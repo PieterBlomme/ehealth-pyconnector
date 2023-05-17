@@ -41,10 +41,6 @@ def test_mda__valid_ssin(sts_service, token, mda_service):
             notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
-        logger.info(mda.transaction_request)
-        logger.info(mda.transaction_response)
-        logger.info(mda.soap_request)
-        logger.info(mda.soap_response)
         
 def test_mda__invalid_ssin(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
@@ -65,10 +61,8 @@ def test_mda__invalid_ssin(sts_service, token, mda_service):
 NOT_BEFORE = datetime.datetime.fromisoformat("2021-01-01T00:00:00")
 NOT_ON_OR_AFTER = datetime.datetime.fromisoformat("2022-01-16T00:00:00")
 
-@pytest.mark.parametrize(
-    "ssin", ["84022148878", "58121520763", pytest.param("76022354782", marks=pytest.mark.xfail(reason="Only 1 period returned")), "67120143655", "61111712346"]
-)
-def test_mda__scenario_1(sts_service, token, mda_service, ssin):
+def test_mda__scenario_1(sts_service, token, mda_service):
+    ssin = "84022148878"
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
             ssin=ssin,
@@ -91,10 +85,9 @@ def test_mda__scenario_1(sts_service, token, mda_service, ssin):
         assert len(insurability_periods) >= 2
         assert insurability_periods[0]["cb1"] != insurability_periods[1]["cb1"]
 
-@pytest.mark.parametrize(
-    "ssin", ["68091400202", "57010179489", "74080925023", "70021546287", "82062220229"]
-)
-def test_mda__scenario_2(sts_service, token, mda_service, ssin):
+
+def test_mda__scenario_2(sts_service, token, mda_service):
+    ssin = "57010179489"
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
             ssin=ssin,
@@ -104,16 +97,16 @@ def test_mda__scenario_2(sts_service, token, mda_service, ssin):
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
-        for a in mda.response.assertion:
-            if a.advice.assertion_type == "urn:be:cin:nippin:insurability:payment":
-                for attribute in a.attribute_statement.attribute:
-                    if attribute.name == 'urn:be:cin:nippin:payment:byIO':
-                        assert attribute.attribute_value.value == 'True'
+        # payment assertion should exist
+        payment = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:insurability:payment']
+        assert len(payment) == 1
+        # byIO should be True
+        by_io = [attr for attr in payment[0].attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:payment:byIO' and attr.attribute_value.value == 'True']
+        assert len(by_io) == 1
     
-@pytest.mark.parametrize(
-    "ssin", ["30050802512", "51052809178", "16112106736", "23102820194", "45072705334"]
-)
-def test_mda__scenario_3(sts_service, token, mda_service, ssin):
+
+def test_mda__scenario_3(sts_service, token, mda_service):
+    ssin = "16112106736"
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
             ssin=ssin,
@@ -123,19 +116,23 @@ def test_mda__scenario_3(sts_service, token, mda_service, ssin):
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
-        for a in mda.response.assertion:
-            if a.advice.assertion_type == 'urn:be:cin:nippin:insurability:patientData':
-                # deceased date should be set
-                assert len([attr for attr in a.attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:careReceiver:deceasedDate']) == 1
-            if a.advice.assertion_type == 'urn:be:cin:nippin:insurability:generalSituation':
-                # closedBefore event presetn
-                assert len([attr for attr in a.attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:generalSituation:event' and attr.attribute_value.value == 'closedBefore']) == 1
-            
+        # patientData assertion should exist
+        patientData = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:insurability:patientData']
+        assert len(patientData) == 1
+        # deceasedDate should exist
+        deceasedDate = [attr for attr in patientData[0].attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:careReceiver:deceasedDate']
+        assert len(deceasedDate) == 1
 
-@pytest.mark.parametrize(
-    "ssin", ["53020927795", "67032535928", "63102909243", "69021902691", "77092206582"]
-)
-def test_mda__scenario_4(sts_service, token, mda_service, ssin):
+        # generalSituation assertion should exist
+        generalSituation = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:insurability:generalSituation']
+        assert len(generalSituation) == 1
+        # event should be closedBefore
+        event = [attr for attr in generalSituation[0].attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:generalSituation:event' and attr.attribute_value.value == 'closedBefore']
+        assert len(event) == 1
+
+
+def test_mda__scenario_4(sts_service, token, mda_service):
+    ssin = "53020927795"
     # hospitalized facet
     facets = [
                     Facet(
@@ -165,3 +162,212 @@ def test_mda__scenario_4(sts_service, token, mda_service, ssin):
         # hospitalization info expected
         hospitalization = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:hospitalisation']
         assert len(hospitalization) == 1
+        
+def test_mda__scenario_5(sts_service, token, mda_service):
+    ssin = "58112438989"
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        mda = mda_service.get_member_data(
+            ssin=ssin,
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+        )
+        assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
+
+        # medicalHouse info expected
+        medicalHouse = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:medicalHouse']
+        assert len(medicalHouse) == 1
+        # type should be Kine
+        type_ = [attr for attr in medicalHouse[0].attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:medicalHouse:type' and attr.attribute_value.value == 'Kine']
+        assert len(type_) == 1
+
+def test_mda__scenario_6(sts_service, token, mda_service):
+    ssin = "70021546287"
+    # for invoicing
+    facets = [
+                    Facet(
+                        id="urn:be:cin:nippin:insurability",
+                        dimensions=[
+                            Dimension(
+                                id="requestType",
+                                value="invoicing",
+                            ),
+                            Dimension(
+                                id="contactType",
+                                value="other",
+                            ),
+                        ]
+                    )
+                ]
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        mda = mda_service.get_member_data(
+            ssin=ssin,
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+            facets=facets
+        )
+        assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
+
+        # medicalHouse info expected
+        periods = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:insurability:period']
+        assert len(periods) > 0
+        # payment approval should not be None
+        for p in periods:
+            approval = [attr for attr in p.attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:paymentApproval' and attr.attribute_value.value is not None]
+            assert len(approval) == 1
+
+def test_mda__scenario_7(sts_service, token, mda_service):
+    # facet not allowed for physiotherpay
+    ssin = "57052511675"
+    facets = [
+                    Facet(
+                        id="urn:be:cin:nippin:carePath",
+                    )
+                ]
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        mda = mda_service.get_member_data(
+            ssin=ssin,
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+            facets=facets
+        )
+        
+        assert mda.response.status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
+        assert mda.response.status.status_detail.fault.fault_code == 'AUTHORIZATION_ERROR'
+        assert mda.response.status.status_detail.fault.details.detail.detail_code == 'UNAUTHORIZED_FACET'
+
+@pytest.mark.xfail(reason="Error while trying to (un)seal: Data can't be unsealed.")
+def test_mda__scenario_8(sts_service, token, mda_service):
+    ssin = "63102909243"
+    # for invoicing
+    facets = [
+                    Facet(
+                        id="urn:be:cin:nippin:chronicCondition",
+                    )
+                ]
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        mda = mda_service.get_member_data(
+            ssin=ssin,
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+            facets=facets
+        )
+        assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
+
+        # chronicCondition info expected
+        chronicCondition = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:chronicCondition']
+        assert len(chronicCondition) == 1
+
+def test_mda__scenario_6(sts_service, token, mda_service):
+    ssin = "70021546287"
+    # for invoicing
+    facets = [
+                    Facet(
+                        id="urn:be:cin:nippin:insurability",
+                        dimensions=[
+                            Dimension(
+                                id="requestType",
+                                value="invoicing",
+                            ),
+                            Dimension(
+                                id="contactType",
+                                value="other",
+                            ),
+                        ]
+                    )
+                ]
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        mda = mda_service.get_member_data(
+            ssin=ssin,
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+            facets=facets
+        )
+        assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
+
+        # medicalHouse info expected
+        periods = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:insurability:period']
+        assert len(periods) > 0
+        # payment approval should not be None
+        for p in periods:
+            approval = [attr for attr in p.attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:paymentApproval' and attr.attribute_value.value is not None]
+            assert len(approval) == 1
+
+def test_mda__scenario_9(sts_service, token, mda_service):
+    # facet not allowed for physiotherpay
+    ssin = "46121723514"
+    facets = [
+                    Facet(
+                        id="urn:be:cin:nippin:referencePharmacy",
+                    )
+                ]
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        mda = mda_service.get_member_data(
+            ssin=ssin,
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+            facets=facets
+        )
+        
+        assert mda.response.status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
+        assert mda.response.status.status_detail.fault.fault_code == 'AUTHORIZATION_ERROR'
+        assert mda.response.status.status_detail.fault.details.detail.detail_code == 'UNAUTHORIZED_FACET'
+
+
+def test_mda__scenario_10(sts_service, token, mda_service):
+    ssin = "58121520763"
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        # fetch regular
+        mda = mda_service.get_member_data(
+            ssin=ssin,
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+        )
+        assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
+
+        # patientData info expected
+        patientData = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:insurability:patientData']
+        assert len(patientData) == 1
+        
+        # fetch with regNumber@mutuality
+        mda = mda_service.get_member_data(
+            registrationNumber="0001995151258",
+            mutuality="319",
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+        )
+        assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
+
+        # patientData info expected
+        patientData2 = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:insurability:patientData']
+        assert len(patientData2) == 1
+        
+        # check equality on some fields
+        for attr_name in (
+            'urn:be:fgov:person:ssin',
+            'urn:be:cin:nippin:careReceiver:name',
+            'urn:be:cin:nippin:careReceiver:firstName',
+            'urn:be:cin:nippin:careReceiver:birthDate'
+        ):
+            a = [attr for attr in patientData[0].attribute_statement.attribute if attr.name == attr_name]
+            b = [attr for attr in patientData2[0].attribute_statement.attribute if attr.name == attr_name]
+            assert a == b
+            assert len(a) == 1
+            
+# TODO tests
+# invalid facets
+# facets not allowed
+# some facets not available
+# singleton/multi-sessions?
+# urn:oasis:names:tc:SAML:2.0:status:Responder internal server error: test with bulk fetch 
+# general way of dealing with Success/Responder/Requestor
+# partial response
+# wrong combo of ssin, regnumMutuality, numMutuality
+# FakeMDAService

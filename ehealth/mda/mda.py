@@ -3,7 +3,7 @@ import logging
 import datetime
 import tempfile
 import uuid
-from typing import List
+from typing import List, Optional
 from io import StringIO
 from ..sts.assertion import Assertion
 from .attribute_query import AttributeQuery, Issuer, Extensions, Subject, SubjectConfirmation, SubjectConfirmationData, NameId, Facet, Dimension
@@ -72,7 +72,9 @@ class MDAService(AbstractMDAService):
     def render_attribute_query(
         self, 
         nihii: str, 
-        ssin: str, 
+        ssin: Optional[str],
+        registrationNumber: Optional[str],
+        mutuality: Optional[str], 
         notBefore: datetime.datetime, 
         notOnOrAfter: datetime.datetime,
         facets: List[Facet]
@@ -80,6 +82,13 @@ class MDAService(AbstractMDAService):
         now = datetime.datetime.now()
         id_ = str(uuid.uuid4())
         
+        if ssin is not None:
+            name_id = NameId(value=ssin)
+        else:
+            assert registrationNumber is not None
+            assert mutuality is not None
+            name_id = NameId(value=f"{registrationNumber}@{mutuality}", format="urn:be:cin:nippin:careReceiver:registrationNumber@mut")
+            
         attrquery = AttributeQuery(
             issue_instant=XmlDateTime.from_datetime(now),
             id="_" + id_,
@@ -90,7 +99,7 @@ class MDAService(AbstractMDAService):
                 facets=facets
             ),
             subject=Subject(
-                name_id=NameId(value=ssin),
+                name_id=name_id,
                 subject_confirmation=SubjectConfirmation(
                     subject_confirmation_data=SubjectConfirmationData(
                         not_before=XmlDateTime.from_datetime(notBefore),
@@ -112,10 +121,12 @@ class MDAService(AbstractMDAService):
         
     def get_member_data(
         self, 
-        ssin: str, 
         token: str, 
         notBefore: datetime.datetime, 
         notOnOrAfter: datetime.datetime,
+        ssin: Optional[str] = None,
+        registrationNumber: Optional[str] = None,
+        mutuality: Optional[str] = None, 
         facets=[
                     Facet(
                         id="urn:be:cin:nippin:insurability",
@@ -134,7 +145,7 @@ class MDAService(AbstractMDAService):
         ) -> str:
         nihii = self.set_configuration_from_token(token)
         
-        template, id_ = self.render_attribute_query(nihii, ssin, notBefore, notOnOrAfter, facets=facets)
+        template, id_ = self.render_attribute_query(nihii, ssin, registrationNumber, mutuality, notBefore, notOnOrAfter, facets=facets)
 
         with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
             # obviously this is lazy ...

@@ -54,7 +54,7 @@ class NameId:
             "type": "Attribute",
         }
     )
-    value: Optional[int] = field(
+    value: Optional[str] = field(
         default=None
     )
 
