@@ -1,0 +1,21 @@
+name: Testing
+on: push
+jobs:
+  test-backend:
+    runs-on: ubuntu-22.04
+    env:
+      KEYSTORE_PASSPHRASE: ${{ secrets.KEYSTORE_PASSPHRASE }}
+      KEYSTORE_SSIN: ${{ secrets.KEYSTORE_SSIN }}
+      MYCARENET_USER: ${{ secrets.MYCARENET_USER }}
+      MYCARENET_PWD: ${{ secrets.MYCARENET_PWD }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build && compile
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          poetry install
+          poetry run download-packages
+          poetry run compile-bridge
+          poetry run launch-bridge &
+          sleep 15
+          poetry run pytest tests/ --log-cli-level=INFO
