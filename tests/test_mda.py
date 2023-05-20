@@ -43,7 +43,7 @@ def test_mda__valid_ssin(sts_service, token, mda_service):
             notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
-        
+
 def test_mda__invalid_ssin(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
@@ -58,8 +58,23 @@ def test_mda__invalid_ssin(sts_service, token, mda_service):
         assert status.status_detail.fault.details.detail.detail_code == 'INVALID_INSS_FORMAT'
         assert status.status_detail.fault.details.detail.message == 'The INSS has an invalid format (not 11 digits)'
 
+def test_mda__partial_response(sts_service, token, mda_service):
+    # currently broken, response received is not a partial error
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        mda = mda_service.get_member_data(
+            ssin="66010301329",
+            token=token,
+            notBefore=datetime.datetime.fromisoformat("2018-01-15T00:00:00"),
+            notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
+        )
+        status = mda.response.status
+        assert status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Responder'
+        assert status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:InternalError'
+        assert status.status_detail.fault.fault_code == 'VALIDATION_ERROR'
+        assert status.status_detail.fault.details.detail.detail_code == 'INVALID_RESPONSE_FROM_IO' # I expect a partial actually
+        assert status.status_detail.fault.details.detail.message == 'Invalid response format from IM'
+
 def test_mda__invalid_facet(sts_service, token, mda_service):
-    ssin = "72102534304"
     facets = [
                     Facet(
                         id="urn:be:cin:nippin:someWeirdFacet",
@@ -68,7 +83,7 @@ def test_mda__invalid_facet(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         # fetch regular
         mda = mda_service.get_member_data(
-            ssin=ssin,
+            ssin=KEYSTORE_SSIN,
             token=token,
             notBefore=NOT_BEFORE,
             notOnOrAfter=NOT_ON_OR_AFTER,
@@ -84,7 +99,6 @@ def test_mda__invalid_facet(sts_service, token, mda_service):
 
 
 def test_mda__valid_and_invalid_facet(sts_service, token, mda_service):
-    ssin = "72102534304"
     facets = [
                     Facet(
                         id="urn:be:cin:nippin:someWeirdFacet",
@@ -106,7 +120,7 @@ def test_mda__valid_and_invalid_facet(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         # fetch regular
         mda = mda_service.get_member_data(
-            ssin=ssin,
+            ssin=KEYSTORE_SSIN,
             token=token,
             notBefore=NOT_BEFORE,
             notOnOrAfter=NOT_ON_OR_AFTER,
@@ -122,7 +136,6 @@ def test_mda__valid_and_invalid_facet(sts_service, token, mda_service):
 
 
 def test_mda__invalid_dimension(sts_service, token, mda_service):
-    ssin = "72102534304"
     facets = [
                     Facet(
                         id="urn:be:cin:nippin:insurability",
@@ -137,7 +150,7 @@ def test_mda__invalid_dimension(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         # fetch regular
         mda = mda_service.get_member_data(
-            ssin=ssin,
+            ssin=KEYSTORE_SSIN,
             token=token,
             notBefore=NOT_BEFORE,
             notOnOrAfter=NOT_ON_OR_AFTER,
@@ -152,7 +165,6 @@ def test_mda__invalid_dimension(sts_service, token, mda_service):
         assert mda.response.assertion == [] # nothing returned
 
 def test_mda__invalid_dimension_value(sts_service, token, mda_service):
-    ssin = "72102534304"
     facets = [
                     Facet(
                         id="urn:be:cin:nippin:insurability",
@@ -167,7 +179,7 @@ def test_mda__invalid_dimension_value(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         # fetch regular
         mda = mda_service.get_member_data(
-            ssin=ssin,
+            ssin=KEYSTORE_SSIN,
             token=token,
             notBefore=NOT_BEFORE,
             notOnOrAfter=NOT_ON_OR_AFTER,
@@ -607,10 +619,10 @@ def task_fetch_mda(ssin):
         logger.info(f"Task for SSIN {ssin}: {a}")
         assert a[0].attribute_value.value == ssin
             
-def test_mda__multiple_sessions(sts_service, token, mda_service):
+def test_mda__multiple_sessions():
     """
     Unclear if the current approach is threadsafe when opening multiple STS+MDA sessions concurrently.
-    Probably best not to count on it, but this test seems to indicate that it's
+    Probably best not to count on it, but this test seems to indicate that it's ok
     """
     ssin_list = ["90060421941", "72102534304", "84022148878", "57010179489", "16112106736", "53020927795", "58112438989", 
                  "70021546287", "57052511675", "63102909243", "46121723514", "58121520763"]
@@ -620,6 +632,5 @@ def test_mda__multiple_sessions(sts_service, token, mda_service):
 # TODO tests
 # urn:oasis:names:tc:SAML:2.0:status:Responder internal server error: test with bulk fetch 
 # general way of dealing with Success/Responder/Requestor
-# partial response
 # wrong combo of ssin, regnumMutuality, numMutuality
 # FakeMDAService
