@@ -300,8 +300,8 @@ class Advice:
             "namespace": "urn:be:cin:nippin:memberdata:saml:extension",
         }
     )
-    facet: Optional[Facet] = field(
-        default=None,
+    facet: List[Facet] = field(
+        default=list,
         metadata={
             "name": "Facet",
             "type": "Element",

@@ -56,6 +56,129 @@ def test_mda__invalid_ssin(sts_service, token, mda_service):
         assert status.status_detail.fault.details.detail.detail_code == 'INVALID_INSS_FORMAT'
         assert status.status_detail.fault.details.detail.message == 'The INSS has an invalid format (not 11 digits)'
 
+def test_mda__invalid_facet(sts_service, token, mda_service):
+    ssin = "72102534304"
+    facets = [
+                    Facet(
+                        id="urn:be:cin:nippin:someWeirdFacet",
+                    )
+                ]
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        # fetch regular
+        mda = mda_service.get_member_data(
+            ssin=ssin,
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+            facets=facets
+        )
+        status = mda.response.status
+        assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Requester'
+        assert status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
+        assert status.status_detail.fault.fault_code == 'INPUT_ERROR'
+        assert status.status_detail.fault.details.detail.detail_code == 'UNKNOWN_FACET'
+        assert status.status_detail.fault.details.detail.message == 'A requested facet does not exist'
+        assert mda.response.assertion == [] # nothing returned
+
+
+def test_mda__valid_and_invalid_facet(sts_service, token, mda_service):
+    ssin = "72102534304"
+    facets = [
+                    Facet(
+                        id="urn:be:cin:nippin:someWeirdFacet",
+                    ),
+                    Facet(
+                        id="urn:be:cin:nippin:insurability",
+                        dimensions=[
+                            Dimension(
+                                id="requestType",
+                                value="information",
+                            ),
+                            Dimension(
+                                id="contactType",
+                                value="other",
+                            ),
+                        ]
+                    )
+                ]
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        # fetch regular
+        mda = mda_service.get_member_data(
+            ssin=ssin,
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+            facets=facets
+        )
+        status = mda.response.status
+        assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Requester'
+        assert status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
+        assert status.status_detail.fault.fault_code == 'INPUT_ERROR'
+        assert status.status_detail.fault.details.detail.detail_code == 'UNKNOWN_FACET'
+        assert status.status_detail.fault.details.detail.message == 'A requested facet does not exist'
+        assert mda.response.assertion == [] # nothing returned
+
+
+def test_mda__invalid_dimension(sts_service, token, mda_service):
+    ssin = "72102534304"
+    facets = [
+                    Facet(
+                        id="urn:be:cin:nippin:insurability",
+                        dimensions=[
+                            Dimension(
+                                id="loremipsem",
+                                value="loremipsem",
+                            ),
+                        ]
+                    )
+                ]
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        # fetch regular
+        mda = mda_service.get_member_data(
+            ssin=ssin,
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+            facets=facets
+        )
+        status = mda.response.status
+        assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Requester'
+        assert status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
+        assert status.status_detail.fault.fault_code == 'INPUT_ERROR'
+        assert status.status_detail.fault.details.detail.detail_code == 'INVALID_DIMENSION_ID'
+        assert status.status_detail.fault.details.detail.message == 'A dimension is invalid in a facet'
+        assert mda.response.assertion == [] # nothing returned
+
+def test_mda__invalid_dimension_value(sts_service, token, mda_service):
+    ssin = "72102534304"
+    facets = [
+                    Facet(
+                        id="urn:be:cin:nippin:insurability",
+                        dimensions=[
+                            Dimension(
+                                id="requestType",
+                                value="loremipsem",
+                            ),
+                        ]
+                    )
+                ]
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        # fetch regular
+        mda = mda_service.get_member_data(
+            ssin=ssin,
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+            facets=facets
+        )
+        status = mda.response.status
+        assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Requester'
+        assert status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
+        assert status.status_detail.fault.fault_code == 'INPUT_ERROR'
+        assert status.status_detail.fault.details.detail.detail_code == 'UNALLOWED_REQUESTTYPE'
+        assert status.status_detail.fault.details.detail.message == 'The value of requestType is not in the list of allowed values'
+        assert mda.response.assertion == [] # nothing returned
+
 # MDA TEST SCENARIOS (Physiotherapy)
 
 NOT_BEFORE = datetime.datetime.fromisoformat("2021-01-01T00:00:00")
@@ -360,11 +483,104 @@ def test_mda__scenario_10(sts_service, token, mda_service):
             b = [attr for attr in patientData2[0].attribute_statement.attribute if attr.name == attr_name]
             assert a == b
             assert len(a) == 1
-            
+
+
+
+def test_mda__scenario_11(sts_service, token, mda_service):
+    ssin = "45112243029"
+    facets = [
+                    Facet(
+                        id="urn:be:cin:nippin:globalMedicalFile",
+                    )
+                ]
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        # fetch regular
+        mda = mda_service.get_member_data(
+            ssin=ssin,
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+            facets=facets
+        )
+        assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
+
+        # globalMedicalFile info expected
+        globalMedicalFile = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:globalMedicalFile']
+        assert len(globalMedicalFile) == 1
+        
+
+def test_mda__scenario_12(sts_service, token, mda_service):
+    ssin = "72102534304"
+    facets = [
+                    Facet(
+                        id="urn:be:cin:nippin:palliativeStatus",
+                    )
+                ]
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        # fetch regular
+        mda = mda_service.get_member_data(
+            ssin=ssin,
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+            facets=facets
+        )
+        assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
+
+        # palliativeStatus info expected
+        palliativeStatus = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:palliativeStatus']
+        assert len(palliativeStatus) == 1
+        
+
+@pytest.mark.skip(reason="unitIssuance not available for physiotherapy")
+def test_mda__scenario_13(sts_service, token, mda_service):
+    pass
+
+@pytest.mark.skip(reason="maxInvoiced not available for physiotherapy")
+def test_mda__scenario_14(sts_service, token, mda_service):
+    pass
+
+
+def test_mda__facet_not_available(sts_service, token, mda_service):
+    # patient is non palliative
+    ssin = "90060421941"
+    facets = [
+                    Facet(
+                        id="urn:be:cin:nippin:insurability",
+                        dimensions=[
+                            Dimension(
+                                id="requestType",
+                                value="information",
+                            ),
+                            Dimension(
+                                id="contactType",
+                                value="other",
+                            ),
+                        ]
+                    ),
+                    Facet(
+                        id="urn:be:cin:nippin:palliativeStatus",
+                    )
+                ]
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        # fetch regular
+        mda = mda_service.get_member_data(
+            ssin=ssin,
+            token=token,
+            notBefore=NOT_BEFORE,
+            notOnOrAfter=NOT_ON_OR_AFTER,
+            facets=facets
+        )
+        assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
+
+        logger.info(mda.response.status)
+
+        # palliativeStatus info not expected since patient not pallative
+        # no errors ...
+        palliativeStatus = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:palliativeStatus']
+        assert len(palliativeStatus) == 0
+
 # TODO tests
-# invalid facets
-# facets not allowed
-# some facets not available
 # singleton/multi-sessions?
 # urn:oasis:names:tc:SAML:2.0:status:Responder internal server error: test with bulk fetch 
 # general way of dealing with Success/Responder/Requestor
