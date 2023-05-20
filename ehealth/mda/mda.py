@@ -141,7 +141,7 @@ class MDAService(AbstractMDAService):
                             ),
                         ]
                     )
-                ]
+                ],
         ) -> str:
         nihii = self.set_configuration_from_token(token)
         
