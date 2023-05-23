@@ -593,41 +593,6 @@ def test_mda__facet_not_available(sts_service, token, mda_service):
         # no errors ...
         palliativeStatus = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:palliativeStatus']
         assert len(palliativeStatus) == 0
-
-def task_fetch_mda(ssin):
-    sts_service = STSService()
-    token = sts_service.get_serialized_token(KEYSTORE_PATH, KEYSTORE_PASSPHRASE, KEYSTORE_SSIN)
-    mda_service =  MDAService(
-        mycarenet_license_username=MYCARENET_USER,
-        mycarenet_license_password=MYCARENET_PWD,
-    )
-    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        # fetch regular
-        mda = mda_service.get_member_data(
-            ssin=ssin,
-            token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
-        )
-        # patientData info expected
-        patientData = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:insurability:patientData']
-        assert len(patientData) == 1
-        
-        # check ssin value
-        a = [attr for attr in patientData[0].attribute_statement.attribute if attr.name == 'urn:be:fgov:person:ssin']
-        assert len(a) == 1
-        logger.info(f"Task for SSIN {ssin}: {a}")
-        assert a[0].attribute_value.value == ssin
-            
-def test_mda__multiple_sessions():
-    """
-    Unclear if the current approach is threadsafe when opening multiple STS+MDA sessions concurrently.
-    Probably best not to count on it, but this test seems to indicate that it's ok
-    """
-    ssin_list = ["90060421941", "72102534304", "84022148878", "57010179489", "16112106736", "53020927795", "58112438989", 
-                 "70021546287", "57052511675", "63102909243", "46121723514", "58121520763"]
-    with ThreadPoolExecutor(max_workers=50) as ex:
-        ex.map(task_fetch_mda, [random.choice(ssin_list) for _ in range(50)])
         
 # TODO tests
 # urn:oasis:names:tc:SAML:2.0:status:Responder internal server error: test with bulk fetch 

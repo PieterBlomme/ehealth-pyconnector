@@ -1,9 +1,12 @@
 from ehealth.sts import FakeSTSService, STSService, KeyStoreException, SoapFaultException
-from ehealth.mda import MDAService
 from pathlib import Path
 import os
+import time
+import random
 import pytest
 import logging
+from concurrent.futures import ProcessPoolExecutor
+from uuid import uuid4
 
 logger = logging.getLogger(__name__)
 KEYSTORE_PASSPHRASE = os.environ.get("KEYSTORE_PASSPHRASE")
@@ -62,3 +65,24 @@ def test_sts__bad_endpoint():
     with pytest.raises(SoapFaultException):
         sts_service.get_serialized_token(str(path), KEYSTORE_PASSPHRASE, KEYSTORE_SSIN)
 
+
+def task_set_random_config_value(uid):
+    logger.info(uid)
+    sts_service = STSService()
+    token = sts_service.get_serialized_token(TEST_DATA_FOLDER.joinpath("valid.acc-p12"), KEYSTORE_PASSPHRASE, KEYSTORE_SSIN)
+    with sts_service.session(token, TEST_DATA_FOLDER.joinpath("valid.acc-p12"), KEYSTORE_PASSPHRASE) as session:
+        sts_service.config_validator.setProperty("uid_test", uid)
+        time.sleep(random.random())
+        result = sts_service.config_validator.getProperty("uid_test")
+        logger.info(result)
+        assert result == uid
+
+            
+def test_sts__multiple_sessions():
+    """
+    Unclear if the current approach is safe across multiple concurrent STS sessions.
+    Probably best not to count on it, but this test seems to indicate that it's ok
+    """
+    with ProcessPoolExecutor(max_workers=50) as ex:
+        ex.map(task_set_random_config_value, [str(uuid4()) for _ in range(50)])
+        
