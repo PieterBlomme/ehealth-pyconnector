@@ -1,14 +1,11 @@
 from ehealth.sts import STSService
-from ehealth.mda import MDAService
+from ehealth.mda import MDAService, MDAValidationException
 from ehealth.mda.attribute_query import Facet, Dimension
 from pathlib import Path
-from typing import List
 import os
 import pytest
-import random
 import datetime
 import logging
-from concurrent.futures import ThreadPoolExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +41,46 @@ def test_mda__valid_ssin(sts_service, token, mda_service):
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
+def test_mda__ssin_combined_with_registration_number(token, mda_service):
+    with pytest.raises(MDAValidationException):
+        mda_service.get_member_data(
+            ssin=KEYSTORE_SSIN,
+            registrationNumber="1234",
+            token=token,
+            notBefore=datetime.datetime.fromisoformat("2018-01-15T00:00:00"),
+            notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
+        )
+
+def test_mda__ssin_combined_with_mutuality(token, mda_service):
+    with pytest.raises(MDAValidationException):
+        mda_service.get_member_data(
+            ssin=KEYSTORE_SSIN,
+            mutuality="1234",
+            token=token,
+            notBefore=datetime.datetime.fromisoformat("2018-01-15T00:00:00"),
+            notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
+        )
+
+def test_mda__registration_number_without_mutuality(token, mda_service):
+    with pytest.raises(MDAValidationException):
+        mda_service.get_member_data(
+            ssin=KEYSTORE_SSIN,
+            registrationNumber="1234",
+            token=token,
+            notBefore=datetime.datetime.fromisoformat("2018-01-15T00:00:00"),
+            notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
+        )
+
+def test_mda__mutuality_without_registration_number(token, mda_service):
+    with pytest.raises(MDAValidationException):
+        mda_service.get_member_data(
+            ssin=KEYSTORE_SSIN,
+            mutuality="1234",
+            token=token,
+            notBefore=datetime.datetime.fromisoformat("2018-01-15T00:00:00"),
+            notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
+        )
+
 def test_mda__invalid_ssin(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
@@ -55,8 +92,8 @@ def test_mda__invalid_ssin(sts_service, token, mda_service):
         status = mda.response.status
         assert status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
         assert status.status_detail.fault.fault_code == 'INPUT_ERROR'
-        assert status.status_detail.fault.details.detail.detail_code == 'INVALID_INSS_FORMAT'
-        assert status.status_detail.fault.details.detail.message == 'The INSS has an invalid format (not 11 digits)'
+        assert status.status_detail.fault.details.detail[0].detail_code == 'INVALID_INSS_FORMAT'
+        assert status.status_detail.fault.details.detail[0].message == 'The INSS has an invalid format (not 11 digits)'
 
 def test_mda__partial_response(sts_service, token, mda_service):
     facets = [
@@ -101,8 +138,8 @@ def test_mda__invalid_facet(sts_service, token, mda_service):
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Requester'
         assert status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
         assert status.status_detail.fault.fault_code == 'INPUT_ERROR'
-        assert status.status_detail.fault.details.detail.detail_code == 'UNKNOWN_FACET'
-        assert status.status_detail.fault.details.detail.message == 'A requested facet does not exist'
+        assert status.status_detail.fault.details.detail[0].detail_code == 'UNKNOWN_FACET'
+        assert status.status_detail.fault.details.detail[0].message == 'A requested facet does not exist'
         assert mda.response.assertion == [] # nothing returned
 
 
@@ -138,8 +175,8 @@ def test_mda__valid_and_invalid_facet(sts_service, token, mda_service):
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Requester'
         assert status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
         assert status.status_detail.fault.fault_code == 'INPUT_ERROR'
-        assert status.status_detail.fault.details.detail.detail_code == 'UNKNOWN_FACET'
-        assert status.status_detail.fault.details.detail.message == 'A requested facet does not exist'
+        assert status.status_detail.fault.details.detail[0].detail_code == 'UNKNOWN_FACET'
+        assert status.status_detail.fault.details.detail[0].message == 'A requested facet does not exist'
         assert mda.response.assertion == [] # nothing returned
 
 
@@ -168,8 +205,8 @@ def test_mda__invalid_dimension(sts_service, token, mda_service):
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Requester'
         assert status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
         assert status.status_detail.fault.fault_code == 'INPUT_ERROR'
-        assert status.status_detail.fault.details.detail.detail_code == 'INVALID_DIMENSION_ID'
-        assert status.status_detail.fault.details.detail.message == 'A dimension is invalid in a facet'
+        assert status.status_detail.fault.details.detail[0].detail_code == 'INVALID_DIMENSION_ID'
+        assert status.status_detail.fault.details.detail[0].message == 'A dimension is invalid in a facet'
         assert mda.response.assertion == [] # nothing returned
 
 def test_mda__invalid_dimension_value(sts_service, token, mda_service):
@@ -197,8 +234,8 @@ def test_mda__invalid_dimension_value(sts_service, token, mda_service):
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Requester'
         assert status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
         assert status.status_detail.fault.fault_code == 'INPUT_ERROR'
-        assert status.status_detail.fault.details.detail.detail_code == 'UNALLOWED_REQUESTTYPE'
-        assert status.status_detail.fault.details.detail.message == 'The value of requestType is not in the list of allowed values'
+        assert status.status_detail.fault.details.detail[0].detail_code == 'UNALLOWED_REQUESTTYPE'
+        assert status.status_detail.fault.details.detail[0].message == 'The value of requestType is not in the list of allowed values'
         assert mda.response.assertion == [] # nothing returned
 
 # MDA TEST SCENARIOS (Physiotherapy)
@@ -381,7 +418,7 @@ def test_mda__scenario_7(sts_service, token, mda_service):
         
         assert mda.response.status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
         assert mda.response.status.status_detail.fault.fault_code == 'AUTHORIZATION_ERROR'
-        assert mda.response.status.status_detail.fault.details.detail.detail_code == 'UNAUTHORIZED_FACET'
+        assert mda.response.status.status_detail.fault.details.detail[0].detail_code == 'UNAUTHORIZED_FACET'
 
 @pytest.mark.xfail(reason="Error while trying to (un)seal: Data can't be unsealed.")
 def test_mda__scenario_8(sts_service, token, mda_service):
@@ -461,7 +498,7 @@ def test_mda__scenario_9(sts_service, token, mda_service):
         
         assert mda.response.status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
         assert mda.response.status.status_detail.fault.fault_code == 'AUTHORIZATION_ERROR'
-        assert mda.response.status.status_detail.fault.details.detail.detail_code == 'UNAUTHORIZED_FACET'
+        assert mda.response.status.status_detail.fault.details.detail[0].detail_code == 'UNAUTHORIZED_FACET'
 
 
 def test_mda__scenario_10(sts_service, token, mda_service):
@@ -604,6 +641,4 @@ def test_mda__facet_not_available(sts_service, token, mda_service):
         
 # TODO tests
 # urn:oasis:names:tc:SAML:2.0:status:Responder internal server error: test with bulk fetch 
-# general way of dealing with Success/Responder/Requestor
-# wrong combo of ssin, regnumMutuality, numMutuality
 # FakeMDAService

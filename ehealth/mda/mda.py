@@ -13,6 +13,9 @@ from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 
 logger = logging.getLogger(__name__)
 
+class MDAValidationException(Exception):
+    pass
+
 class AbstractMDAService:
     pass
 
@@ -122,7 +125,21 @@ class MDAService(AbstractMDAService):
             "ext": "urn:be:cin:nippin:memberdata:saml:extension"
         }
         return serializer.render(attrquery, ns_map), id_
-        
+    
+    @classmethod
+    def _validate_input_query(
+        cls,
+        ssin: Optional[str] = None,
+        registrationNumber: Optional[str] = None,
+        mutuality: Optional[str] = None, 
+    ):
+        if ssin is not None:
+            if registrationNumber is not None or mutuality is not None:
+                raise MDAValidationException("If SSIN is given, mutuality and registrationNumber should be None")
+        else:
+            if registrationNumber is None or mutuality is None:
+                raise MDAValidationException("If SSIN is not given, mutuality and registrationNumber should both be provided")
+
     def get_member_data(
         self, 
         token: str, 
@@ -147,6 +164,8 @@ class MDAService(AbstractMDAService):
                     )
                 ],
         ) -> str:
+        self._validate_input_query(ssin=ssin, registrationNumber=registrationNumber, mutuality=mutuality)
+
         nihii = self.set_configuration_from_token(token)
         
         template, id_ = self.render_attribute_query(nihii, ssin, registrationNumber, mutuality, notBefore, notOnOrAfter, facets=facets)

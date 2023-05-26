@@ -1,3 +1,3 @@
-from .mda import MDAService
+from .mda import MDAService, MDAValidationException
 
-__all__ = ["MDAService"]
+__all__ = ["MDAService", "MDAValidationException"]
