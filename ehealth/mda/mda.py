@@ -38,6 +38,10 @@ class MDAService(AbstractMDAService):
         self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
         self.config_validator.setProperty("endpoint.etk", etk_endpoint)
         self.config_validator.setProperty("environment", environment)
+        if environment == "acc":
+            self.is_test = True
+        else:
+            self.is_test = False
 
     def set_configuration_from_token(self, token: str):
         parser = XmlParser()
@@ -153,7 +157,7 @@ class MDAService(AbstractMDAService):
         content = self.EHEALTH_JVM.createAttributeQueryFromTemplate(self.EHEALTH_JVM.createHashMap(), tmp.name)
                     
         inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(id_)        
-        memberDataRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.memberdatacommons.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildConsultationRequest(True, inputReference, content)
+        memberDataRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.memberdatacommons.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildConsultationRequest(self.is_test, inputReference, content)
         raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(memberDataRequest)
         
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.memberdatav2.session.MemberDataSessionServiceFactory.getMemberDataSyncService()
