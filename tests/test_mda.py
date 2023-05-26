@@ -59,20 +59,28 @@ def test_mda__invalid_ssin(sts_service, token, mda_service):
         assert status.status_detail.fault.details.detail.message == 'The INSS has an invalid format (not 11 digits)'
 
 def test_mda__partial_response(sts_service, token, mda_service):
-    # currently broken, response received is not a partial error
+    facets = [
+                    Facet(
+                        id="urn:be:cin:nippin:chronicCondition",
+                    )
+                ]
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
             ssin="66010301329",
             token=token,
             notBefore=datetime.datetime.fromisoformat("2018-01-15T00:00:00"),
             notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
+            facets=facets
         )
         status = mda.response.status
-        assert status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Responder'
-        assert status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:InternalError'
-        assert status.status_detail.fault.fault_code == 'VALIDATION_ERROR'
-        assert status.status_detail.fault.details.detail.detail_code == 'INVALID_RESPONSE_FROM_IO' # I expect a partial actually
-        assert status.status_detail.fault.details.detail.message == 'Invalid response format from IM'
+        assert status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
+        assert status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:PartialAnswer'
+        assert status.status_detail.fault.fault_code == 'WARNING'
+        assert status.status_detail.fault.details.detail[0].detail_code == 'BO_MISSING_FACET'
+        assert status.status_detail.fault.details.detail[0].detail_source == 'FBIO'
+        assert status.status_detail.fault.details.detail[1].detail_code == 'FACET_EXCEPTION'
+        assert status.status_detail.fault.details.detail[1].detail_source == 'CHRONICCONDITION'
+        assert status.status_detail.fault.details.detail[1].message == 'facet CHRONICCONDITION is not supported by FBIO'
 
 def test_mda__invalid_facet(sts_service, token, mda_service):
     facets = [

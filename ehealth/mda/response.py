@@ -200,8 +200,8 @@ class Details:
     class Meta:
         namespace = "urn:be:cin:types:v1"
 
-    detail: Optional[Detail] = field(
-        default=None,
+    detail: List[Detail] = field(
+        default=list,
         metadata={
             "name": "Detail",
             "type": "Element",
@@ -232,6 +232,14 @@ class Fault:
         default=None,
         metadata={
             "name": "FaultSource",
+            "type": "Element",
+            "namespace": "urn:be:cin:types:v1",
+        }
+    )
+    message: Optional[object] = field(
+        default=None,
+        metadata={
+            "name": "Message",
             "type": "Element",
             "namespace": "urn:be:cin:types:v1",
         }
