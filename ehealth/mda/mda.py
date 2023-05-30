@@ -3,7 +3,8 @@ import logging
 import datetime
 import tempfile
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Tuple
+from pydantic import BaseModel, root_validator
 from io import StringIO
 from ..sts.assertion import Assertion
 from .attribute_query import AttributeQuery, Issuer, Extensions, Subject, SubjectConfirmation, SubjectConfirmationData, NameId, Facet, Dimension
@@ -13,33 +14,59 @@ from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 
 logger = logging.getLogger(__name__)
 
-class MDAValidationException(Exception):
-    pass
+
+class MDAInputModel(BaseModel):
+    notBefore: datetime.datetime
+    notOnOrAfter: datetime.datetime
+    ssin: Optional[str] = None
+    registrationNumber: Optional[str] = None
+    mutuality: Optional[str] = None
+    facets=[
+                Facet(
+                    id="urn:be:cin:nippin:insurability",
+                    dimensions=[
+                        Dimension(
+                            id="requestType",
+                            value="information",
+                        ),
+                        Dimension(
+                            id="contactType",
+                            value="other",
+                        ),
+                    ]
+                )
+    ]
+
+    @root_validator(pre=True)
+    def check_card_number_omitted(cls, values):
+        ssin = values.get("ssin")
+        registrationNumber = values.get("registrationNumber")
+        mutuality = values.get("mutuality")
+        if ssin is not None:
+            if registrationNumber is not None or mutuality is not None:
+                raise ValueError("If SSIN is given, mutuality and registrationNumber should be None")
+        else:
+            if registrationNumber is None or mutuality is None:
+                raise ValueError("If SSIN is not given, mutuality and registrationNumber should both be provided")
+
+        return values
+
+    def __eq__(self, other):
+            if other.__class__ is self.__class__:
+                return self.json() == other.json()
+            return NotImplemented
 
 class AbstractMDAService:
-    pass
-
-class FakeMDAService(AbstractMDAService):
-    pass
-
-class MDAService(AbstractMDAService):
     def __init__(
             self,
-            mycarenet_license_username: str,
-            mycarenet_license_password: str,
-            etk_endpoint: str = "$uddi{uddi:ehealth-fgov-be:business:etkdepot:v1}",
             environment: str = "acc",
+
     ):
         self.GATEWAY = JavaGateway()
         self.EHEALTH_JVM = self.GATEWAY.entry_point
-        self.HOK_METHOD = self.GATEWAY.jvm.be.ehealth.technicalconnector.service.sts.impl.AbstractMDAService.HOK_METHOD
-    
+
         # set up required configuration
         self.config_validator = self.EHEALTH_JVM.getConfigValidator()
-        
-        self.config_validator.setProperty("mycarenet.licence.username", mycarenet_license_username)
-        self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
-        self.config_validator.setProperty("endpoint.etk", etk_endpoint)
         self.config_validator.setProperty("environment", environment)
         if environment == "acc":
             self.is_test = True
@@ -126,49 +153,64 @@ class MDAService(AbstractMDAService):
         }
         return serializer.render(attrquery, ns_map), id_
     
-    @classmethod
-    def _validate_input_query(
-        cls,
-        ssin: Optional[str] = None,
-        registrationNumber: Optional[str] = None,
-        mutuality: Optional[str] = None, 
+class FakeMDAService(AbstractMDAService):
+    def __init__(
+            self,
+            faked: List[Tuple[MDAInputModel, str]],
+            environment: str = "acc",
+
     ):
-        if ssin is not None:
-            if registrationNumber is not None or mutuality is not None:
-                raise MDAValidationException("If SSIN is given, mutuality and registrationNumber should be None")
-        else:
-            if registrationNumber is None or mutuality is None:
-                raise MDAValidationException("If SSIN is not given, mutuality and registrationNumber should both be provided")
+        super().__init__(environment=environment)
+        self.faked = faked
 
     def get_member_data(
         self, 
         token: str, 
-        notBefore: datetime.datetime, 
-        notOnOrAfter: datetime.datetime,
-        ssin: Optional[str] = None,
-        registrationNumber: Optional[str] = None,
-        mutuality: Optional[str] = None, 
-        facets=[
-                    Facet(
-                        id="urn:be:cin:nippin:insurability",
-                        dimensions=[
-                            Dimension(
-                                id="requestType",
-                                value="information",
-                            ),
-                            Dimension(
-                                id="contactType",
-                                value="other",
-                            ),
-                        ]
-                    )
-                ],
+        mda_input: MDAInputModel,
         ) -> str:
-        self._validate_input_query(ssin=ssin, registrationNumber=registrationNumber, mutuality=mutuality)
+        nihii = self.set_configuration_from_token(token)
+
+        template, id_ = self.render_attribute_query(nihii, mda_input.ssin, mda_input.registrationNumber, mda_input.mutuality, mda_input.notBefore, mda_input.notOnOrAfter, facets=mda_input.facets)
+        
+        parser = XmlParser()
+        for model, response_string in self.faked:
+            if model == mda_input:
+                response_pydantic = parser.parse(StringIO(response_string), Response)
+                
+                return MemberData(
+                    response=response_pydantic,
+                    transaction_request=template,
+                    transaction_response=response_string,
+                    soap_request="", # too much effort
+                    soap_response="" # too much effort
+                )
+        raise NotImplementedError(f"Could not fake {mda_input}")
+
+    
+class MDAService(AbstractMDAService):
+    def __init__(
+            self,
+            mycarenet_license_username: str,
+            mycarenet_license_password: str,
+            etk_endpoint: str = "$uddi{uddi:ehealth-fgov-be:business:etkdepot:v1}",
+            environment: str = "acc",
+    ):
+        super().__init__(environment=environment)
+    
+        # set up required configuration        
+        self.config_validator.setProperty("mycarenet.licence.username", mycarenet_license_username)
+        self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
+        self.config_validator.setProperty("endpoint.etk", etk_endpoint)
+
+    def get_member_data(
+        self, 
+        token: str, 
+        mda_input: MDAInputModel,
+        ) -> str:
 
         nihii = self.set_configuration_from_token(token)
         
-        template, id_ = self.render_attribute_query(nihii, ssin, registrationNumber, mutuality, notBefore, notOnOrAfter, facets=facets)
+        template, id_ = self.render_attribute_query(nihii, mda_input.ssin, mda_input.registrationNumber, mda_input.mutuality, mda_input.notBefore, mda_input.notOnOrAfter, facets=mda_input.facets)
 
         with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
             # obviously this is lazy ...

@@ -1,7 +1,8 @@
 from ehealth.sts import STSService
-from ehealth.mda import MDAService, MDAValidationException
+from ehealth.mda import MDAService, MDAInputModel
 from ehealth.mda.attribute_query import Facet, Dimension
 from pathlib import Path
+from pydantic import ValidationError
 import os
 import pytest
 import datetime
@@ -15,6 +16,8 @@ KEYSTORE_SSIN = os.environ.get("KEYSTORE_SSIN")
 KEYSTORE_PATH = str(TEST_DATA_FOLDER.joinpath("valid.acc-p12"))
 MYCARENET_USER = os.environ.get("MYCARENET_USER")
 MYCARENET_PWD = os.environ.get("MYCARENET_PWD")
+NOT_BEFORE = datetime.datetime.fromisoformat("2021-01-01T00:00:00")
+NOT_ON_OR_AFTER = datetime.datetime.fromisoformat("2022-01-16T00:00:00")
 
 @pytest.fixture
 def sts_service():
@@ -30,64 +33,60 @@ def mda_service():
 @pytest.fixture()
 def token(sts_service):
     return sts_service.get_serialized_token(KEYSTORE_PATH, KEYSTORE_PASSPHRASE, KEYSTORE_SSIN)
-    
+
+def build_mda_input(
+        ssin: str = KEYSTORE_SSIN, 
+        notBefore: datetime.datetime = NOT_BEFORE, 
+        notOnOrAfter: datetime.datetime=NOT_ON_OR_AFTER,
+        **kwargs
+        ):
+    return MDAInputModel(
+            ssin=ssin,
+            notBefore=notBefore,
+            notOnOrAfter=notOnOrAfter,
+            **kwargs
+        )
+
 def test_mda__valid_ssin(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
-            ssin=KEYSTORE_SSIN,
             token=token,
-            notBefore=datetime.datetime.fromisoformat("2018-01-15T00:00:00"),
-            notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
+            mda_input=build_mda_input()
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
 def test_mda__ssin_combined_with_registration_number(token, mda_service):
-    with pytest.raises(MDAValidationException):
+    with pytest.raises(ValidationError):
         mda_service.get_member_data(
-            ssin=KEYSTORE_SSIN,
-            registrationNumber="1234",
             token=token,
-            notBefore=datetime.datetime.fromisoformat("2018-01-15T00:00:00"),
-            notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
+            mda_input=build_mda_input(registrationNumber = "1234"),
         )
 
 def test_mda__ssin_combined_with_mutuality(token, mda_service):
-    with pytest.raises(MDAValidationException):
+    with pytest.raises(ValidationError):
         mda_service.get_member_data(
-            ssin=KEYSTORE_SSIN,
-            mutuality="1234",
             token=token,
-            notBefore=datetime.datetime.fromisoformat("2018-01-15T00:00:00"),
-            notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
+            mda_input=build_mda_input(mutuality = "1234"),
         )
 
 def test_mda__registration_number_without_mutuality(token, mda_service):
-    with pytest.raises(MDAValidationException):
+    with pytest.raises(ValidationError):
         mda_service.get_member_data(
-            ssin=KEYSTORE_SSIN,
-            registrationNumber="1234",
             token=token,
-            notBefore=datetime.datetime.fromisoformat("2018-01-15T00:00:00"),
-            notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
+            mda_input=build_mda_input(registrationNumber = "1234", ssin=None),
         )
-
 def test_mda__mutuality_without_registration_number(token, mda_service):
-    with pytest.raises(MDAValidationException):
+    with pytest.raises(ValidationError):
         mda_service.get_member_data(
-            ssin=KEYSTORE_SSIN,
-            mutuality="1234",
             token=token,
-            notBefore=datetime.datetime.fromisoformat("2018-01-15T00:00:00"),
-            notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
+            mda_input=build_mda_input(mutuality = "1234", ssin=None),
         )
 
 def test_mda__invalid_ssin(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
-            ssin=1234,
             token=token,
-            notBefore=datetime.datetime.fromisoformat("2018-01-15T00:00:00"),
-            notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
+            mda_input=build_mda_input(ssin="1234"),
         )
         status = mda.response.status
         assert status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
@@ -96,6 +95,7 @@ def test_mda__invalid_ssin(sts_service, token, mda_service):
         assert status.status_detail.fault.details.detail[0].message == 'The INSS has an invalid format (not 11 digits)'
 
 def test_mda__partial_response(sts_service, token, mda_service):
+    ssin = "66010301329"
     facets = [
                     Facet(
                         id="urn:be:cin:nippin:chronicCondition",
@@ -103,11 +103,8 @@ def test_mda__partial_response(sts_service, token, mda_service):
                 ]
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
-            ssin="66010301329",
             token=token,
-            notBefore=datetime.datetime.fromisoformat("2018-01-15T00:00:00"),
-            notOnOrAfter=datetime.datetime.fromisoformat("2018-01-16T00:00:00"),
-            facets=facets
+            mda_input=build_mda_input(ssin=ssin, facets=facets),
         )
         status = mda.response.status
         assert status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
@@ -128,11 +125,8 @@ def test_mda__invalid_facet(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         # fetch regular
         mda = mda_service.get_member_data(
-            ssin=KEYSTORE_SSIN,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
-            facets=facets
+            mda_input=build_mda_input(facets=facets),
         )
         status = mda.response.status
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Requester'
@@ -165,11 +159,8 @@ def test_mda__valid_and_invalid_facet(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         # fetch regular
         mda = mda_service.get_member_data(
-            ssin=KEYSTORE_SSIN,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
-            facets=facets
+            mda_input=build_mda_input(facets=facets),
         )
         status = mda.response.status
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Requester'
@@ -195,11 +186,8 @@ def test_mda__invalid_dimension(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         # fetch regular
         mda = mda_service.get_member_data(
-            ssin=KEYSTORE_SSIN,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
-            facets=facets
+            mda_input=build_mda_input(facets=facets),
         )
         status = mda.response.status
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Requester'
@@ -224,11 +212,8 @@ def test_mda__invalid_dimension_value(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         # fetch regular
         mda = mda_service.get_member_data(
-            ssin=KEYSTORE_SSIN,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
-            facets=facets
+            mda_input=build_mda_input(facets=facets),
         )
         status = mda.response.status
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Requester'
@@ -240,17 +225,12 @@ def test_mda__invalid_dimension_value(sts_service, token, mda_service):
 
 # MDA TEST SCENARIOS (Physiotherapy)
 
-NOT_BEFORE = datetime.datetime.fromisoformat("2021-01-01T00:00:00")
-NOT_ON_OR_AFTER = datetime.datetime.fromisoformat("2022-01-16T00:00:00")
-
 def test_mda__scenario_1(sts_service, token, mda_service):
     ssin = "84022148878"
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
-            ssin=ssin,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
+            mda_input=build_mda_input(ssin=ssin),
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
@@ -272,10 +252,8 @@ def test_mda__scenario_2(sts_service, token, mda_service):
     ssin = "57010179489"
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
-            ssin=ssin,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
+            mda_input=build_mda_input(ssin=ssin),
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
@@ -291,10 +269,8 @@ def test_mda__scenario_3(sts_service, token, mda_service):
     ssin = "16112106736"
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
-            ssin=ssin,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
+            mda_input=build_mda_input(ssin=ssin),
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
@@ -333,11 +309,8 @@ def test_mda__scenario_4(sts_service, token, mda_service):
                 ]
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
-            ssin=ssin,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
-            facets=facets,
+            mda_input=build_mda_input(ssin=ssin, facets=facets),
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
@@ -349,10 +322,8 @@ def test_mda__scenario_5(sts_service, token, mda_service):
     ssin = "58112438989"
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
-            ssin=ssin,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
+            mda_input=build_mda_input(ssin=ssin),
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
@@ -383,11 +354,8 @@ def test_mda__scenario_6(sts_service, token, mda_service):
                 ]
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
-            ssin=ssin,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
-            facets=facets
+            mda_input=build_mda_input(ssin=ssin, facets=facets),
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
@@ -409,11 +377,8 @@ def test_mda__scenario_7(sts_service, token, mda_service):
                 ]
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
-            ssin=ssin,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
-            facets=facets
+            mda_input=build_mda_input(ssin=ssin, facets=facets),
         )
         
         assert mda.response.status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
@@ -431,53 +396,14 @@ def test_mda__scenario_8(sts_service, token, mda_service):
                 ]
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
-            ssin=ssin,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
-            facets=facets
+            mda_input=build_mda_input(ssin=ssin, facets=facets),
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
         # chronicCondition info expected
         chronicCondition = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:chronicCondition']
         assert len(chronicCondition) == 1
-
-def test_mda__scenario_6(sts_service, token, mda_service):
-    ssin = "70021546287"
-    # for invoicing
-    facets = [
-                    Facet(
-                        id="urn:be:cin:nippin:insurability",
-                        dimensions=[
-                            Dimension(
-                                id="requestType",
-                                value="invoicing",
-                            ),
-                            Dimension(
-                                id="contactType",
-                                value="other",
-                            ),
-                        ]
-                    )
-                ]
-    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        mda = mda_service.get_member_data(
-            ssin=ssin,
-            token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
-            facets=facets
-        )
-        assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
-
-        # medicalHouse info expected
-        periods = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:insurability:period']
-        assert len(periods) > 0
-        # payment approval should not be None
-        for p in periods:
-            approval = [attr for attr in p.attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:paymentApproval' and attr.attribute_value.value is not None]
-            assert len(approval) == 1
 
 def test_mda__scenario_9(sts_service, token, mda_service):
     # facet not allowed for physiotherpay
@@ -489,11 +415,8 @@ def test_mda__scenario_9(sts_service, token, mda_service):
                 ]
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         mda = mda_service.get_member_data(
-            ssin=ssin,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
-            facets=facets
+            mda_input=build_mda_input(ssin=ssin, facets=facets),
         )
         
         assert mda.response.status.status_code.status_code.value == 'urn:be:cin:nippin:SAML:status:AttributeQueryError'
@@ -506,10 +429,8 @@ def test_mda__scenario_10(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         # fetch regular
         mda = mda_service.get_member_data(
-            ssin=ssin,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
+            mda_input=build_mda_input(ssin=ssin),
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
@@ -519,11 +440,8 @@ def test_mda__scenario_10(sts_service, token, mda_service):
         
         # fetch with regNumber@mutuality
         mda = mda_service.get_member_data(
-            registrationNumber="0001995151258",
-            mutuality="319",
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
+            mda_input=build_mda_input(ssin=None, registrationNumber="0001995151258", mutuality="319")
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
@@ -555,11 +473,8 @@ def test_mda__scenario_11(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         # fetch regular
         mda = mda_service.get_member_data(
-            ssin=ssin,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
-            facets=facets
+            mda_input=build_mda_input(ssin=ssin, facets=facets),
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
@@ -578,11 +493,8 @@ def test_mda__scenario_12(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         # fetch regular
         mda = mda_service.get_member_data(
-            ssin=ssin,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
-            facets=facets
+            mda_input=build_mda_input(ssin=ssin, facets=facets),
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
@@ -624,11 +536,8 @@ def test_mda__facet_not_available(sts_service, token, mda_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         # fetch regular
         mda = mda_service.get_member_data(
-            ssin=ssin,
             token=token,
-            notBefore=NOT_BEFORE,
-            notOnOrAfter=NOT_ON_OR_AFTER,
-            facets=facets
+            mda_input=build_mda_input(ssin=ssin, facets=facets),
         )
         assert mda.response.status.status_code.value == 'urn:oasis:names:tc:SAML:2.0:status:Success'
 
@@ -638,7 +547,3 @@ def test_mda__facet_not_available(sts_service, token, mda_service):
         # no errors ...
         palliativeStatus = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:palliativeStatus']
         assert len(palliativeStatus) == 0
-        
-# TODO tests
-# urn:oasis:names:tc:SAML:2.0:status:Responder internal server error: test with bulk fetch 
-# FakeMDAService
