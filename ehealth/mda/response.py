@@ -133,8 +133,8 @@ class Attribute:
             "type": "Attribute",
         }
     )
-    attribute_value: Optional[AttributeValue] = field(
-        default=None,
+    attribute_value: List[AttributeValue] = field(
+        default=list,
         metadata={
             "name": "AttributeValue",
             "type": "Element",

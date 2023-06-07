@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 TEST_DATA_FOLDER = Path(__file__).parent.joinpath("data")
 KEYSTORE_PASSPHRASE = os.environ.get("KEYSTORE_PASSPHRASE")
 KEYSTORE_SSIN = os.environ.get("KEYSTORE_SSIN")
-KEYSTORE_PATH = str(TEST_DATA_FOLDER.joinpath("valid.acc-p12"))
+KEYSTORE_PATH = "valid.acc-p12"
 MYCARENET_USER = os.environ.get("MYCARENET_USER")
 MYCARENET_PWD = os.environ.get("MYCARENET_PWD")
 NOT_BEFORE = datetime.datetime.fromisoformat("2021-01-01T00:00:00")
@@ -237,7 +237,7 @@ def test_mda__scenario_1(sts_service, token, mda_service):
         def _parse_period(assertion) -> dict:
             for attribute in assertion.attribute_statement.attribute:
                 if attribute.name == 'urn:be:cin:nippin:cb1':
-                    cb1 = attribute.attribute_value.value
+                    cb1 = attribute.attribute_value[0].value
                     return {
                         'cb1': cb1,
                     }
@@ -261,7 +261,7 @@ def test_mda__scenario_2(sts_service, token, mda_service):
         payment = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:insurability:payment']
         assert len(payment) == 1
         # byIO should be True
-        by_io = [attr for attr in payment[0].attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:payment:byIO' and attr.attribute_value.value == 'True']
+        by_io = [attr for attr in payment[0].attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:payment:byIO' and attr.attribute_value[0].value == 'True']
         assert len(by_io) == 1
     
 
@@ -285,7 +285,7 @@ def test_mda__scenario_3(sts_service, token, mda_service):
         generalSituation = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:insurability:generalSituation']
         assert len(generalSituation) == 1
         # event should be closedBefore
-        event = [attr for attr in generalSituation[0].attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:generalSituation:event' and attr.attribute_value.value == 'closedBefore']
+        event = [attr for attr in generalSituation[0].attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:generalSituation:event' and attr.attribute_value[0].value == 'closedBefore']
         assert len(event) == 1
 
 
@@ -331,7 +331,7 @@ def test_mda__scenario_5(sts_service, token, mda_service):
         medicalHouse = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:medicalHouse']
         assert len(medicalHouse) == 1
         # type should be Kine
-        type_ = [attr for attr in medicalHouse[0].attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:medicalHouse:type' and attr.attribute_value.value == 'Kine']
+        type_ = [attr for attr in medicalHouse[0].attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:medicalHouse:type' and attr.attribute_value[0].value == 'Kine']
         assert len(type_) == 1
 
 def test_mda__scenario_6(sts_service, token, mda_service):
@@ -364,7 +364,7 @@ def test_mda__scenario_6(sts_service, token, mda_service):
         assert len(periods) > 0
         # payment approval should not be None
         for p in periods:
-            approval = [attr for attr in p.attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:paymentApproval' and attr.attribute_value.value is not None]
+            approval = [attr for attr in p.attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:paymentApproval' and attr.attribute_value[0].value is not None]
             assert len(approval) == 1
 
 def test_mda__scenario_7(sts_service, token, mda_service):
@@ -385,10 +385,8 @@ def test_mda__scenario_7(sts_service, token, mda_service):
         assert mda.response.status.status_detail.fault.fault_code == 'AUTHORIZATION_ERROR'
         assert mda.response.status.status_detail.fault.details.detail[0].detail_code == 'UNAUTHORIZED_FACET'
 
-@pytest.mark.xfail(reason="Error while trying to (un)seal: Data can't be unsealed.")
 def test_mda__scenario_8(sts_service, token, mda_service):
     ssin = "63102909243"
-    # for invoicing
     facets = [
                     Facet(
                         id="urn:be:cin:nippin:chronicCondition",
@@ -405,8 +403,12 @@ def test_mda__scenario_8(sts_service, token, mda_service):
         chronicCondition = [a for a in mda.response.assertion if a.advice.assertion_type == 'urn:be:cin:nippin:chronicCondition']
         assert len(chronicCondition) == 1
 
+        # at least one year available
+        chronicConditionYears = [attr for attr in chronicCondition[0].attribute_statement.attribute if attr.name == 'urn:be:cin:nippin:chronicCondition:year']
+        assert len(chronicConditionYears) > 0
+
 def test_mda__scenario_9(sts_service, token, mda_service):
-    # facet not allowed for physiotherpay
+    # facet not allowed for physiotherapy
     ssin = "46121723514"
     facets = [
                     Facet(
