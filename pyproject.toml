@@ -3,7 +3,11 @@ name = "ehealth"
 version = "0.1.0"
 description = ""
 authors = ["Pieter Blomme <pieter.blomme@gmail.com>"]
-include = ["JavaGateway.java", "disable_trustchain"]
+include = [
+    "JavaGateway.java", 
+    "disable_trustchain/MANIFEST.MF",
+    "disable_trustchain/CertPathCheckerPKIX.java",
+    ]
 
 [tool.poetry.dependencies]
 python = "^3.8"
