@@ -266,7 +266,15 @@ class StatusDetail:
             "namespace": "",
         }
     )
-    
+
+    fault_with_namespace: Optional[Fault] = field(
+        default=None,
+        metadata={
+            "name": "Fault",
+            "type": "Element",
+            "namespace": "urn:be:cin:types:v1",
+        }
+    )
 @dataclass(config=Config)
 class Status:
     class Meta:
