@@ -12,13 +12,21 @@ class FakeSTSService(STSService):
     Mimics behaviour of STSService without actual external endpoint connection.  
     Keystore decryption is validated, but token request is faked.
     """
-    
     def __init__(
             self,
+            keystore_dir: str = "tests/data/",
+            cakeystore_password: str = "system",
+            cakyestore_location: str = "java/config/P12/acc/caCertificateKeystore.jks"
     ):
         self.GATEWAY = JavaGateway()
         self.EHEALTH_JVM = self.GATEWAY.entry_point
         self.HOK_METHOD = self.GATEWAY.jvm.be.ehealth.technicalconnector.service.sts.impl.AbstractSTSService.HOK_METHOD
+        self.config_validator = self.EHEALTH_JVM.getConfigValidator()
+
+        # set up required configuration
+        self.config_validator.setProperty("KEYSTORE_DIR", keystore_dir)
+        self.config_validator.setProperty("CAKEYSTORE_PASSWORD", cakeystore_password)
+        self.config_validator.setProperty("CAKEYSTORE_LOCATION", cakyestore_location) 
     
     def get_serialized_token(self, path: str, pwd: str, ssin: str, quality: str = "physiotherapy") -> str:
         designators = self.build_designators(quality)
