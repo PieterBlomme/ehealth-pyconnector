@@ -36,7 +36,7 @@ class AttributeValue:
             "namespace": "http://www.w3.org/2001/XMLSchema-instance",
         }
     )
-    value: Union[str, bool, XmlDate, int] = field(
+    value: Union[str, bool, XmlDate] = field(
         default=""
     )
 
