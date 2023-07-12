@@ -1,8 +1,10 @@
 import logging
+import shutil
 from io import StringIO
 from py4j.java_gateway import JavaGateway
 from py4j.protocol import Py4JJavaError
 from typing import Any
+from pathlib import Path
 from contextlib import contextmanager
 from .base import AbstractSTSService
 from .assertion import Assertion
@@ -18,8 +20,9 @@ PHYSIOTHERAPY_DESIGNATORS = [
         ("sessionmanager.samlattributedesignator.5", "urn:be:fgov:person:ssin:ehealth:1.0:givenname, urn:be:fgov:certified-namespace:ehealth"),
         ("sessionmanager.samlattributedesignator.6", "urn:be:fgov:person:ssin:ehealth:1.0:surname, urn:be:fgov:certified-namespace:ehealth"),
         ("sessionmanager.samlattributedesignator.7", "urn:be:fgov:person:ssin:ehealth:1.0:fpsph:physiotherapist:boolean, urn:be:fgov:certified-namespace:ehealth"),
-
 ]
+
+GATEWAY_ROOT = Path(__file__).parent.parent.parent
 
 class KeyStoreException(Exception):
     pass
@@ -42,12 +45,13 @@ class STSService(AbstractSTSService):
         self.config_validator = self.EHEALTH_JVM.getConfigValidator()
 
         # set up required configuration
+        self.config_validator.setProperty("KEYSTORE_DIR", "/home/pieter/repos/ehealth-pyconnector/java/config/P12/acc/")    
         self.config_validator.setProperty("endpoint.sts", sts_endpoint)
         self.config_validator.setProperty("environment", environment)
-        self.config_validator.setProperty("KEYSTORE_DIR", keystore_dir)
-        self.config_validator.setProperty("CAKEYSTORE_PASSWORD", cakeystore_password)
-        self.config_validator.setProperty("CAKEYSTORE_LOCATION", cakyestore_location)       
-        
+        # self.config_validator.setProperty("CAKEYSTORE_PASSWORD", cakeystore_password)
+        # self.config_validator.setProperty("CAKEYSTORE_LOCATION", cakyestore_location)       
+
+
     def _build_designators_physiotherapy(self) -> Any:
 
         designators = self.EHEALTH_JVM.createAttributeDesignatorList()
@@ -116,10 +120,20 @@ class STSService(AbstractSTSService):
                 raise e
 
     def get_token(self, path: str, pwd: str, ssin: str, quality: str = "physiotherapy") -> str:
+        keystore_dir = self.config_validator.getProperty("KEYSTORE_DIR")
+        # remove leading slash to avoid treating keystore_dir as absolute
+        # if keystore_dir.startswith("/"):
+        #     keystore_dir = keystore_dir[1:]
+
+        cert_filename = Path(path).name
+        target_path = Path(keystore_dir).joinpath(cert_filename)
+        logger.info(f"Moving certificate {path} to {target_path}")
+        shutil.copyfile(path, target_path)
+
         designators = self.build_designators(quality)
         attributes = self.build_saml_attributes(ssin, quality)
-        authentication = self.create_service(path, pwd, "authentication")
-        service = self.create_service(path, pwd, "authentication")
+        authentication = self.create_service(cert_filename, pwd, "authentication")
+        service = self.create_service(cert_filename, pwd, "authentication")
         
         try:
             return self.GATEWAY.jvm.be.ehealth.technicalconnector.service.sts.STSServiceFactory.getInstance().getToken(authentication, service, attributes, designators, self.HOK_METHOD, 24)
@@ -166,10 +180,16 @@ class STSService(AbstractSTSService):
         service = self.GATEWAY.jvm.be.ehealth.technicalconnector.service.sts.security.impl.KeyStoreCredential(path, "authentication", pwd)
         token = self.GATEWAY.jvm.be.ehealth.technicalconnector.service.sts.SAMLTokenFactory.getInstance().createSamlToken(assertion, service)
         sessionmgmt = self.GATEWAY.jvm.be.ehealth.technicalconnector.session.Session.getInstance()
-        sessionmgmt.loadSession(token, pwd)
+
+        self.config_validator.setProperty("sessionmanager.holderofkey.keystore", path)
+        self.config_validator.setProperty("sessionmanager.encryption.keystore", path)
+        self.config_validator.setProperty("sessionmanager.identification.keystore", path)
+
+        sessionmgmt.loadSession(token, pwd, pwd)
+
         try:
             self.GATEWAY.jvm.org.junit.Assert.assertNotNull(token)
             self.GATEWAY.jvm.org.junit.Assert.assertEquals(True, sessionmgmt.hasValidSession())
-            yield None
+            yield sessionmgmt
         finally:
             sessionmgmt.unloadSession()

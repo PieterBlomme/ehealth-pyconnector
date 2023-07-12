@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Bundle xmlns="http://hl7.org/fhir">
+  <id value="ex01"/>
+  <meta>
+    <profile value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementdemand"/>
+  </meta>
+  <type value="message"/>
+  <timestamp value="2015-07-14T11:15:33+02:00"/>
+  <entry>
+    <fullUrl value="urn:uuid:267b18ce-3d37-4581-9baa-6fada338038b"/>
+    <resource>
+      <MessageHeader>
+        <id value="267b18ce-3d37-4581-9baa-6fada338038b"/>
+        <meta>
+          <profile value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-messageheader"/>
+        </meta>
+        <text>
+          <status value="generated"/><div xmlns="http://www.w3.org/1999/xhtml"><p><b>Generated Narrative: MessageHeader</b><a name="267b18ce-3d37-4581-9baa-6fada338038b"> </a></p><div style="display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%"><p style="margin-bottom: 0px">Resource MessageHeader &quot;267b18ce-3d37-4581-9baa-6fada338038b&quot; </p><p style="margin-bottom: 0px">Profile: <a href="StructureDefinition-be-messageheader.html">MyCareNet MessageHeader BE profile</a></p></div><p><b>event</b>: claim-ask (Details: https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/message-events code claim-ask = 'claim-ask', stated as 'null')</p><h3>Destinations</h3><table class="grid"><tr><td>-</td><td><b>Name</b></td><td><b>Endpoint</b></td></tr><tr><td>*</td><td>MyCareNet</td><td><code>MyCareNet</code></td></tr></table><p><b>sender</b>: <a href="#Organization_Organization1">See above (Organization/Organization1)</a></p><h3>Sources</h3><table class="grid"><tr><td>-</td><td><b>Endpoint</b></td></tr><tr><td>*</td><td><code>urn:uuid:e2c6f73a-74d8-40f2-af0b-a61ad20c53d4</code></td></tr></table><p><b>focus</b>: <a href="#Claim_Claim1">See above (Claim/Claim1)</a></p></div>
+        </text>
+        <eventCoding>
+          <system value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/message-events"/>
+          <code value="claim-ask"/>
+        </eventCoding>
+        <destination>
+          <name value="MyCareNet"/>
+          <endpoint value="MyCareNet"/>
+        </destination>
+        <sender>
+          <reference value="Organization/Organization1"/>
+        </sender>
+        <source>
+          <endpoint value="urn:uuid:e2c6f73a-74d8-40f2-af0b-a61ad20c53d4"/>
+        </source>
+        <focus>
+          <reference value="Claim/Claim1"/>
+        </focus>
+      </MessageHeader>
+    </resource>
+  </entry>
+  <entry>
+    <fullUrl value="urn:uuid:e2c6f73a-74d8-40f2-af0b-a61ad20c53d4"/>
+    <resource>
+      <Organization>
+        <id value="Organization1"/>
+        <meta>
+          <profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-organization"/>
+        </meta>
+        <text>
+          <status value="generated"/><div xmlns="http://www.w3.org/1999/xhtml"><p><b>Generated Narrative: Organization</b><a name="Organization1"> </a></p><div style="display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%"><p style="margin-bottom: 0px">Resource Organization &quot;Organization1&quot; </p><p style="margin-bottom: 0px">Profile: <a href="https://www.ehealth.fgov.be/standards/fhir/core/2.0.0/StructureDefinition-be-organization.html">Organisation core BE profile</a></p></div><p><b>identifier</b>: id: 71000436000</p><p><b>type</b>: hospital <span style="background: LightGoldenRodYellow; margin: 4px; border: 1px solid khaki"> (<a href="https://www.ehealth.fgov.be/standards/fhir/core/2.0.0/CodeSystem-cd-hcparty.html">HCParty</a>#orghospital)</span></p></div>
+        </text>
+        <identifier>
+          <system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi"/>
+          <value value="71000436000"/>
+        </identifier>
+        <type>
+          <coding>
+            <system value="https://www.ehealth.fgov.be/standards/fhir/core/CodeSystem/cd-hcparty"/>
+            <code value="orghospital"/>
+          </coding>
+        </type>
+      </Organization>
+    </resource>
+  </entry>
+  <entry>
+    <fullUrl value="urn:uuid:62c7bfad-0cb3-4a39-9abb-3a62e06de834"/>
+    <resource>
+      <PractitionerRole>
+        <id value="PractitionerRole1"/>
+        <meta>
+          <profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitionerrole"/>
+        </meta>
+        <text>
+          <status value="generated"/><div xmlns="http://www.w3.org/1999/xhtml"><p><b>Generated Narrative: PractitionerRole</b><a name="PractitionerRole1"> </a></p><div style="display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%"><p style="margin-bottom: 0px">Resource PractitionerRole &quot;PractitionerRole1&quot; </p><p style="margin-bottom: 0px">Profile: <a href="https://www.ehealth.fgov.be/standards/fhir/core/2.0.0/StructureDefinition-be-practitionerrole.html">Practitioner role core BE profile</a></p></div><p><b>practitioner</b>: <a href="#Practitioner_Practitioner1">See above (Practitioner/Practitioner1)</a></p><p><b>code</b>: physiotherapist <span style="background: LightGoldenRodYellow; margin: 4px; border: 1px solid khaki"> (<a href="https://www.ehealth.fgov.be/standards/fhir/core/2.0.0/CodeSystem-cd-hcparty.html">HCParty</a>#persphysiotherapist)</span></p></div>
+        </text>
+        <practitioner>
+          <reference value="Practitioner/Practitioner1"/>
+        </practitioner>
+        <code>
+          <coding>
+            <system value="https://www.ehealth.fgov.be/standards/fhir/core/CodeSystem/cd-hcparty"/>
+            <code value="persphysiotherapist"/>
+          </coding>
+        </code>
+      </PractitionerRole>
+    </resource>
+  </entry>
+  <entry>
+    <fullUrl value="urn:uuid:03972cc4-d781-4285-8d79-0f05810e1931"/>
+    <resource>
+      <Practitioner>
+        <id value="Practitioner1"/>
+        <meta>
+          <profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitioner"/>
+        </meta>
+        <text>
+          <status value="generated"/><div xmlns="http://www.w3.org/1999/xhtml"><p><b>Generated Narrative: Practitioner</b><a name="Practitioner1"> </a></p><div style="display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%"><p style="margin-bottom: 0px">Resource Practitioner &quot;Practitioner1&quot; </p><p style="margin-bottom: 0px">Profile: <a href="https://www.ehealth.fgov.be/standards/fhir/core/2.0.0/StructureDefinition-be-practitioner.html">Practitioner core BE profile</a></p></div><p><b>identifier</b>: id: 54263481527</p><p><b>name</b>: John Smith </p></div>
+        </text>
+        <identifier>
+          <system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi"/>
+          <value value="54263481527"/>
+        </identifier>
+        <name>
+          <family value="Smith"/>
+          <given value="John"/>
+        </name>
+      </Practitioner>
+    </resource>
+  </entry>
+  <entry>
+    <fullUrl value="urn:uuid:a52efcb6-1f81-4333-a115-d45bd3183686"/>
+    <resource>
+      <Patient>
+        <id value="Patient1"/>
+        <meta>
+          <profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-patient"/>
+        </meta>
+        <text>
+          <status value="generated"/><div xmlns="http://www.w3.org/1999/xhtml"><p><b>Generated Narrative: Patient</b><a name="Patient1"> </a></p><div style="display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%"><p style="margin-bottom: 0px">Resource Patient &quot;Patient1&quot; </p><p style="margin-bottom: 0px">Profile: <a href="https://www.ehealth.fgov.be/standards/fhir/core/2.0.0/StructureDefinition-be-patient.html">Patient core BE profile</a></p></div><p><b>identifier</b>: id: n° inscription mutualiste</p><p><b>name</b>: Jean Dupont </p><p><b>gender</b>: male</p></div>
+        </text>
+        <identifier>
+          <system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/insurancymembership"/>
+          <value value="n° inscription mutualiste"/>
+          <assigner>
+            <identifier>
+              <system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/insurancenumber"/>
+              <value value="n° mutualité"/>
+            </identifier>
+          </assigner>
+        </identifier>
+        <name>
+          <family value="Dupont"/>
+          <given value="Jean"/>
+        </name>
+        <gender value="male"/>
+      </Patient>
+    </resource>
+  </entry>
+  <entry>
+    <fullUrl value="urn:uuid:035e3de4-011f-48a4-92c9-15b2bbcec321"/>
+    <resource>
+      <PractitionerRole>
+        <id value="PractitionerRole2"/>
+        <meta>
+          <profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitionerrole"/>
+        </meta>
+        <text>
+          <status value="generated"/><div xmlns="http://www.w3.org/1999/xhtml"><p><b>Generated Narrative: PractitionerRole</b><a name="PractitionerRole2"> </a></p><div style="display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%"><p style="margin-bottom: 0px">Resource PractitionerRole &quot;PractitionerRole2&quot; </p><p style="margin-bottom: 0px">Profile: <a href="https://www.ehealth.fgov.be/standards/fhir/core/2.0.0/StructureDefinition-be-practitionerrole.html">Practitioner role core BE profile</a></p></div><p><b>practitioner</b>: <a href="#Practitioner_Practitioner2">See above (Practitioner/Practitioner2)</a></p><p><b>code</b>: physician <span style="background: LightGoldenRodYellow; margin: 4px; border: 1px solid khaki"> (<a href="https://www.ehealth.fgov.be/standards/fhir/core/2.0.0/CodeSystem-cd-hcparty.html">HCParty</a>#persphysician)</span></p></div>
+        </text>
+        <practitioner>
+          <reference value="Practitioner/Practitioner2"/>
+        </practitioner>
+        <code>
+          <coding>
+            <system value="https://www.ehealth.fgov.be/standards/fhir/core/CodeSystem/cd-hcparty"/>
+            <code value="persphysician"/>
+          </coding>
+        </code>
+      </PractitionerRole>
+    </resource>
+  </entry>
+  <entry>
+    <fullUrl value="urn:uuid:8fc72085-d349-4bd7-ba84-91a935a4e3c6"/>
+    <resource>
+      <Practitioner>
+        <id value="Practitioner2"/>
+        <meta>
+          <profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitioner"/>
+        </meta>
+        <text>
+          <status value="generated"/><div xmlns="http://www.w3.org/1999/xhtml"><p><b>Generated Narrative: Practitioner</b><a name="Practitioner2"> </a></p><div style="display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%"><p style="margin-bottom: 0px">Resource Practitioner &quot;Practitioner2&quot; </p><p style="margin-bottom: 0px">Profile: <a href="https://www.ehealth.fgov.be/standards/fhir/core/2.0.0/StructureDefinition-be-practitioner.html">Practitioner core BE profile</a></p></div><p><b>identifier</b>: id: 19234011004</p><p><b>name</b>: Prénom du prescripteur Nom du prescripteur </p></div>
+        </text>
+        <identifier>
+          <system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi"/>
+          <value value="19234011004"/>
+        </identifier>
+        <name>
+          <family value="Nom du prescripteur"/>
+          <given value="Prénom du prescripteur"/>
+        </name>
+      </Practitioner>
+    </resource>
+  </entry>
+  <entry>
+    <fullUrl value="urn:uuid:b3586cda-f1e5-4c58-a389-94249957d87a"/>
+    <resource>
+      <ServiceRequest>
+        <id value="ServiceRequest1"/>
+        <meta>
+          <profile value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementservicerequest"/>
+        </meta>
+        <text>
+          <status value="generated"/><div xmlns="http://www.w3.org/1999/xhtml"><p><b>Generated Narrative: ServiceRequest</b><a name="ServiceRequest1"> </a></p><div style="display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%"><p style="margin-bottom: 0px">Resource ServiceRequest &quot;ServiceRequest1&quot; </p><p style="margin-bottom: 0px">Profile: <a href="StructureDefinition-be-eagreementservicerequest.html">MyCareNet eAgreement ServiceRequest BE profile</a></p></div><p><b>status</b>: active</p><p><b>intent</b>: order</p><p><b>category</b>: Physical therapy procedure <span style="background: LightGoldenRodYellow; margin: 4px; border: 1px solid khaki"> (<a href="https://browser.ihtsdotools.org/">SNOMED CT</a>#91251008)</span></p><p><b>code</b>: Physical therapy procedure <span style="background: LightGoldenRodYellow; margin: 4px; border: 1px solid khaki"> (<a href="https://browser.ihtsdotools.org/">SNOMED CT</a>#91251008)</span></p><p><b>quantity</b>: 15</p><p><b>subject</b>: <a href="#Patient_Patient1">See above (Patient/Patient1)</a></p><p><b>authoredOn</b>: 2015-07-10</p><p><b>requester</b>: <a href="#PractitionerRole_PractitionerRole2">See above (PractitionerRole/PractitionerRole2)</a></p><p><b>supportingInfo</b>: <a name="annexSR1"> </a></p><blockquote><p/><p><a name="annexSR1"> </a></p><p><b>contentType</b>: application/pdf</p><p><b>data</b>: QW5uZXhlIGlubGluZSwgYmFzZTY0ZWQ=</p></blockquote><hr/><blockquote><p><b>Generated Narrative: Binary #annexSR1</b><a name="annexSR1"> </a></p><p><b>contentType</b>: application/pdf</p><p><b>data</b>: QW5uZXhlIGlubGluZSwgYmFzZTY0ZWQ=</p></blockquote></div>
+        </text>
+        <contained>
+          <Binary>
+            <id value="annexSR1"/>
+            <contentType value="application/pdf"/>
+            <data value="QW5uZXhlIGlubGluZSwgYmFzZTY0ZWQ="/>
+          </Binary>
+        </contained>
+        <status value="active"/>
+        <intent value="order"/>
+        <category>
+          <coding>
+            <system value="http://snomed.info/sct"/>
+            <code value="91251008"/>
+            <display value="Physical therapy procedure"/>
+          </coding>
+        </category>
+        <code>
+          <coding>
+            <system value="http://snomed.info/sct"/>
+            <code value="91251008"/>
+            <display value="Physical therapy procedure"/>
+          </coding>
+        </code>
+        <quantityQuantity>
+          <value value="15"/>
+        </quantityQuantity>
+        <subject>
+          <reference value="Patient/Patient1"/>
+        </subject>
+        <authoredOn value="2015-07-10"/>
+        <requester>
+          <reference value="PractitionerRole/PractitionerRole2"/>
+        </requester>
+        <supportingInfo>
+          <reference value="#annexSR1"/>
+        </supportingInfo>
+      </ServiceRequest>
+    </resource>
+  </entry>
+  <entry>
+    <fullUrl value="urn:uuid:3b8e1245-b480-4af6-90c0-f67037ef276b"/>
+    <resource>
+      <ServiceRequest>
+        <id value="ServiceRequest2"/>
+        <meta>
+          <profile value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementservicerequest"/>
+        </meta>
+        <text>
+          <status value="generated"/><div xmlns="http://www.w3.org/1999/xhtml"><p><b>Generated Narrative: ServiceRequest</b><a name="ServiceRequest2"> </a></p><div style="display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%"><p style="margin-bottom: 0px">Resource ServiceRequest &quot;ServiceRequest2&quot; </p><p style="margin-bottom: 0px">Profile: <a href="StructureDefinition-be-eagreementservicerequest.html">MyCareNet eAgreement ServiceRequest BE profile</a></p></div><p><b>identifier</b>: id: n° de la prescription</p><p><b>status</b>: active</p><p><b>intent</b>: order</p><p><b>subject</b>: <a href="#Patient_Patient1">See above (Patient/Patient1)</a></p><p><b>requester</b>: <a href="#PractitionerRole_PractitionerRole2">See above (PractitionerRole/PractitionerRole2)</a></p></div>
+        </text>
+        <identifier>
+          <system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/uhmep"/>
+          <value value="n° de la prescription"/>
+        </identifier>
+        <status value="active"/>
+        <intent value="order"/>
+        <subject>
+          <reference value="Patient/Patient1"/>
+        </subject>
+        <requester>
+          <reference value="PractitionerRole/PractitionerRole2"/>
+        </requester>
+      </ServiceRequest>
+    </resource>
+  </entry>
+  <entry>
+    <fullUrl value="urn:uuid:e85173bc-6f0d-480b-a2cd-2b70d9ffff7a"/>
+    <resource>
+      <Claim>
+        <id value="Claim1"/>
+        <meta>
+          <profile value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementclaim-kine"/>
+        </meta>
+        <text>
+          <status value="generated"/><div xmlns="http://www.w3.org/1999/xhtml"><p><b>Generated Narrative: Claim</b><a name="Claim1"> </a></p><div style="display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%"><p style="margin-bottom: 0px">Resource Claim &quot;Claim1&quot; </p><p style="margin-bottom: 0px">Profile: <a href="StructureDefinition-be-eagreementclaim-kine.html">MyCareNet eAgreement Claim Kine BE profile</a></p></div><p><b>status</b>: active</p><p><b>type</b>: Professional <span style="background: LightGoldenRodYellow; margin: 4px; border: 1px solid khaki"> (<a href="http://terminology.hl7.org/5.0.0/CodeSystem-claim-type.html">Claim Type Codes</a>#professional)</span></p><p><b>subType</b>: physiotherapy-fb <span style="background: LightGoldenRodYellow; margin: 4px; border: 1px solid khaki"> (<a href="CodeSystem-agreement-types.html">CodeSystem agreement types</a>#physiotherapy-fb)</span></p><p><b>use</b>: preauthorization</p><p><b>patient</b>: <a href="#Patient_Patient1">See above (Patient/Patient1)</a></p><p><b>billablePeriod</b>: 2020-01-15 --&gt; (ongoing)</p><p><b>created</b>: 2015-07-14 11:15:30+0200</p><p><b>enterer</b>: <a href="#PractitionerRole_PractitionerRole1">See above (PractitionerRole/PractitionerRole1)</a></p><p><b>provider</b>: <a href="#PractitionerRole_PractitionerRole1">See above (PractitionerRole/PractitionerRole1)</a></p><p><b>priority</b>: Immediate <span style="background: LightGoldenRodYellow; margin: 4px; border: 1px solid khaki"> (<a href="http://terminology.hl7.org/5.0.0/CodeSystem-processpriority.html">Process Priority Codes</a>#stat)</span></p><p><b>referral</b>: <a href="#ServiceRequest_ServiceRequest1">See above (ServiceRequest/ServiceRequest1)</a></p><blockquote><p><b>supportingInfo</b></p><p><b>sequence</b>: 1</p><p><b>category</b>: Attachment <span style="background: LightGoldenRodYellow; margin: 4px; border: 1px solid khaki"> (<a href="http://terminology.hl7.org/5.0.0/CodeSystem-claiminformationcategory.html">Claim Information Category Codes</a>#attachment)</span></p><p><b>code</b>: functional-report <span style="background: LightGoldenRodYellow; margin: 4px; border: 1px solid khaki"> (<a href="CodeSystem-annex-types.html">CodeSystem annex types</a>#functional-report)</span></p><p><b>value</b>: </p></blockquote><blockquote><p><b>supportingInfo</b></p><p><b>sequence</b>: 2</p><p><b>category</b>: Information <span style="background: LightGoldenRodYellow; margin: 4px; border: 1px solid khaki"> (<a href="http://terminology.hl7.org/5.0.0/CodeSystem-claiminformationcategory.html">Claim Information Category Codes</a>#info)</span></p><p><b>value</b>: additional Information</p></blockquote><blockquote><p><b>supportingInfo</b></p><p><b>sequence</b>: 3</p><p><b>category</b>: Information <span style="background: LightGoldenRodYellow; margin: 4px; border: 1px solid khaki"> (<a href="http://terminology.hl7.org/5.0.0/CodeSystem-claiminformationcategory.html">Claim Information Category Codes</a>#info)</span></p><p><b>value</b>: <a href="#ServiceRequest_ServiceRequest2">See above (ServiceRequest/ServiceRequest2)</a></p></blockquote><h3>Insurances</h3><table class="grid"><tr><td>-</td><td><b>Sequence</b></td><td><b>Focal</b></td><td><b>Coverage</b></td></tr><tr><td>*</td><td>1</td><td>true</td><td><span>: use of mandatory insurance coverage, no further details provided here.</span></td></tr></table><h3>Items</h3><table class="grid"><tr><td>-</td><td><b>Sequence</b></td><td><b>ProductOrService</b></td><td><b>Serviced[x]</b></td></tr><tr><td>*</td><td>1</td><td>fb-51 <span style="background: LightGoldenRodYellow; margin: 4px; border: 1px solid khaki"> (<a href="CodeSystem-nihdi-physiotherapy-pathologysituationcode.html">CodeSystem NIHDIPhysiotherapyPathology</a>#fb-51)</span></td><td>2020-01-14</td></tr></table></div>
+        </text>
+        <status value="active"/>
+        <type>
+          <coding>
+            <system value="http://terminology.hl7.org/CodeSystem/claim-type"/>
+            <code value="professional"/>
+          </coding>
+        </type>
+        <subType>
+          <coding>
+            <system value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/agreement-types"/>
+            <code value="physiotherapy-fb"/>
+          </coding>
+        </subType>
+        <use value="preauthorization"/>
+        <patient>
+          <reference value="Patient/Patient1"/>
+        </patient>
+        <billablePeriod>
+          <start value="2020-01-15"/>
+        </billablePeriod>
+        <created value="2015-07-14T11:15:30+02:00"/>
+        <enterer>
+          <reference value="PractitionerRole/PractitionerRole1"/>
+        </enterer>
+        <provider>
+          <reference value="PractitionerRole/PractitionerRole1"/>
+        </provider>
+        <priority>
+          <coding>
+            <system value="http://terminology.hl7.org/CodeSystem/processpriority"/>
+            <code value="stat"/>
+          </coding>
+        </priority>
+        <referral>
+          <reference value="ServiceRequest/ServiceRequest1"/>
+        </referral>
+        <supportingInfo>
+          <sequence value="1"/>
+          <category>
+            <coding>
+              <system value="http://terminology.hl7.org/CodeSystem/claiminformationcategory"/>
+              <code value="attachment"/>
+            </coding>
+          </category>
+          <code>
+            <coding>
+              <system value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/annex-types"/>
+              <code value="functional-report"/>
+            </coding>
+          </code>
+          <valueAttachment>
+            <contentType value="application/pdf"/>
+            <data value="QW5uZXhlIGlubGluZSwgYmFzZTY0ZWQ="/>
+            <title value="nom/description de l'annexe"/>
+          </valueAttachment>
+        </supportingInfo>
+        <supportingInfo>
+          <sequence value="2"/>
+          <category>
+            <coding>
+              <system value="http://terminology.hl7.org/CodeSystem/claiminformationcategory"/>
+              <code value="info"/>
+            </coding>
+          </category>
+          <valueString value="additional Information"/>
+        </supportingInfo>
+        <supportingInfo>
+          <sequence value="3"/>
+          <category>
+            <coding>
+              <system value="http://terminology.hl7.org/CodeSystem/claiminformationcategory"/>
+              <code value="info"/>
+            </coding>
+          </category>
+          <valueReference>
+            <reference value="ServiceRequest/ServiceRequest2"/>
+          </valueReference>
+        </supportingInfo>
+        <insurance>
+          <sequence value="1"/>
+          <focal value="true"/>
+          <coverage>
+            <display value="use of mandatory insurance coverage, no further details provided here."/>
+          </coverage>
+        </insurance>
+        <item>
+          <sequence value="1"/>
+          <productOrService>
+            <coding>
+              <system value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/nihdi-physiotherapy-pathologysituationcode"/>
+              <code value="fb-51"/>
+            </coding>
+          </productOrService>
+          <servicedDate value="2020-01-14"/>
+        </item>
+      </Claim>
+    </resource>
+  </entry>
+</Bundle>
