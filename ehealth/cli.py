@@ -44,12 +44,23 @@ def get_classpath():
     print(f"Using Java CLASSPATH={CLASSPATH}")
     return CLASSPATH
 
+def generate_properties_file():
+    print("Copying be.ehealth.technicalconnector.properties")
+    shutil.copy(f"{PACKAGE_ROOT}/java/config/be.ehealth.technicalconnector.properties", f"{PACKAGE_ROOT}/be.ehealth.technicalconnector.properties")
+    print(f"Fixing KEYSTORE_DIR to {PACKAGE_ROOT}/java/config/P12/${{environment}}/")
+    with open(f"{PACKAGE_ROOT}/be.ehealth.technicalconnector.properties") as f:
+        props = f.read()
+    props = props.replace("KEYSTORE_DIR=/P12/${environment}/", f"KEYSTORE_DIR={PACKAGE_ROOT}/java/config/P12/${{environment}}/")
+    with open(f"{PACKAGE_ROOT}/be.ehealth.technicalconnector.properties", "w") as f:
+        f.write(props)
+        
 @click.command()
 def compile_bridge():
     CLASSPATH = get_classpath()
     cmd = f"javac -cp '{CLASSPATH}' {PACKAGE_ROOT}/JavaGateway.java"
     print(cmd)
     os.system(cmd)
+    generate_properties_file()
 
 def launch_bridge():
     CLASSPATH = get_classpath()
