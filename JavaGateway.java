@@ -19,7 +19,6 @@ public class JavaGateway {
     JavaGateway app = new JavaGateway();
     // app is now the gateway.entry_point
     GatewayServer server = new GatewayServer(app);
-    ConfigFactory.setConfigLocation("/home/pieter/repos/ehealth-pyconnector/java/config/be.ehealth.technicalconnector.properties");
     System.out.println("Started");
     server.start();
   }

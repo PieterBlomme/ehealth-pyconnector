@@ -110,8 +110,9 @@ class EAgreementService(AbstractEAgreementService):
         
         serviceResponse = service.askAgreement(requestBuilder.getRequest())
         response = responseBuilder.handleAskAgreementResponse(serviceResponse, requestBuilder)
-        signVerifResult = response.getSignatureVerificationResult().getErrors().iterator()
-        logger.info(signVerifResult.next())
-        # logger.info(response.getRawDecryptedBlob().toString())
+        signVerifResult = response.getSignatureVerificationResult()
+        for entry in signVerifResult.getErrors():
+            self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
+                  entry.getValue().isValid())
         logger.info(self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8"))
         return ""

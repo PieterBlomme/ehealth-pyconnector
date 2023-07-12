@@ -52,6 +52,6 @@ def test_eagreement__ask_agreement__happy_path(sts_service, token, eagreement_se
         response = eagreement_service.ask_agreement(
             token=token,
             # bundleLocation=str(TEST_DATA_FOLDER.joinpath('AskAgreementRequestContent.xml'))
-            bundleLocation=str(TEST_DATA_FOLDER.joinpath('Bundle-ex01.xml'))
+            bundleLocation=str(TEST_DATA_FOLDER.joinpath('AskAgreementRequestContent.xml'))
         )
         logger.info(response)

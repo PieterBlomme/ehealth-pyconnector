@@ -115,20 +115,10 @@ class STSService(AbstractSTSService):
                 raise e
 
     def get_token(self, path: str, pwd: str, ssin: str, quality: str = "physiotherapy") -> str:
-        keystore_dir = self.config_validator.getProperty("KEYSTORE_DIR")
-        # remove leading slash to avoid treating keystore_dir as absolute
-        # if keystore_dir.startswith("/"):
-        #     keystore_dir = keystore_dir[1:]
-
-        cert_filename = Path(path).name
-        target_path = Path(keystore_dir).joinpath(cert_filename)
-        logger.info(f"Moving certificate {path} to {target_path}")
-        shutil.copyfile(path, target_path)
-
         designators = self.build_designators(quality)
         attributes = self.build_saml_attributes(ssin, quality)
-        authentication = self.create_service(cert_filename, pwd, "authentication")
-        service = self.create_service(cert_filename, pwd, "authentication")
+        authentication = self.create_service(path, pwd, "authentication")
+        service = self.create_service(path, pwd, "authentication")
         
         try:
             return self.GATEWAY.jvm.be.ehealth.technicalconnector.service.sts.STSServiceFactory.getInstance().getToken(authentication, service, attributes, designators, self.HOK_METHOD, 24)
