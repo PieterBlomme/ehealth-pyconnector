@@ -15,7 +15,7 @@ jobs:
           curl -sSL https://install.python-poetry.org | python3 -
           poetry install
           poetry run download-packages
-          poetry run compile-bridge --disable-trustchain-check
+          poetry run compile-bridge
           poetry run launch-bridge &
           sleep 15
           poetry run pytest tests/ --log-cli-level=INFO
