@@ -161,6 +161,6 @@ cython_debug/
 
 # java libs
 java
-bridge
+decompiled
+be.ehealth.technicalconnector.properties
 *.class
-decompiled/
