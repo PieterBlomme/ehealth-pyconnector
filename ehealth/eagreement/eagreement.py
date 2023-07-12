@@ -9,6 +9,11 @@ from io import StringIO
 from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDateTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
+from .bundle import (
+    Bundle, Entry, FullUrl, Resource, MessageHeader, MetaType, Profile, Timestamp,
+    EventCoding, Destination, Sender, Source, Focus, System, Code, Endpoint,
+    Reference, Organization, Id, Identifier, TypeType, Value, Coding
+)
 
 logger = logging.getLogger(__name__)
 
@@ -75,19 +80,81 @@ class EAgreementService(AbstractEAgreementService):
         self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
         self.config_validator.setProperty("endpoint.etk", etk_endpoint)
 
+    def render_bundle(
+        self
+        ):
+        id_ = str(uuid.uuid4())
+        id2_ = str(uuid.uuid4())
+        now = datetime.datetime.now()
+
+        message_header = Entry(
+                    full_url=FullUrl("urn:uuid:MessageHeader"),
+                    resource=Resource(
+                        message_header=MessageHeader(
+                            id=Id(id2_),
+                            meta=MetaType(Profile("http://www.mycarenet.be/standards/fhir/StructureDefinition/be-messageheader")),
+                            event_coding=EventCoding(
+                                system=System("http://www.mycarenet.be/fhir/CodeSystem/message-events"),
+                                code=Code("claim-ask")
+                            ),
+                            source=Source(Endpoint("urn:uuid:Organization1")),
+                            sender=Sender(Reference("Organization/Organization1")),
+                            focus=Focus(Reference("Claim/Claim1")),            
+                        )
+                    )
+                )
+        
+        organization = Entry(
+                    full_url=FullUrl("urn:uuid:Organization1"),
+                    resource=Resource(
+                        organization=Organization(
+                            id=Id("Organization1"),
+                            meta=MetaType(Profile("http://www.mycarenet.be/standards/fhir/StructureDefinition/be-organization")),
+                            identifier=Identifier(
+                                system=System("https://www.ehealth.fgov.be/standards/fhir/NamingSystem/nihdi"),
+                                value=Value("71000436000")
+                            ),
+                            type=TypeType(
+                                EventCoding(
+                                    system=System("https://www.ehealth.fgov.be/standards/fhir/CodeSystem/cd-hcparty"),
+                                    code=Code(value="orghospital")
+                                )
+                            )
+                        )
+                    )
+                )
+        
+        bundle = Bundle(
+            id=Id(id_),
+            timestamp=Timestamp(XmlDateTime.from_datetime(now)),
+            type=TypeType(value="message"),
+            entry=[
+                message_header,
+                organization,
+            ]
+        )
+        
+        serializer = XmlSerializer()
+        serializer.config.pretty_print = True
+        serializer.config.xml_declaration = True
+        ns_map = {
+            "samlp": "urn:oasis:names:tc:SAML:2.0:protocol",
+            "saml": "urn:oasis:names:tc:SAML:2.0:assertion",
+            "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+            "ext": "urn:be:cin:nippin:memberdata:saml:extension"
+        }
+        return serializer.render(bundle, ns_map), id_
+    
     def ask_agreement(
         self, 
         token: str,
         bundleLocation: str,
         patientNiss: str = "72070539942"
         ) -> str:
-        logger.info(bundleLocation)
-        nihii = self.set_configuration_from_token(token)
-        
-        service = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.session.AgreementSessionServiceFactory.getAgreementService()
+        template, id_ = self.render_bundle()
         responseBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder()
 
-        id = "01-KIN-EMEHS"
+        logger.info(template)
         with open(bundleLocation, "rb") as f:
             bundle = f.read()
         # bundle = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorIOUtils.getResourceAsString(bundleLocation).getBytes(
@@ -99,17 +166,20 @@ class EAgreementService(AbstractEAgreementService):
         patientInfo.setInss(patientNiss)
 
         # input reference and AttributeQuery ID must match
-        inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(id)
-        requestBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildAskAgreementRequest(
+        inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(id_)
+        askRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildAskAgreementRequest(
             self.is_test, 
             inputReference, 
             patientInfo, 
             self.GATEWAY.jvm.org.joda.time.DateTime(), 
             bundle
             )
-        
-        serviceResponse = service.askAgreement(requestBuilder.getRequest())
-        response = responseBuilder.handleAskAgreementResponse(serviceResponse, requestBuilder)
+        raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(askRequest)
+        # logger.info(raw_request)
+
+        service = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.session.AgreementSessionServiceFactory.getAgreementService()
+        serviceResponse = service.askAgreement(askRequest.getRequest())
+        response = responseBuilder.handleAskAgreementResponse(serviceResponse, askRequest)
         signVerifResult = response.getSignatureVerificationResult()
         for entry in signVerifResult.getErrors():
             self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
