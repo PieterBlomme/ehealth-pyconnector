@@ -52,7 +52,7 @@ class Created:
         name = "created"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[XmlDateTime] = field(
+    value: Optional[str] = field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -304,7 +304,7 @@ class Timestamp:
         name = "timestamp"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[XmlDateTime] = field(
+    value: Optional[str] = field(
         default=None,
         metadata={
             "type": "Attribute",
