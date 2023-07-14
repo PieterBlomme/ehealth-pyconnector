@@ -12,7 +12,11 @@ from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from .bundle import (
     Bundle, Entry, FullUrl, Resource, MessageHeader, MetaType, Profile, Timestamp,
     EventCoding, Destination, Sender, Source, Focus, System, Code, Endpoint,
-    Reference, Organization, Id, Identifier, TypeType, Value, Coding
+    Reference, Organization, Id, Identifier, TypeType, Value, Coding,
+    Practitioner2, PractitionerRole, Display, Practitioner1, Name,
+    Family, Given, NestedCode, Patient1, Gender, ServiceRequest,
+    Contained, Binary, ContentType, Data, Status, Intent,
+    Subject, Requester, SupportingInfo, Claim, SubType, Use
 )
 
 logger = logging.getLogger(__name__)
@@ -97,7 +101,7 @@ class EAgreementService(AbstractEAgreementService):
                                 system=System("http://www.mycarenet.be/fhir/CodeSystem/message-events"),
                                 code=Code("claim-ask")
                             ),
-                            source=Source(Endpoint("urn:uuid:Organization1")),
+                            source=Source(Endpoint("urn:uuid:e2c6f73a-74d8-40f2-af0b-a61ad20c53d4")),
                             sender=Sender(Reference("Organization/Organization1")),
                             focus=Focus(Reference("Claim/Claim1")),            
                         )
@@ -124,6 +128,161 @@ class EAgreementService(AbstractEAgreementService):
                     )
                 )
         
+        practitioner_role_physio = Entry(
+                    full_url=FullUrl("urn:uuid:PractitionerRole1"),
+                    resource=Resource(
+                        practitioner_role=PractitionerRole(
+                            id=Id("PractitionerRole1"),
+                            meta=MetaType(Profile("http://www.mycarenet.be/standards/fhir/StructureDefinition/be-practitionerrole")),
+                            practitioner=Practitioner2(
+                                Reference("Practitioner/Practitioner1")
+                            ),
+                            code=NestedCode(
+                                coding=Coding(
+                                    system=System("https://www.ehealth.fgov.be/standards/fhir/CodeSystem/cd-hcparty"),
+                                    code=Code("persphysiotherapist"),
+                                    display=Display("physiotherapist")
+                                )
+                            )
+                        ),
+                    )
+                )
+
+        practitioner_physio = Entry(
+                    full_url=FullUrl("urn:uuid:Practitioner1"),
+                    resource=Resource(
+                        practitioner=Practitioner1(
+                            id=Id("Practitioner1"),
+                            meta=MetaType(Profile("http://www.mycarenet.be/standards/fhir/StructureDefinition/be-practitioner")),
+                            practitioner=Practitioner2(
+                                Reference("Practitioner/Practitioner1")
+                            ),
+                            identifier=Identifier(
+                                system=System("https://www.ehealth.fgov.be/standards/fhir/NamingSystem/nihdi"),
+                                value=Value("54263481527")
+                            ),
+                            name=Name(
+                                family=Family("Smith"),
+                                given=Given("John")
+                            )
+                        ),
+                    )
+                )
+
+        patient = Entry(
+                    full_url=FullUrl("urn:uuid:Patient1"),
+                    resource=Resource(
+                        patient=Patient1(
+                            id=Id("Patient1"),
+                            meta=MetaType(Profile("http://www.mycarenet.be/standards/fhir/StructureDefinition/be-patient")),
+                            practitioner=Practitioner2(
+                                Reference("Practitioner/Practitioner1")
+                            ),
+                            identifier=Identifier(
+                                system=System("https://www.ehealth.fgov.be/standards/fhir/NamingSystem/ssin"),
+                                value=Value("73031805784")
+                            ),
+                            name=Name(
+                                family=Family("Dupont"),
+                                given=Given("Jean")
+                            ),
+                            gender=Gender("male")
+                        ),
+                    )
+                )
+        
+        practitioner_role_physician = Entry(
+                    full_url=FullUrl("urn:uuid:PractitionerRole2"),
+                    resource=Resource(
+                        practitioner_role=PractitionerRole(
+                            id=Id("PractitionerRole2"),
+                            meta=MetaType(Profile("http://www.mycarenet.be/standards/fhir/StructureDefinition/be-practitionerrole")),
+                            practitioner=Practitioner2(
+                                Reference("Practitioner/PractitionerRole2")
+                            ),
+                            code=NestedCode(
+                                coding=Coding(
+                                    system=System("https://www.ehealth.fgov.be/standards/fhir/CodeSystem/cd-hcparty"),
+                                    code=Code("persphysician"),
+                                    display=Display("physician")
+                                )
+                            )
+                        ),
+                    )
+                )
+
+        practitioner_physician = Entry(
+                    full_url=FullUrl("urn:uuid:Practitioner2"),
+                    resource=Resource(
+                        practitioner=Practitioner1(
+                            id=Id("Practitioner2"),
+                            meta=MetaType(Profile("http://www.mycarenet.be/standards/fhir/StructureDefinition/be-practitioner")),
+                            practitioner=Practitioner2(
+                                Reference("Practitioner/Practitioner2")
+                            ),
+                            identifier=Identifier(
+                                system=System("https://www.ehealth.fgov.be/standards/fhir/NamingSystem/nihdi"),
+                                value=Value("19234011004")
+                            ),
+                            name=Name(
+                                family=Family("Name"),
+                                given=Given("First name")
+                            )
+                        ),
+                    )
+                )
+
+        annex = Entry(
+                    full_url=FullUrl("urn:uuid:ServiceRequest1"),
+                    resource=Resource(
+                        service_request=ServiceRequest(
+                            id=Id("ServiceRequest1"),
+                            contained=Contained(
+                                binary=Binary(
+                                    id=Id("annexSR1"),
+                                    content_type=ContentType("application/pdf"),
+                                    data=Data("QW5uZXhlIGlubGluZSwgYmFzZTY0ZWQ=")
+                                )
+                            ),
+                            identifier=Identifier(
+                                system=System("https://www.ehealth.fgov.be/standards/fhir/NamingSystem/uhmep"),
+                                value=Value("n° de la prescription")
+                            ),
+                            status=Status("active"),
+                            intent=Intent("order"),
+                            subject=Subject(
+                                reference=Reference("Patient/Patient1")
+                            ),
+                            requester=Requester(Reference("PractitionerRole/PractitionerRole2")),
+                            supporting_info=SupportingInfo(reference=Reference("#annexSR1"))
+                        ),
+                    )
+                )
+
+        claim = Entry(
+                    full_url=FullUrl("urn:uuid:Claim1"),
+                    resource=Resource(
+                        claim=Claim(
+                            id=Id("Claim1"),
+                            meta=MetaType(Profile("http://www.mycarenet.be/standards/fhir/StructureDefinition/be-eagreementclaim")),
+                            status=Status("active"),
+                            type=TypeType(
+                                coding=EventCoding(
+                                    system=System("http://terminology.hl7.org/CodeSystem/claim-type"),
+                                    code=Code("professional"),
+                                )
+                            ),
+                            sub_type=SubType(
+                                coding=Coding(
+                                    system=System("http://www.mycarenet.be/fhir/CodeSystem/agreement-types"),
+                                    code=Code("physiotherapy-fb"),
+                                )
+                            ),
+                            use=Use("preauthorization"),
+                        ),
+                    )
+                )
+        
         bundle = Bundle(
             id=Id(id_),
             timestamp=Timestamp(XmlDateTime.from_datetime(now)),
@@ -131,17 +290,21 @@ class EAgreementService(AbstractEAgreementService):
             entry=[
                 message_header,
                 organization,
+                practitioner_role_physio,
+                practitioner_physio,
+                patient,
+                practitioner_role_physician,
+                practitioner_physician,
+                annex,
+                claim
             ]
         )
         
         serializer = XmlSerializer()
         serializer.config.pretty_print = True
-        serializer.config.xml_declaration = True
+        # serializer.config.xml_declaration = True
         ns_map = {
-            "samlp": "urn:oasis:names:tc:SAML:2.0:protocol",
-            "saml": "urn:oasis:names:tc:SAML:2.0:assertion",
-            "xsi": "http://www.w3.org/2001/XMLSchema-instance",
-            "ext": "urn:be:cin:nippin:memberdata:saml:extension"
+            "": "http://hl7.org/fhir"
         }
         return serializer.render(bundle, ns_map), id_
     
@@ -152,14 +315,15 @@ class EAgreementService(AbstractEAgreementService):
         patientNiss: str = "72070539942"
         ) -> str:
         template, id_ = self.render_bundle()
+        logger.info(template)
+        id_ = "01-KIN-EMEHS"
+
         responseBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder()
 
-        logger.info(template)
-        with open(bundleLocation, "rb") as f:
+        
+        with open("/home/pieter/repos/ehealth-pyconnector/tests/data/AskAgreementRequestContent.xml", "rb") as f:
             bundle = f.read()
-        # bundle = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorIOUtils.getResourceAsString(bundleLocation).getBytes(
-        #     self.GATEWAY.jvm.be.ehealth.technicalconnector.enumeration.Charset.UTF_8.getName()
-        #     )
+
         self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.dump(bundle)
 
         patientInfo = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient()

@@ -430,6 +430,18 @@ class BillablePeriod:
         }
     )
 
+@dataclass
+class Code:
+    class Meta:
+        name = "code"
+        namespace = "http://hl7.org/fhir"
+
+    value: Optional[Union[str, int]] = field(
+        default=None,
+        metadata={
+            "type": "Attribute",
+        }
+    )
 
 @dataclass
 class Coding:
@@ -456,6 +468,18 @@ class Coding:
         }
     )
 
+@dataclass
+class NestedCode:
+    class Meta:
+        name = "code"
+        namespace = "http://hl7.org/fhir"
+
+    coding: Optional[Coding] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+        }
+    )
 
 @dataclass
 class Coverage:
@@ -776,27 +800,6 @@ class Category:
             "type": "Element",
         }
     )
-
-
-@dataclass
-class Code:
-    class Meta:
-        name = "code"
-        namespace = "http://hl7.org/fhir"
-
-    value: Optional[Union[str, int]] = field(
-        default=None,
-        metadata={
-            "type": "Attribute",
-        }
-    )
-    coding: Optional[Coding] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-        }
-    )
-
 
 @dataclass
 class Contained:
@@ -1496,7 +1499,7 @@ class PractitionerRole:
             "type": "Element",
         }
     )
-    code: Optional[Code] = field(
+    code: Optional[NestedCode] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -1722,8 +1725,8 @@ class Bundle:
     id: Optional[Id] = field(
         default=None,
         metadata={
-            "name": "ID",
-            "type": "Attribute",
+            "name": "id",
+            "type": "Element",
         }
     )
     meta: Optional[MetaType] = field(
