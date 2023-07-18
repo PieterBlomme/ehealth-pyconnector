@@ -88,13 +88,10 @@ class EAgreementService(AbstractEAgreementService):
         self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
         self.config_validator.setProperty("endpoint.etk", etk_endpoint)
 
-    def render_bundle(
-        self
-        ):
-        id_ = str(uuid.uuid4())
-        now = datetime.datetime.now(pytz.timezone("Europe/Brussels"))
-        logger.info(now.isoformat())
-
+    @classmethod
+    def _render_message_header(cls,
+                               claim_reference: str
+                               ):
         message_header_uuid = str(uuid.uuid4())
         message_header = Entry(
                     full_url=FullUrl(f"urn:uuid:{message_header_uuid}"),
@@ -108,12 +105,15 @@ class EAgreementService(AbstractEAgreementService):
                             ),
                             source=Source(Endpoint("urn:uuid:e2c6f73a-74d8-40f2-af0b-a61ad20c53d4")),
                             sender=Sender(Reference("Organization/Organization1")),
-                            focus=Focus(Reference("Claim/Claim1")),            
+                            focus=Focus(Reference(claim_reference)),            
                         )
                     )
                 )
-        
-        organization = Entry(
+        return message_header
+    
+    @classmethod
+    def _render_organization(cls):
+        return Entry(
                     full_url=FullUrl("urn:uuid:e2c6f73a-74d8-40f2-af0b-a61ad20c53d4"),
                     resource=Resource(
                         organization=Organization(
@@ -132,36 +132,44 @@ class EAgreementService(AbstractEAgreementService):
                         )
                     )
                 )
-        
-        practitioner_role_physio = Entry(
-                    full_url=FullUrl("urn:uuid:PractitionerRole1"),
+
+    @classmethod
+    def _render_practitioner_role(cls,
+                                practitioner_role: Optional[str] = "PractitionerRole1",
+                                practitioner: Optional[str] = "Practitioner/Practitioner1",
+                                code: Optional[str] = "persphysiotherapist"
+                                ):
+        entry_uuid = str(uuid.uuid4())
+        return Entry(
+                    full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(
                         practitioner_role=PractitionerRole(
-                            id=Id("PractitionerRole1"),
-                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-practitionerrole")),
+                            id=Id(practitioner_role),
+                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitionerrole")),
                             practitioner=Practitioner2(
-                                Reference("Practitioner/Practitioner1")
+                                Reference(practitioner)
                             ),
                             code=NestedCode(
                                 coding=Coding(
                                     system=System("https://www.ehealth.fgov.be/standards/fhir/core/CodeSystem/cd-hcparty"),
-                                    code=Code("persphysiotherapist"),
-                                    display=Display("physiotherapist")
+                                    code=Code(code),
                                 )
                             )
                         ),
                     )
                 )
-
-        practitioner_physio = Entry(
-                    full_url=FullUrl("urn:uuid:Practitioner1"),
+    
+    @classmethod
+    def _render_practitioner(cls,
+        practitioner: Optional[str] = "Practitioner1",
+                            ):
+        entry_uuid = str(uuid.uuid4())
+        return Entry(
+                    full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(
                         practitioner=Practitioner1(
-                            id=Id("Practitioner1"),
-                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-practitioner")),
-                            practitioner=Practitioner2(
-                                Reference("Practitioner/Practitioner1")
-                            ),
+                            id=Id(practitioner),
+                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitioner")),
                             identifier=Identifier(
                                 system=System("https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi"),
                                 value=Value("54263481527")
@@ -173,18 +181,21 @@ class EAgreementService(AbstractEAgreementService):
                         ),
                     )
                 )
-
-        patient = Entry(
-                    full_url=FullUrl("urn:uuid:Patient1"),
+    
+    @classmethod
+    def _render_patient(cls):
+        entry_uuid = str(uuid.uuid4())
+        return Entry(
+                    full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(
                         patient=Patient1(
                             id=Id("Patient1"),
-                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-patient")),
+                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-patient")),
                             practitioner=Practitioner2(
                                 Reference("Practitioner/Practitioner1")
                             ),
                             identifier=Identifier(
-                                system=System("https://www.ehealth.fgov.be/standards/fhir/NamingSystem/ssin"),
+                                system=System("https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/ssin"),
                                 value=Value("73031805784")
                             ),
                             name=Name(
@@ -195,53 +206,15 @@ class EAgreementService(AbstractEAgreementService):
                         ),
                     )
                 )
-        
-        practitioner_role_physician = Entry(
-                    full_url=FullUrl("urn:uuid:PractitionerRole2"),
-                    resource=Resource(
-                        practitioner_role=PractitionerRole(
-                            id=Id("PractitionerRole2"),
-                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-practitionerrole")),
-                            practitioner=Practitioner2(
-                                Reference("Practitioner/PractitionerRole2")
-                            ),
-                            code=NestedCode(
-                                coding=Coding(
-                                    system=System("https://www.ehealth.fgov.be/standards/fhir/core/CodeSystem/cd-hcparty"),
-                                    code=Code("persphysician"),
-                                    display=Display("physician")
-                                )
-                            )
-                        ),
-                    )
-                )
-
-        practitioner_physician = Entry(
-                    full_url=FullUrl("urn:uuid:Practitioner2"),
-                    resource=Resource(
-                        practitioner=Practitioner1(
-                            id=Id("Practitioner2"),
-                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-practitioner")),
-                            practitioner=Practitioner2(
-                                Reference("Practitioner/Practitioner2")
-                            ),
-                            identifier=Identifier(
-                                system=System("https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi"),
-                                value=Value("19234011004")
-                            ),
-                            name=Name(
-                                family=Family("Name"),
-                                given=Given("First name")
-                            )
-                        ),
-                    )
-                )
-
-        annex = Entry(
-                    full_url=FullUrl("urn:uuid:ServiceRequest1"),
+    
+    @classmethod
+    def _render_annex(cls):
+        entry_uuid = str(uuid.uuid4())
+        return Entry(
+                    full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(
                         service_request=ServiceRequest(
-                            id=Id("ServiceRequest1"),
+                            id=Id("ServiceRequest2"),
                             contained=Contained(
                                 binary=Binary(
                                     id=Id("annexSR1"),
@@ -263,9 +236,14 @@ class EAgreementService(AbstractEAgreementService):
                         ),
                     )
                 )
-
-        claim = Entry(
-                    full_url=FullUrl("urn:uuid:Claim1"),
+    
+    @classmethod
+    def _render_claim(cls,
+                      now: datetime.datetime,
+                      ):
+        entry_uuid = str(uuid.uuid4())
+        return Entry(
+                    full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(
                         claim=Claim(
                             id=Id("Claim1"),
@@ -279,7 +257,7 @@ class EAgreementService(AbstractEAgreementService):
                             ),
                             sub_type=SubType(
                                 coding=Coding(
-                                    system=System("http://www.mycarenet.be/fhir/CodeSystem/agreement-types"),
+                                    system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/agreement-types"),
                                     code=Code("physiotherapy-fb"),
                                 )
                             ),
@@ -290,7 +268,7 @@ class EAgreementService(AbstractEAgreementService):
                                     value=XmlDate.from_date(datetime.date.today() - datetime.timedelta(days=145))
                                     )
                             ),
-                            created=Created(now.isoformat()),
+                            created=Created(now.isoformat(timespec="seconds")),
                             enterer=Enterer(Reference("PractitionerRole/PractitionerRole1")),
                             provider=Provider(Reference("PractitionerRole/PractitionerRole1")),
                             priority=Priority(
@@ -311,7 +289,7 @@ class EAgreementService(AbstractEAgreementService):
                                 sequence=Sequence(1),
                                 product_or_service=ProductOrService(
                                     coding=Coding(
-                                        system=System("http://www.mycarenet.be/fhir/CodeSystem/nihdi-physiotherapy-pathologysituationcode"),
+                                        system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/nihdi-physiotherapy-pathologysituationcode"),
                                         code=Code("fb-51")
                                     ),
                                 ),
@@ -321,10 +299,41 @@ class EAgreementService(AbstractEAgreementService):
                         ),
                     )
                 )
+    
+    def render_bundle(
+        self
+        ):
+        id_ = str(uuid.uuid4())
+        now = datetime.datetime.now(pytz.timezone("Europe/Brussels"))
+
+        message_header = self._render_message_header(claim_reference=f"Claim/Claim1")
+        organization = self._render_organization()
+        practitioner_physio = self._render_practitioner(
+            practitioner="Practitioner1"
+        )
+        practitioner_role_physio = self._render_practitioner_role(
+            practitioner_role="PractitionerRole1",
+            practitioner=f"Practitioner/Practitioner1",
+            code="persphysiotherapist"
+        )
+        patient = self._render_patient()
+        practitioner_physician = self._render_practitioner(
+            practitioner="Practitioner2"
+        )
+        practitioner_role_physician = self._render_practitioner_role(
+            practitioner_role="PractitionerRole2",
+            practitioner=f"Practitioner/Practitioner2",
+            code="persphysician"
+        )
+        annex = self._render_annex()
+        claim = self._render_claim(
+            now=now,
+            )
         
         bundle = Bundle(
             id=Id(id_),
-            timestamp=Timestamp(now.isoformat()),
+            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementdemand")),
+            timestamp=Timestamp(now.isoformat(timespec="seconds")),
             type=TypeType(value="message"),
             entry=[
                 message_header,
@@ -350,15 +359,18 @@ class EAgreementService(AbstractEAgreementService):
     def ask_agreement(
         self, 
         token: str,
-        bundleLocation: str,
+        # bundleLocation: str,
         patientNiss: str = "90060421941"
         ) -> str:
         template, id_ = self.render_bundle()
+        logger.info(template)
         nihii = self.set_configuration_from_token(token)
 
         responseBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder()
         
         bundle = bytes(template, encoding="utf-8")
+        # with open("/mnt/c/Users/piete/Documents/ehealth-pyconnector/tests/data/Bundle-ex01.xml", "rb") as f:
+        #     bundle = f.read()
 
         self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.dump(bundle)
 
