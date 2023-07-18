@@ -1598,7 +1598,7 @@ class ServiceRequest:
             "type": "Element",
         }
     )
-    code: Optional[Code] = field(
+    code: Optional[NestedCode] = field(
         default=None,
         metadata={
             "type": "Element",

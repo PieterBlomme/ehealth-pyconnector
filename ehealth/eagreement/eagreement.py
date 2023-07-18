@@ -20,7 +20,8 @@ from .bundle import (
     Subject, Requester, SupportingInfo, Claim, SubType, Use,
     BillablePeriod, Patient2, Start, Created, Enterer,
     Provider,Priority, Referral, Sequence, Category,
-    Insurance, Item, Coverage, Focal, ProductOrService, ServicedDate
+    Insurance, Item, Coverage, Focal, ProductOrService, ServicedDate,
+    QuantityQuantity, AuthoredOn
 )
 
 logger = logging.getLogger(__name__)
@@ -90,7 +91,7 @@ class EAgreementService(AbstractEAgreementService):
 
     @classmethod
     def _render_message_header(cls,
-                               claim_reference: str
+                               organization_urn: str,
                                ):
         message_header_uuid = str(uuid.uuid4())
         message_header = Entry(
@@ -100,12 +101,16 @@ class EAgreementService(AbstractEAgreementService):
                             id=Id(message_header_uuid),
                             meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-messageheader")),
                             event_coding=EventCoding(
-                                system=System("http://www.mycarenet.be/fhir/CodeSystem/message-events"),
+                                system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/message-events"),
                                 code=Code("claim-ask")
                             ),
-                            source=Source(Endpoint("urn:uuid:e2c6f73a-74d8-40f2-af0b-a61ad20c53d4")),
+                            destination=Destination(
+                                name=Name(value="MyCareNet"),
+                                endpoint=Endpoint("MyCareNet")
+                                ),
+                            source=Source(Endpoint(organization_urn)),
                             sender=Sender(Reference("Organization/Organization1")),
-                            focus=Focus(Reference(claim_reference)),            
+                            focus=Focus(Reference("Claim/Claim1")),            
                         )
                     )
                 )
@@ -113,11 +118,12 @@ class EAgreementService(AbstractEAgreementService):
     
     @classmethod
     def _render_organization(cls):
+        entry_uuid = str(uuid.uuid4())
         return Entry(
-                    full_url=FullUrl("urn:uuid:e2c6f73a-74d8-40f2-af0b-a61ad20c53d4"),
+                    full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(
                         organization=Organization(
-                            id=Id("organization1"),
+                            id=Id("Organization1"),
                             meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-organization")),
                             identifier=Identifier(
                                 system=System("https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi"),
@@ -208,13 +214,14 @@ class EAgreementService(AbstractEAgreementService):
                 )
     
     @classmethod
-    def _render_annex(cls):
-        entry_uuid = str(uuid.uuid4())
+    def render_service_request_1(cls):
+        entry_uuid = str(uuid.uuid4())        
         return Entry(
                     full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(
                         service_request=ServiceRequest(
-                            id=Id("ServiceRequest2"),
+                            id=Id("ServiceRequest1"),
+                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementservicerequest")),
                             contained=Contained(
                                 binary=Binary(
                                     id=Id("annexSR1"),
@@ -222,9 +229,43 @@ class EAgreementService(AbstractEAgreementService):
                                     data=Data("QW5uZXhlIGlubGluZSwgYmFzZTY0ZWQ=")
                                 )
                             ),
+                            status=Status("active"),
+                            intent=Intent("order"),
+                            category=Category(
+                                coding=Coding(
+                                    system=System("http://snomed.info/sct"),
+                                    code=Code("91251008"),
+                                )
+                            ),
+                            code=NestedCode(
+                                coding=Coding(
+                                    system=System("http://snomed.info/sct"),
+                                    code=Code("91251008"),
+                                )
+                            ),
+                            quantity_quantity=QuantityQuantity(Value(15)),
+                            authored_on=AuthoredOn(XmlDate.from_date(datetime.date.today())),
+                            subject=Subject(
+                                reference=Reference("Patient/Patient1")
+                            ),
+                            requester=Requester(Reference("PractitionerRole/PractitionerRole2")),
+                            supporting_info=SupportingInfo(reference=Reference("#annexSR1"))
+                        ),
+                    )
+                )
+
+    @classmethod
+    def render_service_request_2(cls):
+        entry_uuid = str(uuid.uuid4())
+        return Entry(
+                    full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
+                    resource=Resource(
+                        service_request=ServiceRequest(
+                            id=Id("ServiceRequest2"),
+                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementservicerequest")),
                             identifier=Identifier(
-                                system=System("https://www.ehealth.fgov.be/standards/fhir/NamingSystem/uhmep"),
-                                value=Value("n° de la prescription")
+                                system=System("https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/uhmep"),
+                                value=Value("71000436000")
                             ),
                             status=Status("active"),
                             intent=Intent("order"),
@@ -232,7 +273,6 @@ class EAgreementService(AbstractEAgreementService):
                                 reference=Reference("Patient/Patient1")
                             ),
                             requester=Requester(Reference("PractitionerRole/PractitionerRole2")),
-                            supporting_info=SupportingInfo(reference=Reference("#annexSR1"))
                         ),
                     )
                 )
@@ -247,7 +287,7 @@ class EAgreementService(AbstractEAgreementService):
                     resource=Resource(
                         claim=Claim(
                             id=Id("Claim1"),
-                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementclaim")),
+                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementclaim-kine")),
                             status=Status("active"),
                             type=TypeType(
                                 coding=EventCoding(
@@ -306,8 +346,10 @@ class EAgreementService(AbstractEAgreementService):
         id_ = str(uuid.uuid4())
         now = datetime.datetime.now(pytz.timezone("Europe/Brussels"))
 
-        message_header = self._render_message_header(claim_reference=f"Claim/Claim1")
         organization = self._render_organization()
+        message_header = self._render_message_header(
+            organization_urn=organization.full_url.value
+            )
         practitioner_physio = self._render_practitioner(
             practitioner="Practitioner1"
         )
@@ -325,7 +367,8 @@ class EAgreementService(AbstractEAgreementService):
             practitioner=f"Practitioner/Practitioner2",
             code="persphysician"
         )
-        annex = self._render_annex()
+        annex = self.render_service_request_1()
+        prescription = self.render_service_request_2()
         claim = self._render_claim(
             now=now,
             )
@@ -344,6 +387,7 @@ class EAgreementService(AbstractEAgreementService):
                 practitioner_role_physician,
                 practitioner_physician,
                 annex,
+                prescription,
                 claim
             ]
         )
