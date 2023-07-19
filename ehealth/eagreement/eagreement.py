@@ -72,7 +72,7 @@ class AbstractEAgreementService:
         self.config_validator.setProperty("mycarenet.default.careprovider.nihii.quality", quality)
         self.config_validator.setProperty("mycarenet.default.careprovider.physicalperson.ssin", ssin)
         self.config_validator.setProperty("mycarenet.default.careprovider.physicalperson.name", f"{givenname} {surname}")
-        return nihii
+        return nihii, givenname, surname
     
 class EAgreementService(AbstractEAgreementService):
     def __init__(
@@ -91,7 +91,7 @@ class EAgreementService(AbstractEAgreementService):
 
     @classmethod
     def _render_message_header(cls,
-                               organization_urn: str,
+                               practitioner_role_urn: str,
                                ):
         message_header_uuid = str(uuid.uuid4())
         message_header = Entry(
@@ -108,8 +108,8 @@ class EAgreementService(AbstractEAgreementService):
                                 name=Name(value="MyCareNet"),
                                 endpoint=Endpoint("MyCareNet")
                                 ),
-                            source=Source(Endpoint(organization_urn)),
-                            sender=Sender(Reference("Organization/Organization1")),
+                            source=Source(Endpoint(practitioner_role_urn)),
+                            sender=Sender(Reference("PractitionerRole/PractitionerRole1")),
                             focus=Focus(Reference("Claim/Claim1")),            
                         )
                     )
@@ -117,8 +117,10 @@ class EAgreementService(AbstractEAgreementService):
         return message_header
     
     @classmethod
-    def _render_organization(cls):
-        entry_uuid = str(uuid.uuid4())
+    def _render_organization(cls,
+                             entry_uuid: Optional[str] = None):
+        if not entry_uuid:
+            entry_uuid = str(uuid.uuid4())
         return Entry(
                     full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(
@@ -167,6 +169,9 @@ class EAgreementService(AbstractEAgreementService):
     
     @classmethod
     def _render_practitioner(cls,
+        nihii: str,
+        givenname: str,
+        surname: str,
         practitioner: Optional[str] = "Practitioner1",
                             ):
         entry_uuid = str(uuid.uuid4())
@@ -178,18 +183,19 @@ class EAgreementService(AbstractEAgreementService):
                             meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitioner")),
                             identifier=Identifier(
                                 system=System("https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi"),
-                                value=Value("54263481527")
+                                value=Value(nihii)
                             ),
                             name=Name(
-                                family=Family("Smith"),
-                                given=Given("Jeff")
+                                family=Family(surname),
+                                given=Given(givenname)
                             )
                         ),
                     )
                 )
     
     @classmethod
-    def _render_patient(cls):
+    def _render_patient(cls,
+                        ssin: str, givenname: str, surname: str):
         entry_uuid = str(uuid.uuid4())
         return Entry(
                     full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
@@ -202,11 +208,11 @@ class EAgreementService(AbstractEAgreementService):
                             ),
                             identifier=Identifier(
                                 system=System("https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/ssin"),
-                                value=Value("73031805784")
+                                value=Value(ssin)
                             ),
                             name=Name(
-                                family=Family("Dupont"),
-                                given=Given("Jean")
+                                family=Family(surname),
+                                given=Given(givenname)
                             ),
                             gender=Gender("male")
                         ),
@@ -244,7 +250,7 @@ class EAgreementService(AbstractEAgreementService):
                                 )
                             ),
                             quantity_quantity=QuantityQuantity(Value(15)),
-                            authored_on=AuthoredOn(XmlDate.from_date(datetime.date.today())),
+                            authored_on=AuthoredOn(XmlDate.from_date(datetime.date.today() - datetime.timedelta(days=145))),
                             subject=Subject(
                                 reference=Reference("Patient/Patient1")
                             ),
@@ -341,16 +347,17 @@ class EAgreementService(AbstractEAgreementService):
                 )
     
     def render_bundle(
-        self
+        self,
+        nihii: str,
+        givenname: str,
+        surname: str
         ):
         id_ = str(uuid.uuid4())
         now = datetime.datetime.now(pytz.timezone("Europe/Brussels"))
-
-        organization = self._render_organization()
-        message_header = self._render_message_header(
-            organization_urn=organization.full_url.value
-            )
         practitioner_physio = self._render_practitioner(
+            nihii=nihii,
+            givenname=givenname,
+            surname=surname,
             practitioner="Practitioner1"
         )
         practitioner_role_physio = self._render_practitioner_role(
@@ -358,8 +365,20 @@ class EAgreementService(AbstractEAgreementService):
             practitioner=f"Practitioner/Practitioner1",
             code="persphysiotherapist"
         )
-        patient = self._render_patient()
+        # organization = self._render_organization()
+        message_header = self._render_message_header(
+            practitioner_role_urn=practitioner_role_physio.full_url.value
+            )
+
+        patient = self._render_patient(
+            ssin="90060421941",
+            givenname="Pieter",
+            surname="Blomme"
+        )
         practitioner_physician = self._render_practitioner(
+            nihii="00092210605",
+            givenname="Pieter",
+            surname="Blomme",
             practitioner="Practitioner2"
         )
         practitioner_role_physician = self._render_practitioner_role(
@@ -380,7 +399,7 @@ class EAgreementService(AbstractEAgreementService):
             type=TypeType(value="message"),
             entry=[
                 message_header,
-                organization,
+                # organization,
                 practitioner_role_physio,
                 practitioner_physio,
                 patient,
@@ -406,9 +425,14 @@ class EAgreementService(AbstractEAgreementService):
         # bundleLocation: str,
         patientNiss: str = "90060421941"
         ) -> str:
-        template, id_ = self.render_bundle()
+        nihii, givenname, surname = self.set_configuration_from_token(token)
+
+        template, id_ = self.render_bundle(
+            nihii=nihii,
+            givenname=givenname,
+            surname=surname
+        )
         logger.info(template)
-        nihii = self.set_configuration_from_token(token)
 
         responseBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder()
         
@@ -436,6 +460,49 @@ class EAgreementService(AbstractEAgreementService):
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.session.AgreementSessionServiceFactory.getAgreementService()
         serviceResponse = service.askAgreement(askRequest.getRequest())
         response = responseBuilder.handleAskAgreementResponse(serviceResponse, askRequest)
+        signVerifResult = response.getSignatureVerificationResult()
+        for entry in signVerifResult.getErrors():
+            self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
+                  entry.getValue().isValid())
+        logger.info(self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8"))
+        return ""
+    
+
+    def consult_agreement(
+        self, 
+        token: str,
+        # bundleLocation: str,
+        patientNiss: str = "90060421941"
+        ) -> str:
+        id_ = "ex12"
+        nihii = self.set_configuration_from_token(token)
+
+        responseBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder()
+        
+        # bundle = bytes(template, encoding="utf-8")
+        with open("/mnt/c/Users/piete/Documents/ehealth-pyconnector/tests/data/Bundle-ex12.xml", "rb") as f:
+            bundle = f.read()
+
+        self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.dump(bundle)
+
+        patientInfo = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient()
+        patientInfo.setInss(patientNiss)
+
+        # input reference and AttributeQuery ID must match
+        inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(id_)
+        consultRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildConsultAgreementRequest(
+            self.is_test, 
+            inputReference, 
+            patientInfo, 
+            self.GATEWAY.jvm.org.joda.time.DateTime(), 
+            bundle
+            )
+        raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(consultRequest)
+        # logger.info(raw_request)
+
+        service = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.session.AgreementSessionServiceFactory.getAgreementService()
+        serviceResponse = service.consultAgreement(consultRequest.getRequest())
+        response = responseBuilder.handleConsultAgreementResponse(serviceResponse, consultRequest)
         signVerifResult = response.getSignatureVerificationResult()
         for entry in signVerifResult.getErrors():
             self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",

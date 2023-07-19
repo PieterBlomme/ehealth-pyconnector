@@ -38,3 +38,11 @@ def test_eagreement__ask_agreement__happy_path(sts_service, token, eagreement_se
             # bundleLocation=str(TEST_DATA_FOLDER.joinpath('AskAgreementRequestContent.xml'))
         )
         logger.info(response)
+
+def test_eagreement__consult_agreement__happy_path(sts_service, token, eagreement_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        response = eagreement_service.consult_agreement(
+            token=token,
+            # bundleLocation=str(TEST_DATA_FOLDER.joinpath('AskAgreementRequestContent.xml'))
+        )
+        logger.info(response)
