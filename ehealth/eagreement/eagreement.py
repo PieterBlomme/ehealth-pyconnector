@@ -4,8 +4,7 @@ import datetime
 import tempfile
 import uuid
 import pytz
-from typing import List, Optional, Tuple
-from pydantic import BaseModel, root_validator
+from typing import List, Optional
 from io import StringIO
 from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDateTime, XmlDate
@@ -23,6 +22,7 @@ from .bundle import (
     Insurance, Item, Coverage, Focal, ProductOrService, ServicedDate,
     QuantityQuantity, AuthoredOn
 )
+from .input_models import Patient, Practitioner, AskAgreementInputModel
 
 logger = logging.getLogger(__name__)
 
@@ -92,6 +92,7 @@ class EAgreementService(AbstractEAgreementService):
     @classmethod
     def _render_message_header(cls,
                                practitioner_role_urn: str,
+                               claim: Optional[str] = "claim-ask"
                                ):
         message_header_uuid = str(uuid.uuid4())
         message_header = Entry(
@@ -102,7 +103,7 @@ class EAgreementService(AbstractEAgreementService):
                             meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-messageheader")),
                             event_coding=EventCoding(
                                 system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/message-events"),
-                                code=Code("claim-ask")
+                                code=Code(claim)
                             ),
                             destination=Destination(
                                 name=Name(value="MyCareNet"),
@@ -169,25 +170,23 @@ class EAgreementService(AbstractEAgreementService):
     
     @classmethod
     def _render_practitioner(cls,
-        nihii: str,
-        givenname: str,
-        surname: str,
-        practitioner: Optional[str] = "Practitioner1",
+        practitioner: Practitioner,
+        practitioner_identifier: Optional[str] = "Practitioner1",
                             ):
         entry_uuid = str(uuid.uuid4())
         return Entry(
                     full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(
                         practitioner=Practitioner1(
-                            id=Id(practitioner),
+                            id=Id(practitioner_identifier),
                             meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitioner")),
                             identifier=Identifier(
                                 system=System("https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi"),
-                                value=Value(nihii)
+                                value=Value(practitioner.nihii)
                             ),
                             name=Name(
-                                family=Family(surname),
-                                given=Given(givenname)
+                                family=Family(practitioner.surname),
+                                given=Given(practitioner.givenname)
                             )
                         ),
                     )
@@ -195,7 +194,7 @@ class EAgreementService(AbstractEAgreementService):
     
     @classmethod
     def _render_patient(cls,
-                        ssin: str, givenname: str, surname: str):
+                        patient: Patient):
         entry_uuid = str(uuid.uuid4())
         return Entry(
                     full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
@@ -208,13 +207,13 @@ class EAgreementService(AbstractEAgreementService):
                             ),
                             identifier=Identifier(
                                 system=System("https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/ssin"),
-                                value=Value(ssin)
+                                value=Value(patient.ssin)
                             ),
                             name=Name(
-                                family=Family(surname),
-                                given=Given(givenname)
+                                family=Family(patient.surname),
+                                given=Given(patient.givenname)
                             ),
-                            gender=Gender("male")
+                            gender=Gender(patient.gender)
                         ),
                     )
                 )
@@ -348,17 +347,14 @@ class EAgreementService(AbstractEAgreementService):
     
     def render_bundle(
         self,
-        nihii: str,
-        givenname: str,
-        surname: str
+        practitioner: Practitioner,
+        input_model: AskAgreementInputModel,
         ):
         id_ = str(uuid.uuid4())
         now = datetime.datetime.now(pytz.timezone("Europe/Brussels"))
         practitioner_physio = self._render_practitioner(
-            nihii=nihii,
-            givenname=givenname,
-            surname=surname,
-            practitioner="Practitioner1"
+            practitioner=practitioner,
+            practitioner_identifier="Practitioner1"
         )
         practitioner_role_physio = self._render_practitioner_role(
             practitioner_role="PractitionerRole1",
@@ -371,15 +367,11 @@ class EAgreementService(AbstractEAgreementService):
             )
 
         patient = self._render_patient(
-            ssin="90060421941",
-            givenname="Pieter",
-            surname="Blomme"
+            patient=input_model.patient
         )
         practitioner_physician = self._render_practitioner(
-            nihii="00092210605",
-            givenname="Pieter",
-            surname="Blomme",
-            practitioner="Practitioner2"
+            practitioner=input_model.physician,
+            practitioner_identifier="Practitioner2"
         )
         practitioner_role_physician = self._render_practitioner_role(
             practitioner_role="PractitionerRole2",
@@ -387,7 +379,7 @@ class EAgreementService(AbstractEAgreementService):
             code="persphysician"
         )
         annex = self.render_service_request_1()
-        prescription = self.render_service_request_2()
+        # prescription = self.render_service_request_2()
         claim = self._render_claim(
             now=now,
             )
@@ -406,7 +398,7 @@ class EAgreementService(AbstractEAgreementService):
                 practitioner_role_physician,
                 practitioner_physician,
                 annex,
-                prescription,
+                # prescription,
                 claim
             ]
         )
@@ -422,30 +414,30 @@ class EAgreementService(AbstractEAgreementService):
     def ask_agreement(
         self, 
         token: str,
-        # bundleLocation: str,
-        patientNiss: str = "90060421941"
+        input_model: AskAgreementInputModel
         ) -> str:
         nihii, givenname, surname = self.set_configuration_from_token(token)
 
         template, id_ = self.render_bundle(
-            nihii=nihii,
-            givenname=givenname,
-            surname=surname
+            Practitioner(
+                nihii=nihii,
+                givenname=givenname,
+                surname=surname,
+            ),
+            input_model=input_model
         )
-        logger.info(template)
 
         responseBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder()
         
         bundle = bytes(template, encoding="utf-8")
-        # with open("/mnt/c/Users/piete/Documents/ehealth-pyconnector/tests/data/Bundle-ex01.xml", "rb") as f:
-        #     bundle = f.read()
 
         self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.dump(bundle)
 
+        # TODO figure out how to remove this.  The bundle is already rendered at this point ...
         patientInfo = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient()
-        patientInfo.setInss(patientNiss)
+        patientInfo.setInss(input_model.patient.ssin)
 
-        # input reference and AttributeQuery ID must match
+        # input reference and Bundle ID must match
         inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(id_)
         askRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildAskAgreementRequest(
             self.is_test, 

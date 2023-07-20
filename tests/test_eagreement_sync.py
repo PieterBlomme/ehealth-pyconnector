@@ -1,5 +1,5 @@
 from ehealth.sts import STSService
-from ehealth.eagreement import EAgreementService
+from ehealth.eagreement import EAgreementService, AskAgreementInputModel, Patient, Practitioner
 from pathlib import Path
 import os
 import pytest
@@ -32,10 +32,23 @@ def token(sts_service):
 
 
 def test_eagreement__ask_agreement__happy_path(sts_service, token, eagreement_service):
+    input_model = AskAgreementInputModel(
+        patient=Patient(
+            ssin="90060421941",
+            givenname="Pieter",
+            surname="Blomme",
+            gender="male"
+        ),
+        physician=Practitioner(
+            nihii="00092210605",
+            givenname="John",
+            surname="Smith"
+        )
+    )
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         response = eagreement_service.ask_agreement(
             token=token,
-            # bundleLocation=str(TEST_DATA_FOLDER.joinpath('AskAgreementRequestContent.xml'))
+            input_model=input_model
         )
         logger.info(response)
 
@@ -43,6 +56,5 @@ def test_eagreement__consult_agreement__happy_path(sts_service, token, eagreemen
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         response = eagreement_service.consult_agreement(
             token=token,
-            # bundleLocation=str(TEST_DATA_FOLDER.joinpath('AskAgreementRequestContent.xml'))
         )
         logger.info(response)
