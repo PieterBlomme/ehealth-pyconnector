@@ -7,7 +7,7 @@ import pytz
 from typing import List, Optional
 from io import StringIO
 from ..sts.assertion import Assertion
-from xsdata.models.datatype import XmlDateTime, XmlDate
+from xsdata.models.datatype import XmlDate
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from .bundle import (
     Bundle, Entry, FullUrl, Resource, MessageHeader, MetaType, Profile, Timestamp,
@@ -22,7 +22,8 @@ from .bundle import (
     Insurance, Item, Coverage, Focal, ProductOrService, ServicedDate,
     QuantityQuantity, AuthoredOn
 )
-from .input_models import Patient, Practitioner, AskAgreementInputModel
+from .input_models import Patient, Practitioner, AskAgreementInputModel, ClaimAsk, Prescription
+from .ask_agreement import Bundle as AskAgreementResponseBundle, AskAgreementResponse
 
 logger = logging.getLogger(__name__)
 
@@ -219,7 +220,7 @@ class EAgreementService(AbstractEAgreementService):
                 )
     
     @classmethod
-    def render_service_request_1(cls):
+    def _render_service_request_1(cls, prescription: Prescription):
         entry_uuid = str(uuid.uuid4())        
         return Entry(
                     full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
@@ -230,8 +231,8 @@ class EAgreementService(AbstractEAgreementService):
                             contained=Contained(
                                 binary=Binary(
                                     id=Id("annexSR1"),
-                                    content_type=ContentType("application/pdf"),
-                                    data=Data("QW5uZXhlIGlubGluZSwgYmFzZTY0ZWQ=")
+                                    content_type=ContentType(prescription.data_mimetype),
+                                    data=Data(prescription.data_base64) # "QW5uZXhlIGlubGluZSwgYmFzZTY0ZWQ="
                                 )
                             ),
                             status=Status("active"),
@@ -239,17 +240,17 @@ class EAgreementService(AbstractEAgreementService):
                             category=Category(
                                 coding=Coding(
                                     system=System("http://snomed.info/sct"),
-                                    code=Code("91251008"),
+                                    code=Code(prescription.snomed_category), # "91251008"
                                 )
                             ),
                             code=NestedCode(
                                 coding=Coding(
                                     system=System("http://snomed.info/sct"),
-                                    code=Code("91251008"),
+                                    code=Code(prescription.snomed_code), # "91251008"
                                 )
                             ),
-                            quantity_quantity=QuantityQuantity(Value(15)),
-                            authored_on=AuthoredOn(XmlDate.from_date(datetime.date.today() - datetime.timedelta(days=145))),
+                            quantity_quantity=QuantityQuantity(Value(prescription.quantity)), # 15
+                            authored_on=AuthoredOn(XmlDate.from_date(prescription.date)), # datetime.date.today() - datetime.timedelta(days=145)
                             subject=Subject(
                                 reference=Reference("Patient/Patient1")
                             ),
@@ -285,9 +286,11 @@ class EAgreementService(AbstractEAgreementService):
     @classmethod
     def _render_claim(cls,
                       now: datetime.datetime,
+                      claim_ask: ClaimAsk,
+                      service_request: Optional[str] = None
                       ):
         entry_uuid = str(uuid.uuid4())
-        return Entry(
+        entry = Entry(
                     full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(
                         claim=Claim(
@@ -303,14 +306,14 @@ class EAgreementService(AbstractEAgreementService):
                             sub_type=SubType(
                                 coding=Coding(
                                     system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/agreement-types"),
-                                    code=Code("physiotherapy-fb"),
+                                    code=Code(claim_ask.sub_type),
                                 )
                             ),
                             use=Use("preauthorization"),
                             patient=Patient2(Reference("Patient/Patient1")),
                             billable_period=BillablePeriod(
                                 Start(
-                                    value=XmlDate.from_date(datetime.date.today() - datetime.timedelta(days=145))
+                                    value=XmlDate.from_date(claim_ask.billable_period)
                                     )
                             ),
                             created=Created(now.isoformat(timespec="seconds")),
@@ -322,7 +325,6 @@ class EAgreementService(AbstractEAgreementService):
                                         code=Code("stat")
                                     ),
                             ),
-                            referral=Referral(Reference("ServiceRequest/ServiceRequest1")),
                             supporting_info=[
                             ],
                             insurance=Insurance(
@@ -335,15 +337,18 @@ class EAgreementService(AbstractEAgreementService):
                                 product_or_service=ProductOrService(
                                     coding=Coding(
                                         system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/nihdi-physiotherapy-pathologysituationcode"),
-                                        code=Code("fb-51")
+                                        code=Code(claim_ask.product_or_service)
                                     ),
                                 ),
-                                serviced_date=ServicedDate(XmlDate.from_date(datetime.date.today() - datetime.timedelta(days=156)))
+                                serviced_date=ServicedDate(XmlDate.from_date(claim_ask.serviced_date))
                             )
 
                         ),
                     )
                 )
+        if service_request:
+            entry.resource.claim.referral = Referral(Reference(service_request))
+        return entry
     
     def render_bundle(
         self,
@@ -378,29 +383,36 @@ class EAgreementService(AbstractEAgreementService):
             practitioner=f"Practitioner/Practitioner2",
             code="persphysician"
         )
-        annex = self.render_service_request_1()
-        # prescription = self.render_service_request_2()
-        claim = self._render_claim(
-            now=now,
-            )
-        
-        bundle = Bundle(
-            id=Id(id_),
-            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementdemand")),
-            timestamp=Timestamp(now.isoformat(timespec="seconds")),
-            type=TypeType(value="message"),
-            entry=[
-                message_header,
+        entries = [
+               message_header,
                 # organization,
                 practitioner_role_physio,
                 practitioner_physio,
                 patient,
                 practitioner_role_physician,
                 practitioner_physician,
-                annex,
-                # prescription,
-                claim
-            ]
+        ]
+        if input_model.claim.prescription:
+            annex = self._render_service_request_1(input_model.claim.prescription)
+            entries.append(annex)
+            service_request = f"ServiceRequest/{annex.resource.service_request.id.value}"
+            # prescription = self.render_service_request_2()
+            # entries.append(prescription)
+        else:
+            service_request = None
+        claim = self._render_claim(
+            now=now,
+            claim_ask=input_model.claim,
+            service_request=service_request
+            )
+        entries.append(claim)
+        
+        bundle = Bundle(
+            id=Id(id_),
+            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementdemand")),
+            timestamp=Timestamp(now.isoformat(timespec="seconds")),
+            type=TypeType(value="message"),
+            entry=entries
         )
         
         serializer = XmlSerializer()
@@ -447,17 +459,31 @@ class EAgreementService(AbstractEAgreementService):
             bundle
             )
         raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(askRequest)
-        # logger.info(raw_request)
 
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.session.AgreementSessionServiceFactory.getAgreementService()
         serviceResponse = service.askAgreement(askRequest.getRequest())
+        raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
+
         response = responseBuilder.handleAskAgreementResponse(serviceResponse, askRequest)
         signVerifResult = response.getSignatureVerificationResult()
         for entry in signVerifResult.getErrors():
             self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
                   entry.getValue().isValid())
-        logger.info(self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8"))
-        return ""
+
+        parser = XmlParser()
+        response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
+        try:
+            response_pydantic = parser.parse(StringIO(response_string), AskAgreementResponseBundle)
+            return AskAgreementResponse(
+                response=response_pydantic,
+                transaction_request=template,
+                transaction_response=response_string,
+                soap_request=raw_request,
+                soap_response=raw_response
+            )
+        except:
+            logger.error(response_string)
+            raise
     
 
     def consult_agreement(
