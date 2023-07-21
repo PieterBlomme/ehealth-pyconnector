@@ -34,7 +34,7 @@ def token(sts_service):
 def test_eagreement__ask_agreement__happy_path(sts_service, token, eagreement_service):
     input_model = AskAgreementInputModel(
         patient=Patient(
-            ssin="90060421941",
+            ssin=KEYSTORE_SSIN,
             givenname="Pieter",
             surname="Blomme",
             gender="male"
@@ -69,8 +69,14 @@ def test_eagreement__consult_agreement__happy_path(sts_service, token, eagreemen
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         response = eagreement_service.consult_agreement(
             token=token,
+            input_model=Patient(
+                ssin="71020203354",
+                givenname="Dimitri Claude",
+                surname="Rossion",
+                gender="male"
+            )
         )
-        logger.info(response)
+        logger.info(response.response)
 
 def test_eagreement__scenario1__p1__no_prescription(sts_service, token, eagreement_service):
     input_model = AskAgreementInputModel(

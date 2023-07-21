@@ -353,6 +353,19 @@ class Value:
         }
     )
 
+@dataclass
+class ValueCode:
+    class Meta:
+        name = "valueCode"
+        namespace = "http://hl7.org/fhir"
+
+    value: Optional[str] = field(
+        default=None,
+        metadata={
+            "type": "Attribute",
+            "required": True,
+        }
+    )
 
 @dataclass
 class ValueString:
@@ -1148,6 +1161,27 @@ class Table:
 
 
 @dataclass
+class ValueCoding:
+    class Meta:
+        name = "valueCoding"
+        namespace = "http://hl7.org/fhir"
+
+    system: Optional[System] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+    code: Optional[Code] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+
+@dataclass
 class Div:
     class Meta:
         name = "div"
@@ -1195,6 +1229,48 @@ class Div:
     hr: Optional[object] = field(
         default=None,
         metadata={
+            "type": "Element",
+        }
+    )
+
+@dataclass
+class Parameter:
+    class Meta:
+        name = "parameter"
+        namespace = "http://hl7.org/fhir"
+
+    name: Optional[Name] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+    value_coding: Optional[ValueCoding] = field(
+        default=None,
+        metadata={
+            "name": "valueCoding",
+            "type": "Element",
+        }
+    )
+    value_code: Optional[ValueCode] = field(
+        default=None,
+        metadata={
+            "name": "valueCode",
+            "type": "Element",
+        }
+    )
+    value_reference: Optional[ValueReference] = field(
+        default=None,
+        metadata={
+            "name": "valueReference",
+            "type": "Element",
+        }
+    )
+    value_string: Optional[ValueString] = field(
+        default=None,
+        metadata={
+            "name": "valueString",
             "type": "Element",
         }
     )
@@ -1332,6 +1408,26 @@ class Claim:
         }
     )
 
+
+@dataclass
+class Parameters:
+    class Meta:
+        namespace = "http://hl7.org/fhir"
+
+    id: Optional[Id] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+    parameter: List[Parameter] = field(
+        default_factory=list,
+        metadata={
+            "type": "Element",
+            "min_occurs": 1,
+        }
+    )
 
 @dataclass
 class MessageHeader:
@@ -1652,6 +1748,15 @@ class Resource:
             "type": "Element",
         }
     )
+    
+    parameters: Optional[Parameters] = field(
+        default=None,
+        metadata={
+            "name": "Parameters",
+            "type": "Element",
+        }
+    )
+
     service_request: Optional[ServiceRequest] = field(
         default=None,
         metadata={

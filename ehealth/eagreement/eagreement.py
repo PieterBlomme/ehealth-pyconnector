@@ -20,10 +20,12 @@ from .bundle import (
     BillablePeriod, Patient2, Start, Created, Enterer,
     Provider,Priority, Referral, Sequence, Category,
     Insurance, Item, Coverage, Focal, ProductOrService, ServicedDate,
-    QuantityQuantity, AuthoredOn
+    QuantityQuantity, AuthoredOn, Parameter, Parameters, ValueCode,
+    ValueCoding, ValueString, ValueReference
 )
 from .input_models import Patient, Practitioner, AskAgreementInputModel, ClaimAsk, Prescription
-from .ask_agreement import Bundle as AskAgreementResponseBundle, AskAgreementResponse
+from .ask_agreement import Bundle as AskResponseBundle, Response as AskResponse
+from .consult_agreement import Bundle as ConsultresposneBundle, Response as ConsultResponse
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +48,7 @@ class AbstractEAgreementService:
             self.is_test = False
 
     def set_configuration_from_token(self, token: str):
+        # TODO copy paste from MDA
         parser = XmlParser()
         token_pydantic = parser.parse(StringIO(token), Assertion)
         
@@ -74,21 +77,6 @@ class AbstractEAgreementService:
         self.config_validator.setProperty("mycarenet.default.careprovider.physicalperson.ssin", ssin)
         self.config_validator.setProperty("mycarenet.default.careprovider.physicalperson.name", f"{givenname} {surname}")
         return nihii, givenname, surname
-    
-class EAgreementService(AbstractEAgreementService):
-    def __init__(
-            self,
-            mycarenet_license_username: str,
-            mycarenet_license_password: str,
-            etk_endpoint: str = "$uddi{uddi:ehealth-fgov-be:business:etkdepot:v1}",
-            environment: str = "acc",
-    ):
-        super().__init__(environment=environment)
-    
-        # set up required configuration        
-        self.config_validator.setProperty("mycarenet.licence.username", mycarenet_license_username)
-        self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
-        self.config_validator.setProperty("endpoint.etk", etk_endpoint)
 
     @classmethod
     def _render_message_header(cls,
@@ -96,23 +84,34 @@ class EAgreementService(AbstractEAgreementService):
                                claim: Optional[str] = "claim-ask"
                                ):
         message_header_uuid = str(uuid.uuid4())
+
+        if claim:
+            event_coding = event_coding=EventCoding(
+                                system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/message-events"),
+                                code=Code(claim)
+                            )
+            focus=Focus(Reference("Claim/Claim1"))
+        else:
+            event_coding = event_coding=EventCoding(
+                                system=System("http://hl7.org/fhir/restful-interaction"),
+                                code=Code("search-type")
+                            )
+            focus=Focus(Reference("Parameters/Parameters1"))
+
         message_header = Entry(
                     full_url=FullUrl(f"urn:uuid:{message_header_uuid}"),
                     resource=Resource(
                         message_header=MessageHeader(
                             id=Id(message_header_uuid),
                             meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-messageheader")),
-                            event_coding=EventCoding(
-                                system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/message-events"),
-                                code=Code(claim)
-                            ),
+                            event_coding=event_coding,
                             destination=Destination(
                                 name=Name(value="MyCareNet"),
                                 endpoint=Endpoint("MyCareNet")
                                 ),
                             source=Source(Endpoint(practitioner_role_urn)),
                             sender=Sender(Reference("PractitionerRole/PractitionerRole1")),
-                            focus=Focus(Reference("Claim/Claim1")),            
+                            focus=focus,            
                         )
                     )
                 )
@@ -349,8 +348,56 @@ class EAgreementService(AbstractEAgreementService):
         if service_request:
             entry.resource.claim.referral = Referral(Reference(service_request))
         return entry
+
+    @classmethod
+    def _render_parameters(cls):
+        entry_uuid = str(uuid.uuid4())
+        return Entry(
+                    full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
+                    resource=Resource(
+                        parameters=Parameters(
+                            id=Id("Parameters1"),
+                            parameter=[
+                                Parameter(
+                                    name=Name(value="resourceType"),
+                                    value_string=ValueString(value="ClaimResponse")
+                                ),
+                                Parameter(
+                                    name=Name(value="patient"),
+                                    value_reference=ValueReference(Reference(value="Patient/Patient1"))
+                                ),
+                                Parameter(
+                                    name=Name(value="use"),
+                                    value_code=ValueCode(value="preauthorization")
+                                ),
+                                Parameter(
+                                    name=Name(value="subType"),
+                                    value_coding=ValueCoding(
+                                        system=System(value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/agreement-types"),
+                                        code=Code(value="physiotherapy")
+                                    )
+                                ),
+                            ]
+                        ),
+                    )
+                )
     
-    def render_bundle(
+class EAgreementService(AbstractEAgreementService):
+    def __init__(
+            self,
+            mycarenet_license_username: str,
+            mycarenet_license_password: str,
+            etk_endpoint: str = "$uddi{uddi:ehealth-fgov-be:business:etkdepot:v1}",
+            environment: str = "acc",
+    ):
+        super().__init__(environment=environment)
+    
+        # set up required configuration        
+        self.config_validator.setProperty("mycarenet.licence.username", mycarenet_license_username)
+        self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
+        self.config_validator.setProperty("endpoint.etk", etk_endpoint)
+
+    def render_ask_agreement_bundle(
         self,
         practitioner: Practitioner,
         input_model: AskAgreementInputModel,
@@ -422,6 +469,55 @@ class EAgreementService(AbstractEAgreementService):
             "": "http://hl7.org/fhir"
         }
         return serializer.render(bundle, ns_map), id_
+
+    def render_consult_agreement_bundle(
+        self,
+        practitioner: Practitioner,
+        patient: Patient
+        ):
+        id_ = str(uuid.uuid4())
+        now = datetime.datetime.now(pytz.timezone("Europe/Brussels"))
+        practitioner_physio = self._render_practitioner(
+            practitioner=practitioner,
+            practitioner_identifier="Practitioner1"
+        )
+        practitioner_role_physio = self._render_practitioner_role(
+            practitioner_role="PractitionerRole1",
+            practitioner=f"Practitioner/Practitioner1",
+            code="persphysiotherapist"
+        )
+        message_header = self._render_message_header(
+            practitioner_role_urn=practitioner_role_physio.full_url.value,
+            claim=None
+            )
+
+        parameters = self._render_parameters()
+        patient = self._render_patient(
+            patient=patient
+        )
+        entries = [
+                message_header,
+                parameters,
+                practitioner_role_physio,
+                practitioner_physio,
+                patient,
+        ]
+        
+        bundle = Bundle(
+            id=Id(id_),
+            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementconsult")),
+            timestamp=Timestamp(now.isoformat(timespec="seconds")),
+            type=TypeType(value="message"),
+            entry=entries
+        )
+        
+        serializer = XmlSerializer()
+        serializer.config.pretty_print = True
+        # serializer.config.xml_declaration = True
+        ns_map = {
+            "": "http://hl7.org/fhir"
+        }
+        return serializer.render(bundle, ns_map), id_
     
     def ask_agreement(
         self, 
@@ -430,7 +526,7 @@ class EAgreementService(AbstractEAgreementService):
         ) -> str:
         nihii, givenname, surname = self.set_configuration_from_token(token)
 
-        template, id_ = self.render_bundle(
+        template, id_ = self.render_ask_agreement_bundle(
             Practitioner(
                 nihii=nihii,
                 givenname=givenname,
@@ -444,7 +540,6 @@ class EAgreementService(AbstractEAgreementService):
         bundle = bytes(template, encoding="utf-8")
 
         self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.dump(bundle)
-
         # TODO figure out how to remove this.  The bundle is already rendered at this point ...
         patientInfo = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient()
         patientInfo.setInss(input_model.patient.ssin)
@@ -473,8 +568,8 @@ class EAgreementService(AbstractEAgreementService):
         parser = XmlParser()
         response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
         try:
-            response_pydantic = parser.parse(StringIO(response_string), AskAgreementResponseBundle)
-            return AskAgreementResponse(
+            response_pydantic = parser.parse(StringIO(response_string), AskResponseBundle)
+            return AskResponse(
                 response=response_pydantic,
                 transaction_request=template,
                 transaction_response=response_string,
@@ -489,22 +584,26 @@ class EAgreementService(AbstractEAgreementService):
     def consult_agreement(
         self, 
         token: str,
-        # bundleLocation: str,
-        patientNiss: str = "90060421941"
+        input_model: Patient
         ) -> str:
-        id_ = "ex12"
-        nihii = self.set_configuration_from_token(token)
+        nihii, givenname, surname = self.set_configuration_from_token(token)
+        template, id_ = self.render_consult_agreement_bundle(
+            Practitioner(
+                nihii=nihii,
+                givenname=givenname,
+                surname=surname,
+            ),
+            patient=input_model
+        )
 
         responseBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder()
         
-        # bundle = bytes(template, encoding="utf-8")
-        with open("/mnt/c/Users/piete/Documents/ehealth-pyconnector/tests/data/Bundle-ex12.xml", "rb") as f:
-            bundle = f.read()
+        bundle = bytes(template, encoding="utf-8")
 
         self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.dump(bundle)
 
         patientInfo = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient()
-        patientInfo.setInss(patientNiss)
+        patientInfo.setInss(input_model.ssin)
 
         # input reference and AttributeQuery ID must match
         inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(id_)
@@ -520,10 +619,26 @@ class EAgreementService(AbstractEAgreementService):
 
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.session.AgreementSessionServiceFactory.getAgreementService()
         serviceResponse = service.consultAgreement(consultRequest.getRequest())
+        raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
+
         response = responseBuilder.handleConsultAgreementResponse(serviceResponse, consultRequest)
         signVerifResult = response.getSignatureVerificationResult()
         for entry in signVerifResult.getErrors():
             self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
                   entry.getValue().isValid())
-        logger.info(self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8"))
-        return ""
+
+
+        parser = XmlParser()
+        response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
+        try:
+            response_pydantic = parser.parse(StringIO(response_string), ConsultresposneBundle)
+            return ConsultResponse(
+                response=response_pydantic,
+                transaction_request=template,
+                transaction_response=response_string,
+                soap_request=raw_request,
+                soap_response=raw_response
+            )
+        except:
+            logger.error(response_string)
+            raise
