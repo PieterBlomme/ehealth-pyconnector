@@ -1,8 +1,7 @@
 from dataclasses import field
 from pydantic.dataclasses import dataclass
 from typing import List, Optional
-from xsdata.models.datatype import XmlDateTime, XmlDate
-from pydantic import Extra
+from xsdata.models.datatype import XmlDate, XmlDateTime
 
 __NAMESPACE__ = "http://hl7.org/fhir"
 
@@ -21,6 +20,7 @@ class Created:
         }
     )
 
+
 @dataclass
 class End:
     class Meta:
@@ -34,6 +34,7 @@ class End:
             "required": True,
         }
     )
+
 
 @dataclass
 class Endpoint:
@@ -49,19 +50,6 @@ class Endpoint:
         }
     )
 
-@dataclass
-class Expression:
-    class Meta:
-        name = "expression"
-        namespace = "http://hl7.org/fhir"
-
-    value: Optional[str] = field(
-        default=None,
-        metadata={
-            "type": "Attribute",
-            "required": True,
-        }
-    )
 
 @dataclass
 class Family:
@@ -174,7 +162,7 @@ class PreAuthRef:
         name = "preAuthRef"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    value: Optional[int] = field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -212,19 +200,6 @@ class Reference:
         }
     )
 
-@dataclass
-class Severity:
-    class Meta:
-        name = "severity"
-        namespace = "http://hl7.org/fhir"
-
-    value: Optional[str] = field(
-        default=None,
-        metadata={
-            "type": "Attribute",
-            "required": True,
-        }
-    )
 
 @dataclass
 class Start:
@@ -239,6 +214,7 @@ class Start:
             "required": True,
         }
     )
+
 
 @dataclass
 class Status:
@@ -464,6 +440,7 @@ class Practitioner2:
         }
     )
 
+
 @dataclass
 class PreAuthPeriod:
     class Meta:
@@ -484,6 +461,7 @@ class PreAuthPeriod:
             "required": True,
         }
     )
+
 
 @dataclass
 class Receiver:
@@ -732,21 +710,6 @@ class ProductOrService:
 
 
 @dataclass
-class Reason:
-    class Meta:
-        name = "reason"
-        namespace = "http://hl7.org/fhir"
-
-    coding: Optional[Coding] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-
-
-@dataclass
 class SubType:
     class Meta:
         name = "subType"
@@ -780,19 +743,6 @@ class TypeType:
         }
     )
 
-@dataclass
-class Details:
-    class Meta:
-        name = "details"
-        namespace = "http://hl7.org/fhir"
-
-    coding: Optional[Coding] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
 
 @dataclass
 class PractitionerRole:
@@ -842,13 +792,6 @@ class Adjudication:
             "required": True,
         }
     )
-    reason: Optional[Reason] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
 
 
 @dataclass
@@ -872,41 +815,6 @@ class EventCoding:
         }
     )
 
-
-@dataclass
-class Issue:
-    class Meta:
-        name = "issue"
-        namespace = "http://hl7.org/fhir"
-
-    severity: Optional[Severity] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-    code: Optional[Code] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-    details: Optional[Details] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-    expression: Optional[Expression] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
 
 @dataclass
 class Response:
@@ -1133,46 +1041,12 @@ class ClaimResponse:
         }
     )
 
-@dataclass
-class OperationOutcome:
-    class Meta:
-        namespace = "http://hl7.org/fhir"
-
-    id: Optional[Id] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-    meta: Optional[MetaType] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-    issue: Optional[Issue] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
 
 @dataclass
 class Resource:
     class Meta:
         name = "resource"
         namespace = "http://hl7.org/fhir"
-
-    operation_outcome: Optional[OperationOutcome] = field(
-        default=None,
-        metadata={
-            "name": "OperationOutcome",
-            "type": "Element",
-        }
-    )
 
     claim_response: Optional[ClaimResponse] = field(
         default=None,
@@ -1281,14 +1155,3 @@ class Bundle:
             "min_occurs": 1,
         }
     )
-
-class Config:
-    extra = Extra.forbid
-
-@dataclass(config=Config)
-class Response:
-    response: Bundle
-    transaction_request: str
-    transaction_response: str
-    soap_request: str
-    soap_response: str

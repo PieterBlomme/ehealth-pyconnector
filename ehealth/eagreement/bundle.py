@@ -129,6 +129,18 @@ class Focal:
         }
     )
 
+@dataclass
+class PreAuthRef:
+    class Meta:
+        name = "preAuthRef"
+        namespace = "http://hl7.org/fhir"
+
+    value: Optional[str] = field(
+        default=None,
+        metadata={
+            "type": "Attribute",
+        }
+    )
 
 @dataclass
 class FullUrl:
@@ -867,6 +879,14 @@ class Insurance:
             "type": "Element",
         }
     )
+
+    pre_auth_ref: Optional[PreAuthRef] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+        }
+    )
+    
     coverage: Optional[Coverage] = field(
         default=None,
         metadata={
@@ -1076,7 +1096,7 @@ class SupportingInfo:
             "type": "Element",
         }
     )
-    code: Optional[Code] = field(
+    code: Optional[NestedCode] = field(
         default=None,
         metadata={
             "type": "Element",

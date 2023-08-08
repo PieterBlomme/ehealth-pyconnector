@@ -8,7 +8,7 @@ from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate
 from xsdata_pydantic.bindings import XmlParser
 from .bundle import (
-    Bundle, Entry, FullUrl, Resource, MessageHeader, MetaType, Profile,
+    PreAuthRef, Entry, FullUrl, Resource, MessageHeader, MetaType, Profile,
     EventCoding, Destination, Sender, Source, Focus, System, Code, Endpoint,
     Reference, Organization, Id, Identifier, TypeType, Value, Coding,
     Practitioner2, PractitionerRole, Display, Practitioner1, Name,
@@ -19,7 +19,8 @@ from .bundle import (
     Provider,Priority, Referral, Sequence, Category,
     Insurance, Item, Coverage, Focal, ProductOrService, ServicedDate,
     QuantityQuantity, AuthoredOn, Parameter, Parameters, ValueCode,
-    ValueCoding, ValueString, ValueReference
+    ValueCoding, ValueString, ValueReference, ValueAttachment,
+    Title
 )
 from .input_models import Patient, Practitioner, ClaimAsk, Prescription
 
@@ -289,6 +290,51 @@ class AbstractEAgreementService:
                       service_request: Optional[str] = None
                       ):
         entry_uuid = str(uuid.uuid4())
+
+        if claim_ask.product_or_service.split("-")[0] == "co":
+
+            sub_type = "physiotherapy-common-" + claim_ask.product_or_service.split("-")[1]
+        else:
+            sub_type = "physiotherapy-" + claim_ask.product_or_service.split("-")[0]
+
+        if claim_ask.pre_auth_ref is None:
+            insurance = Insurance(
+                                sequence=Sequence(1),
+                                focal=Focal(True),
+                                coverage=Coverage(Display("use of mandatory insurance coverage, no further details provided here."))
+            )
+        else:
+            insurance = Insurance(
+                                sequence=Sequence(1),
+                                focal=Focal(True),
+                                coverage=Coverage(Display("use of mandatory insurance coverage, no further details provided here.")),
+                                pre_auth_ref=PreAuthRef(claim_ask.pre_auth_ref)
+            )
+        
+        attachments = [
+            SupportingInfo(
+                sequence=Sequence(seq+1),
+                category=Category(
+                    coding=Coding(
+                        system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
+                        code=Code("attachment")
+                    ),
+                ),
+                code=NestedCode(
+                    coding=Coding(
+                            system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/annex-types"),
+                            code=Code(a.type)
+                        )
+                ),
+                value_attachment=ValueAttachment(
+                    content_type=ContentType(a.mimetype),
+                    data=Data(a.data_base64),
+                    title=Title(value=a.title)
+
+                )
+            )
+            for seq, a in enumerate(claim_ask.attachments)
+        ]
         entry = Entry(
                     full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(
@@ -305,7 +351,7 @@ class AbstractEAgreementService:
                             sub_type=SubType(
                                 coding=Coding(
                                     system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/agreement-types"),
-                                    code=Code(claim_ask.sub_type),
+                                    code=Code(sub_type),
                                 )
                             ),
                             use=Use("preauthorization"),
@@ -324,13 +370,8 @@ class AbstractEAgreementService:
                                         code=Code("stat")
                                     ),
                             ),
-                            supporting_info=[
-                            ],
-                            insurance=Insurance(
-                                sequence=Sequence(1),
-                                focal=Focal(True),
-                                coverage=Coverage(Display("use of mandatory insurance coverage, no further details provided here."))
-                            ),
+                            supporting_info=attachments,
+                            insurance=insurance,
                             item=Item(
                                 sequence=Sequence(1),
                                 product_or_service=ProductOrService(
@@ -339,7 +380,7 @@ class AbstractEAgreementService:
                                         code=Code(claim_ask.product_or_service)
                                     ),
                                 ),
-                                serviced_date=ServicedDate(XmlDate.from_date(claim_ask.serviced_date))
+                                serviced_date=ServicedDate(XmlDate.from_date(claim_ask.serviced_date)) if claim_ask.transaction != "claim-extend" else None
                             )
 
                         ),

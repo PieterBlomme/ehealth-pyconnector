@@ -48,7 +48,7 @@ class EAgreementService(AbstractEAgreementService):
         }
         return serializer.render(bundle, ns_map)
     
-    def render_ask_agreement_bundle(
+    def render_ask_or_extend_agreement_bundle(
         self,
         practitioner: Practitioner,
         input_model: AskAgreementInputModel,
@@ -66,7 +66,8 @@ class EAgreementService(AbstractEAgreementService):
         )
         # organization = self._render_organization()
         message_header = self._render_message_header(
-            practitioner_role_urn=practitioner_role_physio.full_url.value
+            practitioner_role_urn=practitioner_role_physio.full_url.value,
+            claim=input_model.claim.transaction
             )
 
         patient = self._render_patient(
@@ -120,7 +121,7 @@ class EAgreementService(AbstractEAgreementService):
             builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildAskAgreementRequest
             )
         return request, template
-
+    
     def render_consult_agreement_bundle(
         self,
         practitioner: Practitioner,
@@ -211,7 +212,7 @@ class EAgreementService(AbstractEAgreementService):
         ) -> str:
         practitioner = self.set_configuration_from_token(token)
 
-        request, template = self.render_ask_agreement_bundle(
+        request, template = self.render_ask_or_extend_agreement_bundle(
             practitioner=practitioner,
             input_model=input_model
         )
@@ -233,7 +234,6 @@ class EAgreementService(AbstractEAgreementService):
             soap_request=raw_request,
             soap_response=raw_response
         )
-    
 
     def consult_agreement(
         self, 
@@ -263,3 +263,26 @@ class EAgreementService(AbstractEAgreementService):
             soap_request=raw_request,
             soap_response=raw_response
         )
+    
+    def async_messages(
+            self,
+            token: str,
+    ):
+        practitioner = self.set_configuration_from_token(token)
+
+        request = self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.domain.GetRequest.newBuilder().withDefaults().build()
+        service = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreementasync.session.AgreementSessionServiceFactory.getAgrementService()
+        response = service.getEAgreementResponse(request)
+
+        logger.info(response.getMsgResponses().size())
+
+        # ProcessedMsgResponse<byte[]> processedMsgResponse = response.getMsgResponses().get(0);
+        # assertEquals("SignatureVerificationResult should contain no error", 0, processedMsgResponse.getSignatureVerificationResult().getErrors().size());
+        # MsgResponse msgResponse = processedMsgResponse.getMsgResponse();
+        # assertNotNull("Missing xades", msgResponse.getXadesT());
+        # XmlAsserter.assertSimilar(ConnectorXmlUtils.toObject(processedMsgResponse.getSignedData(), EncryptedKnownContent.class), processedMsgResponse.getRawDecryptedBlob());
+        # byte[] businessContent = processedMsgResponse.getBusinessResponse();
+        # String stringContent = new String(businessContent, "UTF-8");
+        # XmlAsserter.assertSimilar(ConnectorIOUtils.getResourceAsString("/examples/mycarenet/eagreementasync/expected/eAgreementResponse.xml"), stringContent);
+
+        # AgreementSessionServiceFactory.getAgrementService().confirmAllMessages(response);
