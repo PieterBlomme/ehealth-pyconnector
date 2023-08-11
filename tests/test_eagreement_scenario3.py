@@ -12,8 +12,6 @@ KEYSTORE_PASSPHRASE = os.environ.get("KEYSTORE_PASSPHRASE")
 KEYSTORE_SSIN = os.environ.get("KEYSTORE_SSIN")
 KEYSTORE_PATH = "valid.acc-p12"
 
-SCENARIO_FLAG = os.environ.get("SCENARIO3_FLAG", "6.3.1")
-
 @pytest.fixture(scope="function")
 def default_input() -> AskAgreementInputModel:
     return AskAgreementInputModel(
@@ -49,7 +47,6 @@ def default_input() -> AskAgreementInputModel:
         )
     )
  
-@pytest.mark.skipif(SCENARIO_FLAG > "6.3.1", reason="scenario flag")
 def test__6_3_1__fb_35_does_not_exist(sts_service, token, eagreement_service, default_input):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         response = eagreement_service.ask_agreement(
@@ -69,7 +66,6 @@ def test__6_3_1__fb_35_does_not_exist(sts_service, token, eagreement_service, de
         "INCONSISTENT_CLAIM_PRODUCTORSERVICE_WITH_CLAIM_SUBTYPE" in outcomes
         )
     
-@pytest.mark.skipif(SCENARIO_FLAG > "6.3.2", reason="scenario flag")
 def test__6_3_2__bad_age_requirements(sts_service, token, eagreement_service, default_input):
     default_input.claim.product_or_service = "fb-51"
     default_input.claim.prescription.quantity = 51
@@ -86,7 +82,6 @@ def test__6_3_2__bad_age_requirements(sts_service, token, eagreement_service, de
     assert claim_response.pre_auth_ref.value.startswith("100") # IO1
     assert claim_response.add_item.adjudication.reason.coding.code.value == "REF_AGREE_SRV_PHYSIO_015"
 
-@pytest.mark.skipif(SCENARIO_FLAG > "6.3.3", reason="scenario flag")
 def test__6_3_3__fb_56(sts_service, token, eagreement_service, default_input):
     default_input.claim.product_or_service = "fb-56"
     default_input.claim.prescription.quantity = 52
@@ -103,7 +98,7 @@ def test__6_3_3__fb_56(sts_service, token, eagreement_service, default_input):
     assert claim_response.pre_auth_ref.value.startswith("100") # IO1
     assert claim_response.add_item.adjudication.reason.coding.code.value == "REF_AGREE_SRV_PHYSIO_012"
 
-@pytest.mark.skipif(SCENARIO_FLAG > "6.3.4", reason="scenario flag")
+@pytest.mark.manual
 def test__6_3_4__fb_55_ok(sts_service, token, eagreement_service, default_input):
     default_input.claim.product_or_service = "fb-55"
     default_input.claim.prescription.quantity = 53
@@ -124,7 +119,6 @@ def test__6_3_4__fb_55_ok(sts_service, token, eagreement_service, default_input)
         datetime.date(year=start_agreement.year + 2, month=12, day=31)
     )
 
-@pytest.mark.skipif(SCENARIO_FLAG > "6.3.5", reason="scenario flag")
 def test__6_3_5__fb_58(sts_service, token, eagreement_service, default_input):
     default_input.claim.product_or_service = "fb-58"
     default_input.claim.prescription.quantity = 54
@@ -147,8 +141,8 @@ def test__6_3_5__fb_58(sts_service, token, eagreement_service, default_input):
     assert (
         "INVALID_SERVICEREQUEST_PRESCRIPTIONDATE" in outcomes
         )
-    
-@pytest.mark.skipif(SCENARIO_FLAG > "6.3.6", reason="scenario flag")
+
+@pytest.mark.manual
 def test__6_3_6__fb_58_ok(sts_service, token, eagreement_service, default_input):
     default_input.claim.product_or_service = "fb-58"
     default_input.claim.prescription.quantity = 55
@@ -167,18 +161,14 @@ def test__6_3_6__fb_58_ok(sts_service, token, eagreement_service, default_input)
     assert claim_response.add_item.adjudication.category.coding.code.value == "intreatment"
     assert claim_response.pre_auth_ref.value.startswith("100") # IO1
 
-@pytest.mark.skipif(SCENARIO_FLAG > "6.3.7", reason="scenario flag")
 def test__6_3_7__async(sts_service, token, eagreement_service, default_input):
     raise NotImplementedError("needs async implemented")
 
-@pytest.mark.skipif(SCENARIO_FLAG > "6.3.8", reason="scenario flag")
 def test__6_3_8__async_closed(sts_service, token, eagreement_service, default_input):
     raise NotImplementedError("needs async implemented")
 
-@pytest.mark.skipif(SCENARIO_FLAG > "6.3.9", reason="scenario flag")
 def test__6_3_9__extend(sts_service, token, eagreement_service, default_input):
     raise NotImplementedError("needs async implemented")
 
-@pytest.mark.skipif(SCENARIO_FLAG > "6.3.10", reason="scenario flag")
 def test__6_3_10__extend(sts_service, token, eagreement_service, default_input):
     raise NotImplementedError("needs async implemented")

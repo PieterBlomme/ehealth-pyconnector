@@ -12,8 +12,6 @@ KEYSTORE_PASSPHRASE = os.environ.get("KEYSTORE_PASSPHRASE")
 KEYSTORE_SSIN = os.environ.get("KEYSTORE_SSIN")
 KEYSTORE_PATH = "valid.acc-p12"
 
-SCENARIO_FLAG = os.environ.get("SCENARIO1_FLAG", "6.1.1")
-
 @pytest.fixture(scope="function")
 def default_input() -> AskAgreementInputModel:
     return AskAgreementInputModel(
@@ -43,7 +41,6 @@ def default_input() -> AskAgreementInputModel:
         )
     )
  
-@pytest.mark.skipif(SCENARIO_FLAG > "6.1.1", reason="scenario flag")
 def test__6_1_1__no_prescription(sts_service, token, eagreement_service, default_input):
     default_input.claim.prescription = None
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
@@ -65,7 +62,6 @@ def test__6_1_1__no_prescription(sts_service, token, eagreement_service, default
     assert outcome.issue.code.value == "business-rule"
     assert outcome.issue.details.coding.code.value == "MISSING_PRESCRIPTION_IN_PHYSIO_CLAIM"
 
-@pytest.mark.skipif(SCENARIO_FLAG > "6.1.2", reason="scenario flag")
 def test__6_1_2__failed_business_checks(sts_service, token, eagreement_service, default_input):
     # TODO this fails if 6_1_3 has executed for this patient
     # temp use another patient
@@ -82,7 +78,7 @@ def test__6_1_2__failed_business_checks(sts_service, token, eagreement_service, 
     assert claim_response.add_item.adjudication.reason.coding.code.value == "REF_AGREE_SRV_PHYSIO_010"
     assert claim_response.pre_auth_ref.value.startswith("100") # IO1
 
-@pytest.mark.skipif(SCENARIO_FLAG > "6.1.3", reason="scenario flag")
+@pytest.mark.manual
 def test__6_1_3__fa1(sts_service, token, eagreement_service, default_input):
     # preAuthPeriod start 2023-02-25
     # preAuthPeriod end 2024-02-24
@@ -101,8 +97,7 @@ def test__6_1_3__fa1(sts_service, token, eagreement_service, default_input):
     assert claim_response.pre_auth_period.start.value == XmlDate.from_date(datetime.date.today() - datetime.timedelta(days=145))
     assert claim_response.pre_auth_period.end.value == XmlDate.from_date(datetime.date.today() + datetime.timedelta(days=219))
 
-
-@pytest.mark.skipif(SCENARIO_FLAG > "6.1.4", reason="scenario flag")
+@pytest.mark.manual
 def test__6_1_4__fa1_extend(sts_service, token, eagreement_service, default_input):
     # first consult to get the preAuthRef
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
@@ -135,7 +130,6 @@ def test__6_1_4__fa1_extend(sts_service, token, eagreement_service, default_inpu
     outcome = outcome[0]
     assert outcome.issue.details.coding.code.value == "UNAUTHORIZED_CLAIM_PREAUTHREF_INVALID_SUBTYPE"
 
-@pytest.mark.skipif(SCENARIO_FLAG > "6.1.5", reason="scenario flag")
 def test__6_1_5__missing_attachments(sts_service, token, eagreement_service, default_input):
     default_input.claim.product_or_service = "e-j-2"
     default_input.claim.prescription.quantity = 250
@@ -161,7 +155,7 @@ def test__6_1_5__missing_attachments(sts_service, token, eagreement_service, def
     # for some reason I only get one of the errors
     assert "MISSING_MEDICALREPORT_ANNEX_IN_PHYSIO_CLAIM_SUPPORTINGINFO" in outcomes or "MISSING_RADIOLOGY_PROTOCOL_ANNEX_IN_PHYSIO_CLAIM_SUPPORTINGINFO" in outcomes
 
-@pytest.mark.skipif(SCENARIO_FLAG > "6.1.6", reason="scenario flag")
+@pytest.mark.manual
 def test__6_1_6__with_supporting_attachments(sts_service, token, eagreement_service, default_input):
     default_input.claim.product_or_service = "e-j-2"
     default_input.claim.prescription.quantity = 251
@@ -203,7 +197,6 @@ def test__6_1_6__with_supporting_attachments(sts_service, token, eagreement_serv
     assert claim_response.add_item.adjudication.category.coding.code.value == "intreatment"
     assert claim_response.pre_auth_ref.value.startswith("100") # IO1
 
-@pytest.mark.skipif(SCENARIO_FLAG > "6.1.7", reason="scenario flag")
 def test__6_1_7__async_agreement(sts_service, token, eagreement_service, default_input):
     # TODO will only work if 6_1_6 intreatment worked
     # TODO cannot continue until there are actual messages
@@ -213,7 +206,7 @@ def test__6_1_7__async_agreement(sts_service, token, eagreement_service, default
         )
         logger.info(response)
 
-@pytest.mark.skipif(SCENARIO_FLAG > "6.1.8", reason="scenario flag")
+@pytest.mark.manual
 def test__6_1_8__conflict_with_existing_agreement(sts_service, token, eagreement_service, default_input):
     # NOTE essentially a copy of 6_1_6.  
     # If 6_1_6 executed first, this test will succeed
@@ -263,7 +256,7 @@ def test__6_1_8__conflict_with_existing_agreement(sts_service, token, eagreement
         "UNAUTHORIZED_CLAIM_DUE_TO_EXISTING_IN_PROCESS_CLAIM"
     )
 
-@pytest.mark.skipif(SCENARIO_FLAG > "6.1.9", reason="scenario flag")
+@pytest.mark.manual
 def test__6_1_9__conflict_with_existing_agreement__refusal_case(sts_service, token, eagreement_service, default_input):
     # TODO fails due to existing agreement, but not one that I requested??
 
