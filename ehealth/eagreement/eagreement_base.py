@@ -566,10 +566,4 @@ class AbstractEAgreementService:
         )
         
         template = self.serialize_template(bundle)
-        request = self.redundant_template_render(
-            template=template,
-            patient_ssin=input_model.ssin,
-            id_=id_,
-            builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildConsultAgreementRequest
-            )
-        return request, template
+        return template, id_

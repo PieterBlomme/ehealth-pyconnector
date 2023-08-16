@@ -7,6 +7,7 @@ import json
 import logging
 from uuid import uuid4
 from pathlib import Path
+from typing import Dict, List
 from .utils import get_existing_agreements
 
 logger = logging.getLogger(__name__)
@@ -16,14 +17,44 @@ KEYSTORE_SSIN = os.environ.get("KEYSTORE_SSIN")
 KEYSTORE_PATH = "valid.acc-p12"
 DATA_FOLDER = Path(__file__).parent.joinpath("data/faked_eagreement")
 
+def _get_existing_agreements(token, eagreement_service, patient) -> Dict[str, List[str]]:
+    response = eagreement_service.consult_agreement(
+        token=token,
+        input_model=patient
+    )
+    bundle = [e.resource.bundle for e in response.response.entry if e.resource.bundle is not None]
+    assert len(bundle) == 1
+    bundle = bundle[0]
+    claim_response = [e.resource.claim_response for e in bundle.entry if e.resource.claim_response is not None]
+    existing_agreements = {}
+    for c in claim_response:
+        if c.status.value != "active":
+            logger.info(f"Status {c.status.value} != 'active'")
+            continue
+        if c.add_item.adjudication.category.coding.code.value != "agreement":
+            logger.info(f"Adjudication {c.add_item.adjudication.category.coding.code.value} != 'agreement'")
+            continue
+        code = c.add_item.product_or_service.coding.code.value
+        existing_agreements[code] = existing_agreements.get(code, []) + [c.pre_auth_ref.value]
+    return existing_agreements, response
+
 def ask_agreement_extended(service: EAgreementService, token: str, input_model: AskAgreementInputModel):
     # do a consult call first to store state
     patient = input_model.patient
     
-    existing_agreements = get_existing_agreements(token, service, patient)
+    existing_agreements, response = _get_existing_agreements(token, service, patient)
     logger.info(existing_agreements)
 
-    # actual call
+    # store consult call
+    store = {
+        "input_model": patient.json(),
+        "state": existing_agreements,
+        "response": response.transaction_response
+    }
+    with open(DATA_FOLDER.joinpath(str(uuid4()) + ".json"), "w") as f:
+        json.dump(store, f)
+
+    # actual ask call
     response = service.ask_agreement(
             token=token,
             input_model=input_model
@@ -91,10 +122,7 @@ def test__6_1_2__failed_business_checks(sts_service, token, eagreement_service, 
     # temp use another patient
     default_input.patient.ssin = "71070610591"
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        response = eagreement_service.ask_agreement(
-            token=token,
-            input_model=default_input
-        )
+        response = ask_agreement_extended(eagreement_service, token, default_input)
     claim_response = [e.resource.claim_response for e in response.response.entry if e.resource.claim_response is not None]
     assert len(claim_response) == 1
     claim_response = claim_response[0]
@@ -108,10 +136,7 @@ def test__6_1_3__fa1(sts_service, token, eagreement_service, default_input):
     # preAuthPeriod end 2024-02-24
     default_input.claim.product_or_service = "fa-1"
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        response = eagreement_service.ask_agreement(
-            token=token,
-            input_model=default_input
-        )
+        response = ask_agreement_extended(eagreement_service, token, default_input)
     # check claim response
     claim_response = [e.resource.claim_response for e in response.response.entry if e.resource.claim_response is not None]
     assert len(claim_response) == 1
@@ -138,10 +163,7 @@ def test__6_1_4__fa1_extend(sts_service, token, eagreement_service, default_inpu
     default_input.claim.prescription.quantity = 43
 
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        response = eagreement_service.ask_agreement(
-            token=token,
-            input_model=default_input
-        )
+        response = ask_agreement_extended(eagreement_service, token, default_input)
     # check message header
     message_header = [e.resource.message_header for e in response.response.entry if e.resource.message_header is not None]
     assert len(message_header) == 1
@@ -164,10 +186,7 @@ def test__6_1_5__missing_attachments(sts_service, token, eagreement_service, def
     # temp use another patient
     default_input.patient.ssin = "71070610591"
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        response = eagreement_service.ask_agreement(
-            token=token,
-            input_model=default_input
-        )
+        response = ask_agreement_extended(eagreement_service, token, default_input)
     # check message header
     message_header = [e.resource.message_header for e in response.response.entry if e.resource.message_header is not None]
     assert len(message_header) == 1
@@ -202,10 +221,7 @@ def test__6_1_6__with_supporting_attachments(sts_service, token, eagreement_serv
     # temp use another patient
     default_input.patient.ssin = "71070610591"
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        response = eagreement_service.ask_agreement(
-            token=token,
-            input_model=default_input
-        )
+        response = ask_agreement_extended(eagreement_service, token, default_input)
 
     # xfail if pending request
     outcome = [e.resource.operation_outcome for e in response.response.entry if e.resource.operation_outcome is not None]
@@ -225,9 +241,7 @@ def test__6_1_7__async_agreement(sts_service, token, eagreement_service, default
     # TODO will only work if 6_1_6 intreatment worked
     # TODO cannot continue until there are actual messages
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        response = eagreement_service.async_messages(
-            token=token,
-        )
+        response = ask_agreement_extended(eagreement_service, token, default_input)
         logger.info(response)
 
 @pytest.mark.manual
@@ -255,10 +269,7 @@ def test__6_1_8__conflict_with_existing_agreement(sts_service, token, eagreement
     # temp use another patient
     default_input.patient.ssin = "71070610591"
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        response = eagreement_service.ask_agreement(
-            token=token,
-            input_model=default_input
-        )
+        response = ask_agreement_extended(eagreement_service, token, default_input)
 
     # xfail if no existing agreement
     outcome = [e.resource.operation_outcome for e in response.response.entry if e.resource.operation_outcome is not None]
@@ -297,10 +308,7 @@ def test__6_1_9__conflict_with_existing_agreement__refusal_case(sts_service, tok
     default_input.claim.prescription.date = datetime.date.today() - datetime.timedelta(days=30)
 
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        response = eagreement_service.ask_agreement(
-            token=token,
-            input_model=default_input
-        )
+        response = ask_agreement_extended(eagreement_service, token, default_input)
 
     logger.info(response.transaction_request)
     logger.info(response.transaction_response)

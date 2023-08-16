@@ -70,25 +70,24 @@ class FakeEAgreementService(AbstractEAgreementService):
         input_model: Patient
         ) -> str:
         practitioner = self.set_configuration_from_token(token)
-        request, template = self.render_consult_agreement_bundle(
+        template, id_ = self.render_consult_agreement_bundle(
             practitioner=practitioner,
             input_model=input_model
         )
+        patient_state = self._state.get(input_model.ssin, {})
 
-        raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(request)
+        for model, state, response_string in self.faked:
+            if model == input_model.json() and state == patient_state:
 
-        serviceResponse = self.get_service().consultAgreement(request.getRequest())
-        raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
+                response_pydantic = self.convert_response_to_pydantic(response_string, ConsultResponseBundle)
 
-        response = self.get_response_builder().handleConsultAgreementResponse(serviceResponse, request)
-        self.verify_result(response)
+                # TODO if response is agreement, update state
 
-        response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
-        response_pydantic = self.convert_response_to_pydantic(response, ConsultResponseBundle)
-        return ConsultResponse(
-            response=response_pydantic,
-            transaction_request=template,
-            transaction_response=response_string,
-            soap_request=raw_request,
-            soap_response=raw_response
-        )
+                return ConsultResponse(
+                    response=response_pydantic,
+                    transaction_request=template,
+                    transaction_response=response_string,
+                    soap_request="", # too much effort
+                    soap_response="" # too much effort
+                )
+        raise NotImplementedError(f"Could not fake {input_model}")

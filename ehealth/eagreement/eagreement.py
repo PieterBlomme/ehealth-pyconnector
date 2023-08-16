@@ -88,11 +88,17 @@ class EAgreementService(AbstractEAgreementService):
         input_model: Patient
         ) -> str:
         practitioner = self.set_configuration_from_token(token)
-        request, template = self.render_consult_agreement_bundle(
+        template, id_ = self.render_consult_agreement_bundle(
             practitioner=practitioner,
             input_model=input_model
         )
-
+        request = self.redundant_template_render(
+            template=template,
+            patient_ssin=input_model.ssin,
+            id_=id_,
+            builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildConsultAgreementRequest
+            )
+        
         raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(request)
 
         serviceResponse = self.get_service().consultAgreement(request.getRequest())

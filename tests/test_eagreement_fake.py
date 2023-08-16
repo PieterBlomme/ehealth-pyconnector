@@ -14,6 +14,7 @@ KEYSTORE_PASSPHRASE = os.environ.get("KEYSTORE_PASSPHRASE")
 KEYSTORE_SSIN = os.environ.get("KEYSTORE_SSIN")
 KEYSTORE_PATH = "valid.acc-p12"
 DATA_FOLDER = Path(__file__).parent.joinpath("data/faked_eagreement")
+BASE_DATE = datetime.date.fromisoformat("2023-08-16")
 
 @pytest.fixture(scope="function")
 def default_input() -> AskAgreementInputModel:
@@ -32,13 +33,13 @@ def default_input() -> AskAgreementInputModel:
         claim=ClaimAsk(
             sub_type="physiotherapy-fa",
             product_or_service="fa-6",
-            billable_period=datetime.date.today() - datetime.timedelta(days=145),
-            serviced_date=datetime.date.today() - datetime.timedelta(days=156),
+            billable_period=BASE_DATE - datetime.timedelta(days=145),
+            serviced_date=BASE_DATE - datetime.timedelta(days=156),
             prescription=Prescription(
                 data_base64="QW5uZXhlIGlubGluZSwgYmFzZTY0ZWQ=",
                 snomed_category=91251008,
                 snomed_code=91251008,
-                date=datetime.date.today() - datetime.timedelta(days=150),
+                date=BASE_DATE - datetime.timedelta(days=150),
                 quantity=41
             )
         )
@@ -72,7 +73,7 @@ def fake_mda_service():
     fake.set_state("71020203354", initial_state)
     return fake
 
-def test__6_1_1__no_prescription(fake_sts_service, token, fake_mda_service, default_input):
+def test_fake_ask_ok(fake_sts_service, token, fake_mda_service, default_input):
     default_input.claim.prescription = None
     with fake_sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         response = fake_mda_service.ask_agreement(token, default_input)
@@ -90,3 +91,26 @@ def test__6_1_1__no_prescription(fake_sts_service, token, fake_mda_service, defa
     assert outcome.issue.severity.value == "error"
     assert outcome.issue.code.value == "business-rule"
     assert outcome.issue.details.coding.code.value == "MISSING_PRESCRIPTION_IN_PHYSIO_CLAIM"
+
+def test_fake_consult_ok(fake_sts_service, token, fake_mda_service, default_input):
+    default_input.claim.prescription = None
+    with fake_sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        response = fake_mda_service.consult_agreement(token, default_input.patient)
+
+    logger.info(response)
+
+def test_fake_ask_nok(fake_sts_service, token, fake_mda_service, default_input):
+    default_input.patient.ssin = KEYSTORE_SSIN
+    with fake_sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        with pytest.raises(NotImplementedError):
+            fake_mda_service.ask_agreement(token, default_input)
+
+def test_fake_consult_nok(fake_sts_service, token, fake_mda_service, default_input):
+    default_input.patient.ssin = KEYSTORE_SSIN
+    with fake_sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        with pytest.raises(NotImplementedError):
+            fake_mda_service.consult_agreement(token, default_input.patient)
+
+# TODO 
+# tests agreement => changed state
+# tests intreatment => changed state
