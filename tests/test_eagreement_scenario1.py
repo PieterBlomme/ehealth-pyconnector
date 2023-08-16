@@ -1,9 +1,12 @@
-from ehealth.eagreement import AskAgreementInputModel, Patient, Practitioner, ClaimAsk, Prescription, Attachment
+from ehealth.eagreement import AskAgreementInputModel, Patient, Practitioner, ClaimAsk, Prescription, Attachment, EAgreementService
 from xsdata.models.datatype import XmlDate
 import os
 import datetime
 import pytest
+import json
 import logging
+from uuid import uuid4
+from pathlib import Path
 from .utils import get_existing_agreements
 
 logger = logging.getLogger(__name__)
@@ -11,6 +14,29 @@ logger = logging.getLogger(__name__)
 KEYSTORE_PASSPHRASE = os.environ.get("KEYSTORE_PASSPHRASE")
 KEYSTORE_SSIN = os.environ.get("KEYSTORE_SSIN")
 KEYSTORE_PATH = "valid.acc-p12"
+DATA_FOLDER = Path(__file__).parent.joinpath("data/faked_eagreement")
+
+def ask_agreement_extended(service: EAgreementService, token: str, input_model: AskAgreementInputModel):
+    # do a consult call first to store state
+    patient = input_model.patient
+    
+    existing_agreements = get_existing_agreements(token, service, patient)
+    logger.info(existing_agreements)
+
+    # actual call
+    response = service.ask_agreement(
+            token=token,
+            input_model=input_model
+        )
+    
+    store = {
+        "input_model": input_model.json(),
+        "state": existing_agreements,
+        "response": response.transaction_response
+    }
+    with open(DATA_FOLDER.joinpath(str(uuid4()) + ".json"), "w") as f:
+        json.dump(store, f)
+    return response
 
 @pytest.fixture(scope="function")
 def default_input() -> AskAgreementInputModel:
@@ -40,14 +66,12 @@ def default_input() -> AskAgreementInputModel:
             )
         )
     )
- 
+
 def test__6_1_1__no_prescription(sts_service, token, eagreement_service, default_input):
     default_input.claim.prescription = None
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        response = eagreement_service.ask_agreement(
-            token=token,
-            input_model=default_input
-        )
+        response = ask_agreement_extended(eagreement_service, token, default_input)
+
     # check message header
     message_header = [e.resource.message_header for e in response.response.entry if e.resource.message_header is not None]
     assert len(message_header) == 1

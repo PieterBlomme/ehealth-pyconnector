@@ -2,11 +2,16 @@ from py4j.java_gateway import JavaGateway
 import logging
 import datetime
 import uuid
-from typing import Optional
+import pytz
+from typing import Optional, Any, Callable
 from io import StringIO
 from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate
 from xsdata_pydantic.bindings import XmlParser
+from xsdata_pydantic.bindings import XmlSerializer, XmlParser
+from pydantic import BaseModel
+from .input_models import Patient, Practitioner, AskAgreementInputModel
+
 from .bundle import (
     PreAuthRef, Entry, FullUrl, Resource, MessageHeader, MetaType, Profile,
     EventCoding, Destination, Sender, Source, Focus, System, Code, Endpoint,
@@ -20,7 +25,7 @@ from .bundle import (
     Insurance, Item, Coverage, Focal, ProductOrService, ServicedDate,
     QuantityQuantity, AuthoredOn, Parameter, Parameters, ValueCode,
     ValueCoding, ValueString, ValueReference, ValueAttachment,
-    Title
+    Title, Bundle, Timestamp
 )
 from .input_models import Patient, Practitioner, ClaimAsk, Prescription
 
@@ -422,3 +427,149 @@ class AbstractEAgreementService:
                         ),
                     )
                 )
+
+    @classmethod
+    def serialize_template(cls, bundle: BaseModel):
+        serializer = XmlSerializer()
+        serializer.config.pretty_print = True
+        # serializer.config.xml_declaration = True
+        ns_map = {
+            "": "http://hl7.org/fhir"
+        }
+        return serializer.render(bundle, ns_map)
+
+    def redundant_template_render(self, template: Any, patient_ssin: str, id_: str, builder_func: Callable):
+        bundle = bytes(template, encoding="utf-8")
+        self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.dump(bundle)
+
+        # TODO figure out how to remove this.  The bundle is already rendered at this point ...
+        patientInfo = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient()
+        patientInfo.setInss(patient_ssin)
+
+        # input reference and Bundle ID must match
+        inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(id_)
+        return builder_func(
+            self.is_test, 
+            inputReference, 
+            patientInfo, 
+            self.GATEWAY.jvm.org.joda.time.DateTime(), 
+            bundle
+            )
+    
+    def render_ask_or_extend_agreement_bundle(
+        self,
+        practitioner: Practitioner,
+        input_model: AskAgreementInputModel,
+        ):
+        id_ = str(uuid.uuid4())
+        now = datetime.datetime.now(pytz.timezone("Europe/Brussels"))
+        practitioner_physio = self._render_practitioner(
+            practitioner=practitioner,
+            practitioner_identifier="Practitioner1"
+        )
+        practitioner_role_physio = self._render_practitioner_role(
+            practitioner_role="PractitionerRole1",
+            practitioner=f"Practitioner/Practitioner1",
+            code="persphysiotherapist"
+        )
+        # organization = self._render_organization()
+        message_header = self._render_message_header(
+            practitioner_role_urn=practitioner_role_physio.full_url.value,
+            claim=input_model.claim.transaction
+            )
+
+        patient = self._render_patient(
+            patient=input_model.patient
+        )
+        practitioner_physician = self._render_practitioner(
+            practitioner=input_model.physician,
+            practitioner_identifier="Practitioner2"
+        )
+        practitioner_role_physician = self._render_practitioner_role(
+            practitioner_role="PractitionerRole2",
+            practitioner=f"Practitioner/Practitioner2",
+            code="persphysician"
+        )
+        entries = [
+               message_header,
+                # organization,
+                practitioner_role_physio,
+                practitioner_physio,
+                patient,
+                practitioner_role_physician,
+                practitioner_physician,
+        ]
+        if input_model.claim.prescription:
+            annex = self._render_service_request_1(input_model.claim.prescription)
+            entries.append(annex)
+            service_request = f"ServiceRequest/{annex.resource.service_request.id.value}"
+            # prescription = self.render_service_request_2()
+            # entries.append(prescription)
+        else:
+            service_request = None
+        claim = self._render_claim(
+            now=now,
+            claim_ask=input_model.claim,
+            service_request=service_request
+            )
+        entries.append(claim)
+        
+        bundle = Bundle(
+            id=Id(id_),
+            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementdemand")),
+            timestamp=Timestamp(now.isoformat(timespec="seconds")),
+            type=TypeType(value="message"),
+            entry=entries
+        )
+        template = self.serialize_template(bundle)
+        return template, id_
+    
+    def render_consult_agreement_bundle(
+        self,
+        practitioner: Practitioner,
+        input_model: Patient
+        ):
+        id_ = str(uuid.uuid4())
+        now = datetime.datetime.now(pytz.timezone("Europe/Brussels"))
+        practitioner_physio = self._render_practitioner(
+            practitioner=practitioner,
+            practitioner_identifier="Practitioner1"
+        )
+        practitioner_role_physio = self._render_practitioner_role(
+            practitioner_role="PractitionerRole1",
+            practitioner=f"Practitioner/Practitioner1",
+            code="persphysiotherapist"
+        )
+        message_header = self._render_message_header(
+            practitioner_role_urn=practitioner_role_physio.full_url.value,
+            claim=None
+            )
+
+        parameters = self._render_parameters()
+        patient = self._render_patient(
+            patient=input_model
+        )
+        entries = [
+                message_header,
+                parameters,
+                practitioner_role_physio,
+                practitioner_physio,
+                patient,
+        ]
+        
+        bundle = Bundle(
+            id=Id(id_),
+            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementconsult")),
+            timestamp=Timestamp(now.isoformat(timespec="seconds")),
+            type=TypeType(value="message"),
+            entry=entries
+        )
+        
+        template = self.serialize_template(bundle)
+        request = self.redundant_template_render(
+            template=template,
+            patient_ssin=input_model.ssin,
+            id_=id_,
+            builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildConsultAgreementRequest
+            )
+        return request, template
