@@ -56,7 +56,7 @@ def generate_properties_file(path: Optional[str] = PACKAGE_ROOT):
         f.write(props)
         
 @click.command()
-@click.option('--base-path', multiple=True)
+@click.option('--base-path')
 def compile_bridge(base_path):
     CLASSPATH = get_classpath()
     cmd = f"javac -cp '{CLASSPATH}' {PACKAGE_ROOT}/JavaGateway.java"
