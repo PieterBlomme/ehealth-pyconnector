@@ -70,8 +70,11 @@ class EAgreementService(AbstractEAgreementService):
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
 
         response = self.get_response_builder().handleAskAgreementResponse(serviceResponse, request)
-        self.verify_result(response)
-
+        try:
+            self.verify_result(response)
+        except Exception as e:
+            logger.exception(e)
+            
         response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
         response_pydantic = self.convert_response_to_pydantic(response, AskResponseBundle)
         return AskResponse(
@@ -105,7 +108,10 @@ class EAgreementService(AbstractEAgreementService):
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
 
         response = self.get_response_builder().handleConsultAgreementResponse(serviceResponse, request)
-        self.verify_result(response)
+        try:
+            self.verify_result(response)
+        except Exception as e:
+            logger.exception(e)
 
         response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
         response_pydantic = self.convert_response_to_pydantic(response, ConsultResponseBundle)
