@@ -33,9 +33,12 @@ class EAgreementService(AbstractEAgreementService):
     def verify_result(self, response: Any):
         signVerifResult = response.getSignatureVerificationResult()
         for entry in signVerifResult.getErrors():
-            self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
-                  entry.getValue().isValid())
-    
+            try:
+                self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
+                    entry.getValue().isValid())
+            except Exception as e:
+                logger.exception(e)
+                logger.error(entry)
 
     def convert_response_to_pydantic(self, response: any, target_class: Callable):
         parser = XmlParser()

@@ -1152,8 +1152,8 @@ class OperationOutcome:
             "required": True,
         }
     )
-    issue: Optional[Issue] = field(
-        default=None,
+    issue: List[Issue] = field(
+        default_factory=list,
         metadata={
             "type": "Element",
             "required": True,

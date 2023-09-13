@@ -17,6 +17,9 @@ KEYSTORE_SSIN = os.environ.get("KEYSTORE_SSIN")
 KEYSTORE_PATH = "valid.acc-p12"
 DATA_FOLDER = Path(__file__).parent.joinpath("data/faked_eagreement")
 
+SSINS = ["71020203354", "64051544103", "96010145781", "84080841501", "68042000773"]
+NIHIIS = ["00092210605", "09120132247", "74050344782", "64090403291", "90010352422"]
+
 def _get_existing_agreements(token, eagreement_service, patient) -> Dict[str, List[str]]:
     response = eagreement_service.consult_agreement(
         token=token,
@@ -73,13 +76,13 @@ def ask_agreement_extended(service: EAgreementService, token: str, input_model: 
 def default_input() -> AskAgreementInputModel:
     return AskAgreementInputModel(
         patient=Patient(
-            ssin="71020203354",
+            ssin="",
             givenname="John",
             surname="Smith",
             gender="male"
         ),
         physician=Practitioner(
-            nihii="00092210605",
+            nihii="",
             givenname="John",
             surname="Smith"
         ),
@@ -98,7 +101,11 @@ def default_input() -> AskAgreementInputModel:
         )
     )
 
-def test__6_1_1__no_prescription(sts_service, token, eagreement_service, default_input):
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_1_1__no_prescription(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+
     default_input.claim.prescription = None
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         response = ask_agreement_extended(eagreement_service, token, default_input)
@@ -113,16 +120,26 @@ def test__6_1_1__no_prescription(sts_service, token, eagreement_service, default
     outcome = [e.resource.operation_outcome for e in response.response.entry if e.resource.operation_outcome is not None]
     assert len(outcome) == 1
     outcome = outcome[0]
-    assert outcome.issue.severity.value == "error"
-    assert outcome.issue.code.value == "business-rule"
-    assert outcome.issue.details.coding.code.value == "MISSING_PRESCRIPTION_IN_PHYSIO_CLAIM"
+    for issue in outcome.issue:
+        assert issue.severity.value == "error"
+        assert issue.code.value == "business-rule"
+        assert issue.details.coding.code.value == "MISSING_PRESCRIPTION_IN_PHYSIO_CLAIM"
 
-def test__6_1_2__failed_business_checks(sts_service, token, eagreement_service, default_input):
-    # TODO this fails if 6_1_3 has executed for this patient
-    # temp use another patient
-    default_input.patient.ssin = "71070610591"
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_1_2__failed_business_checks(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    # expected to fail for 71020203354 (existing agreement at the moment)
+    # the others fail due to UKNOWN_PRACTITIONER_IDENTIFIER and even UNAUTHORIZED_SECTOR_IN_SERVICEREQUEST_REQUESTER ??
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        existing_agreements = get_existing_agreements(token, eagreement_service, default_input.patient)
+        logger.info(f"Existing agreements: {existing_agreements}")
         response = ask_agreement_extended(eagreement_service, token, default_input)
+
+    outcome = [e.resource.operation_outcome for e in response.response.entry if e.resource.operation_outcome is not None]
+    logger.warning(outcome)
+
     claim_response = [e.resource.claim_response for e in response.response.entry if e.resource.claim_response is not None]
     assert len(claim_response) == 1
     claim_response = claim_response[0]
@@ -174,9 +191,14 @@ def test__6_1_4__fa1_extend(sts_service, token, eagreement_service, default_inpu
     outcome = [e.resource.operation_outcome for e in response.response.entry if e.resource.operation_outcome is not None]
     assert len(outcome) == 1
     outcome = outcome[0]
-    assert outcome.issue.details.coding.code.value == "UNAUTHORIZED_CLAIM_PREAUTHREF_INVALID_SUBTYPE"
+    for issue in outcome.issue:
+        assert issue.details.coding.code.value == "UNAUTHORIZED_CLAIM_PREAUTHREF_INVALID_SUBTYPE"
 
-def test__6_1_5__missing_attachments(sts_service, token, eagreement_service, default_input):
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_1_5__missing_attachments(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+
     default_input.claim.product_or_service = "e-j-2"
     default_input.claim.prescription.quantity = 250
     default_input.claim.billable_period = datetime.date.today() - datetime.timedelta(days=90)
@@ -194,7 +216,7 @@ def test__6_1_5__missing_attachments(sts_service, token, eagreement_service, def
     assert message_header.event_coding.code.value == "reject"
 
     # check outcomes
-    outcomes = [e.resource.operation_outcome.issue.details.coding.code.value for e in response.response.entry if e.resource.operation_outcome is not None]
+    outcomes = [e.resource.operation_outcome.issue[0].details.coding.code.value for e in response.response.entry if e.resource.operation_outcome is not None]
     # for some reason I only get one of the errors
     assert "MISSING_MEDICALREPORT_ANNEX_IN_PHYSIO_CLAIM_SUPPORTINGINFO" in outcomes or "MISSING_RADIOLOGY_PROTOCOL_ANNEX_IN_PHYSIO_CLAIM_SUPPORTINGINFO" in outcomes
 
@@ -227,7 +249,7 @@ def test__6_1_6__with_supporting_attachments(sts_service, token, eagreement_serv
     outcome = [e.resource.operation_outcome for e in response.response.entry if e.resource.operation_outcome is not None]
     if len(outcome) == 1:
         outcome = outcome[0]
-        if outcome.issue.details.coding.code.value == "UNAUTHORIZED_CLAIM_DUE_TO_EXISTING_IN_PROCESS_CLAIM":
+        if outcome.issue[0].details.coding.code.value == "UNAUTHORIZED_CLAIM_DUE_TO_EXISTING_IN_PROCESS_CLAIM":
             pytest.xfail("TODO existing in process claim needs to be handled (can we cancel it somehow?)")
     
     # check claim response
@@ -287,10 +309,11 @@ def test__6_1_8__conflict_with_existing_agreement(sts_service, token, eagreement
     outcome = [e.resource.operation_outcome for e in response.response.entry if e.resource.operation_outcome is not None]
     assert len(outcome) == 1
     outcome = outcome[0]
-    assert outcome.issue.details.coding.code.value in (
-        "UNAUTHORIZED_CLAIM_DUE_TO_EXISTING_AGREEMENT",
-        "UNAUTHORIZED_CLAIM_DUE_TO_EXISTING_IN_PROCESS_CLAIM"
-    )
+    for issue in outcome.issue:
+        assert issue.details.coding.code.value in (
+            "UNAUTHORIZED_CLAIM_DUE_TO_EXISTING_AGREEMENT",
+            "UNAUTHORIZED_CLAIM_DUE_TO_EXISTING_IN_PROCESS_CLAIM"
+        )
 
 @pytest.mark.manual
 def test__6_1_9__conflict_with_existing_agreement__refusal_case(sts_service, token, eagreement_service, default_input):
