@@ -237,6 +237,7 @@ def test__6_1_6__with_supporting_attachments(sts_service, token, eagreement_serv
     assert claim_response.add_item.adjudication.category.coding.code.value == "intreatment"
     assert claim_response.pre_auth_ref.value.startswith("100") # IO1
 
+@pytest.mark.asynchronous
 def test__6_1_7__async_agreement(sts_service, token, eagreement_service, default_input):
     # TODO will only work if 6_1_6 intreatment worked
     # TODO cannot continue until there are actual messages

@@ -116,8 +116,10 @@ def test__6_2_3__fa_2_intreatment(sts_service, token, eagreement_service, defaul
     assert claim_response.add_item.adjudication.category.coding.code.value == "intreatment"
     assert claim_response.pre_auth_ref.value.startswith("100") # IO1
 
+@pytest.mark.asynchronous
 def test__6_2_4__async(sts_service, token, eagreement_service, default_input):
     raise NotImplementedError("needs async implemented")
 
+@pytest.mark.asynchronous
 def test__6_2_5__argue(sts_service, token, eagreement_service, default_input):
     raise NotImplementedError("needs async implemented")
