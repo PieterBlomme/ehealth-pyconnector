@@ -12,17 +12,20 @@ KEYSTORE_PASSPHRASE = os.environ.get("KEYSTORE_PASSPHRASE")
 KEYSTORE_SSIN = os.environ.get("KEYSTORE_SSIN")
 KEYSTORE_PATH = "valid.acc-p12"
 
+SSINS = ["71070610591", "90050725406", "96020232395", "91110537409", "68042002753"]
+NIHIIS = ["58112129084", "12032636926", "76101138974", "30610131001", "76100322788"]
+
 @pytest.fixture(scope="function")
 def default_input() -> AskAgreementInputModel:
     return AskAgreementInputModel(
         patient=Patient(
-            ssin="71070610591",
+            ssin="",
             givenname="John",
             surname="Smith",
             gender="male"
         ),
         physician=Practitioner(
-            nihii="58112129084",
+            nihii="",
             givenname="John",
             surname="Smith"
         ),
@@ -48,7 +51,11 @@ def default_input() -> AskAgreementInputModel:
         )
     )
  
-def test__6_2_1__inconsistent_dates(sts_service, token, eagreement_service, default_input):
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_2_1__inconsistent_dates(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+    
     default_input.claim.product_or_service = "fa-1"
     default_input.claim.prescription.quantity = 30
     default_input.claim.billable_period = datetime.date.today() - datetime.timedelta(days=270)
@@ -67,7 +74,7 @@ def test__6_2_1__inconsistent_dates(sts_service, token, eagreement_service, defa
     assert message_header.event_coding.code.value == "reject"
 
     # check outcomes
-    outcomes = [e.resource.operation_outcome.issue.details.coding.code.value for e in response.response.entry if e.resource.operation_outcome is not None]
+    outcomes = [e.resource.operation_outcome.issue[0].details.coding.code.value for e in response.response.entry if e.resource.operation_outcome is not None]
     # for some reason I only get one of the errors
     assert (
         "UNAUTHORIZED_STARTDATE_IN_CLAIM_BILLABLEPERIOD" in outcomes or
