@@ -121,5 +121,29 @@ def test__6_2_4__async(sts_service, token, eagreement_service, default_input):
     raise NotImplementedError("needs async implemented")
 
 @pytest.mark.asynchronous
-def test__6_2_5__argue(sts_service, token, eagreement_service, default_input):
+def test__6_2_5__argue_refused(sts_service, token, eagreement_service, default_input):
+    raise NotImplementedError("needs async implemented")
+
+@pytest.mark.asynchronous
+def test__6_2_6__argue_impossible_date(sts_service, token, eagreement_service, default_input):
+    raise NotImplementedError("needs async implemented")
+
+@pytest.mark.asynchronous
+def test__6_2_7__argue_approved(sts_service, token, eagreement_service, default_input):
+    raise NotImplementedError("needs async implemented")
+
+@pytest.mark.asynchronous
+def test__6_2_8__async_approved(sts_service, token, eagreement_service, default_input):
+    raise NotImplementedError("needs async implemented")
+
+@pytest.mark.manual
+def test__6_2_9__early_closure(sts_service, token, eagreement_service, default_input):
+    raise NotImplementedError("needs async implemented")
+
+@pytest.mark.manual
+def test__6_2_10__extend_failed_business_checks(sts_service, token, eagreement_service, default_input):
+    raise NotImplementedError("needs async implemented")
+
+@pytest.mark.manual
+def test__6_2_11__complete_agreement_bad_reference(sts_service, token, eagreement_service, default_input):
     raise NotImplementedError("needs async implemented")
