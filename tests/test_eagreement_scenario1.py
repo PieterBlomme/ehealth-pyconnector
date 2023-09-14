@@ -17,8 +17,8 @@ KEYSTORE_SSIN = os.environ.get("KEYSTORE_SSIN")
 KEYSTORE_PATH = "valid.acc-p12"
 DATA_FOLDER = Path(__file__).parent.joinpath("data/faked_eagreement")
 
-SSINS = ["71020203354", "64051544103", "96010145781", "84080841501", "68042000773"]
-NIHIIS = ["00092210605", "09120132247", "74050344782", "64090403291", "90010352422"]
+SSINS = ["71020203354"]#, "64051544103", "96010145781", "84080841501", "68042000773"]
+NIHIIS = ["00092210605"]#, "09120132247", "74050344782", "64090403291", "90010352422"]
 
 def _get_existing_agreements(token, eagreement_service, patient) -> Dict[str, List[str]]:
     response = eagreement_service.consult_agreement(
@@ -34,7 +34,7 @@ def _get_existing_agreements(token, eagreement_service, patient) -> Dict[str, Li
         if c.status.value != "active":
             logger.info(f"Status {c.status.value} != 'active'")
             continue
-        if c.add_item.adjudication.category.coding.code.value != "agreement":
+        if c.add_item.adjudication.category.coding.code.value not in ("intreatment", "agreement"):
             logger.info(f"Adjudication {c.add_item.adjudication.category.coding.code.value} != 'agreement'")
             continue
         code = c.add_item.product_or_service.coding.code.value
@@ -164,7 +164,11 @@ def test__6_1_3__fa1(sts_service, token, eagreement_service, default_input):
     assert claim_response.pre_auth_period.end.value == XmlDate.from_date(datetime.date.today() + datetime.timedelta(days=219))
 
 @pytest.mark.manual
-def test__6_1_4__fa1_extend(sts_service, token, eagreement_service, default_input):
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_1_4__fa1_extend(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+
     # first consult to get the preAuthRef
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         existing_agreements = get_existing_agreements(token, eagreement_service, default_input.patient)
@@ -205,8 +209,6 @@ def test__6_1_5__missing_attachments(sts_service, token, eagreement_service, def
     default_input.claim.serviced_date = datetime.date.today() - datetime.timedelta(days=106)
     default_input.claim.prescription.date = datetime.date.today() - datetime.timedelta(days=100)
     # TODO this fails if 6_1_3 has executed for this patient
-    # temp use another patient
-    default_input.patient.ssin = "71070610591"
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         response = ask_agreement_extended(eagreement_service, token, default_input)
     # check message header
@@ -221,7 +223,11 @@ def test__6_1_5__missing_attachments(sts_service, token, eagreement_service, def
     assert "MISSING_MEDICALREPORT_ANNEX_IN_PHYSIO_CLAIM_SUPPORTINGINFO" in outcomes or "MISSING_RADIOLOGY_PROTOCOL_ANNEX_IN_PHYSIO_CLAIM_SUPPORTINGINFO" in outcomes
 
 @pytest.mark.manual
-def test__6_1_6__with_supporting_attachments(sts_service, token, eagreement_service, default_input):
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_1_6__with_supporting_attachments(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+
     default_input.claim.product_or_service = "e-j-2"
     default_input.claim.prescription.quantity = 251
     default_input.claim.billable_period = datetime.date.today() - datetime.timedelta(days=100)
@@ -239,9 +245,6 @@ def test__6_1_6__with_supporting_attachments(sts_service, token, eagreement_serv
             title="attahcment",
         ),
     ]
-    # TODO this fails if 6_1_3 has executed for this patient
-    # temp use another patient
-    default_input.patient.ssin = "71070610591"
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         response = ask_agreement_extended(eagreement_service, token, default_input)
 
@@ -260,12 +263,16 @@ def test__6_1_6__with_supporting_attachments(sts_service, token, eagreement_serv
     assert claim_response.pre_auth_ref.value.startswith("100") # IO1
 
 @pytest.mark.asynchronous
-def test__6_1_7__async_agreement(sts_service, token, eagreement_service, default_input):
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_1_7__async_agreement(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+
     # TODO will only work if 6_1_6 intreatment worked
     # TODO cannot continue until there are actual messages
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         response = ask_agreement_extended(eagreement_service, token, default_input)
-        logger.info(response)
+        response_async = eagreement_service.async_messages(token)
 
 @pytest.mark.manual
 def test__6_1_8__conflict_with_existing_agreement(sts_service, token, eagreement_service, default_input):
