@@ -23,6 +23,10 @@ class EAgreementService(AbstractEAgreementService):
         self.config_validator.setProperty("mycarenet.licence.username", mycarenet_license_username)
         self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
         self.config_validator.setProperty("endpoint.etk", etk_endpoint)
+        logger.info(self.config_validator.getProperty("KEYSTORE_DIR"))
+        logger.info(self.config_validator.getProperty("truststore_location"))
+        logger.info(self.config_validator.getProperty("CAKEYSTORE_LOCATION"))
+        logger.info(self.config_validator.getProperty("CAKEYSTORE_PASSWORD"))
     
     def get_service(self):
         return self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.session.AgreementSessionServiceFactory.getAgreementService()
