@@ -38,9 +38,6 @@ def download_packages():
 def get_classpath():
     # correctly set the Java classpath
     CLASSPATH = "./java/lib/*:./java/test-lib/*"
-    ENV_PATH = subprocess.getoutput("poetry env info --path")
-    PY4J_PATH = f"{ENV_PATH}/share/py4j/py4j0.10.9.7.jar"
-    CLASSPATH += f":{PY4J_PATH}"
     print(f"Using Java CLASSPATH={CLASSPATH}")
     return CLASSPATH
 
@@ -53,14 +50,22 @@ def generate_properties_file():
     props = props.replace("KEYSTORE_DIR=/P12/${environment}/", f"KEYSTORE_DIR={PACKAGE_ROOT}/java/config/P12/${{environment}}/")
     with open(f"{PACKAGE_ROOT}/be.ehealth.technicalconnector.properties", "w") as f:
         f.write(props)
-        
+
+def move_py4j_jar():
+    print("Moving py4j0.10.9.7.jar")
+    ENV_PATH = subprocess.getoutput("poetry env info --path")
+    PY4J_PATH = f"{ENV_PATH}/share/py4j/py4j0.10.9.7.jar"
+    shutil.copy(PY4J_PATH, "./java/lib/py4j0.10.9.7.jar")
+
 @click.command()
 def compile_bridge():
     CLASSPATH = get_classpath()
+    move_py4j_jar()
     cmd = f"javac -cp '{CLASSPATH}' {PACKAGE_ROOT}/JavaGateway.java"
     print(cmd)
     os.system(cmd)
     generate_properties_file()
+
 
 def launch_bridge():
     CLASSPATH = get_classpath()
