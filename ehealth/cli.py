@@ -54,7 +54,10 @@ def generate_properties_file():
 def move_py4j_jar():
     print("Moving py4j0.10.9.7.jar")
     ENV_PATH = subprocess.getoutput("poetry env info --path")
+    if not ENV_PATH:
+        ENV_PATH = "/usr/local"
     PY4J_PATH = f"{ENV_PATH}/share/py4j/py4j0.10.9.7.jar"
+    print(PY4J_PATH)
     shutil.copy(PY4J_PATH, "./java/lib/py4j0.10.9.7.jar")
 
 @click.command()
