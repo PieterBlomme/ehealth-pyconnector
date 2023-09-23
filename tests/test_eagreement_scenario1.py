@@ -19,8 +19,8 @@ DATA_FOLDER = Path(__file__).parent.joinpath("data/faked_eagreement")
 
 SSINS = ["71020203354", "64051544103", "96010145781", "84080841501", "68042000773"]
 NIHIIS = ["00092210605", "09120132247", "74050344782", "64090403291", "90010352422"]
-SSINS = ["71020203354"]
-NIHIIS = ["00092210605"]
+SSINS = ["64051544103"]
+NIHIIS = ["09120132247"]
 
 def _get_existing_agreements(token, eagreement_service, patient) -> Dict[str, List[str]]:
     response = eagreement_service.consult_agreement(
@@ -56,8 +56,8 @@ def ask_agreement_extended(service: EAgreementService, token: str, input_model: 
         "state": existing_agreements,
         "response": response.transaction_response
     }
-    with open(DATA_FOLDER.joinpath(str(uuid4()) + ".json"), "w") as f:
-        json.dump(store, f)
+    # with open(DATA_FOLDER.joinpath(str(uuid4()) + ".json"), "w") as f:
+        # json.dump(store, f)
 
     # actual ask call
     response = service.ask_agreement(
@@ -70,8 +70,8 @@ def ask_agreement_extended(service: EAgreementService, token: str, input_model: 
         "state": existing_agreements,
         "response": response.transaction_response
     }
-    with open(DATA_FOLDER.joinpath(str(uuid4()) + ".json"), "w") as f:
-        json.dump(store, f)
+    # with open(DATA_FOLDER.joinpath(str(uuid4()) + ".json"), "w") as f:
+        # json.dump(store, f)
     return response
 
 @pytest.fixture(scope="function")
@@ -272,18 +272,46 @@ def test__6_1_7(sts_service, token, eagreement_service, default_input, ssin, nih
     default_input.physician.nihii = nihii
 
     # TODO will only work if 6_1_6 intreatment worked
-    # TODO cannot continue until there are actual messages
+    # TODO cannot continue until there are actual m
+    # essages
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        response = ask_agreement_extended(eagreement_service, token, default_input)
-        response_async = eagreement_service.async_messages(token)
+        responses_async = eagreement_service.async_messages(token)
+        assert len(responses_async) > 0
+
+        found = False
+        for response_async in responses_async:
+            # check patient
+            patients = [e.resource.patient for e in response_async.response.entry if e.resource.patient is not None]
+            assert (len(patients)) == 1
+            patient = patients[0]
+            if patient.identifier.value.value != ssin:
+                ConnectionRefusedError
+
+            # check claim response
+            claim_responses = [e.resource.claim_response for e in response_async.response.entry if e.resource.claim_response is not None]
+            assert len(claim_responses) == 1
+            claim_response = claim_responses[0]
+            if claim_response.add_item.product_or_service.coding.code.value != "e-j-2":
+                continue
+            else:
+                found = True
+            claim_response.add_item.adjudication.category.coding.code.value == "agreement"
+        assert found, "No matching message found"
 
 @pytest.mark.manual
-def test__6_1_8(sts_service, token, eagreement_service, default_input):
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_1_8(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    # Only works with a fixed setup date :( ...
+    # output is only correct if servicedDate is the same as 6_1_6
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+
     # NOTE essentially a copy of 6_1_6.  
-    # If 6_1_6 executed first, this test will succeed
+    # If 6_1_7 executed first, this test will succeed
     default_input.claim.product_or_service = "e-j-2"
     default_input.claim.prescription.quantity = 200
     default_input.claim.billable_period = datetime.date.today() - datetime.timedelta(days=100)
+    # serviced_date should be equal to serviced_date previous agreement
     default_input.claim.serviced_date = datetime.date.today() - datetime.timedelta(days=106)
     default_input.claim.prescription.date = datetime.date.today() - datetime.timedelta(days=105)
     default_input.claim.attachments = [
@@ -298,21 +326,18 @@ def test__6_1_8(sts_service, token, eagreement_service, default_input):
             title="attachment",
         ),
     ]
-    # TODO this fails if 6_1_3 has executed for this patient
-    # temp use another patient
-    default_input.patient.ssin = "71070610591"
+
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         response = ask_agreement_extended(eagreement_service, token, default_input)
 
     # xfail if no existing agreement
     outcome = [e.resource.operation_outcome for e in response.response.entry if e.resource.operation_outcome is not None]
-    if not len(outcome) == 1:
-        pytest.xfail("No existing agreement for patient")
     
     # check message header
     message_header = [e.resource.message_header for e in response.response.entry if e.resource.message_header is not None]
     assert len(message_header) == 1
     message_header = message_header[0]
+    logger.info(message_header)
     assert message_header.event_coding.code.value == "reject"
 
     # check outcome
@@ -326,14 +351,13 @@ def test__6_1_8(sts_service, token, eagreement_service, default_input):
         )
 
 @pytest.mark.manual
-def test__6_1_9(sts_service, token, eagreement_service, default_input):
-    # TODO fails due to existing agreement, but not one that I requested??
-
-    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        existing_agreements = get_existing_agreements(token, eagreement_service, default_input.patient)
-        logger.info(existing_agreements)
-        if not existing_agreements.get("fa-1"):
-            pytest.xfail("An existing fa-1 agreement is needed for this test")
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_1_9(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    # fails on outcome due to existing co-1-2-3-0 agreement
+    # not one that I created ...
+    
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
 
     default_input.claim.product_or_service = "co-1-2-3-0"
     default_input.claim.prescription.quantity = 9
@@ -343,9 +367,11 @@ def test__6_1_9(sts_service, token, eagreement_service, default_input):
 
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         response = ask_agreement_extended(eagreement_service, token, default_input)
-
-    logger.info(response.transaction_request)
-    logger.info(response.transaction_response)
+    outcome = [e.resource.operation_outcome for e in response.response.entry if e.resource.operation_outcome is not None]
+    assert len(outcome) == 1
+    outcome = outcome[0]
+    for issue in outcome.issue:
+        logger.info(outcome)
 
     # check claim_response
     claim_response = [e.resource.claim_response for e in response.response.entry if e.resource.claim_response is not None]

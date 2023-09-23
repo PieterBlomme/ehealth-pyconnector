@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, Any, List
+from typing import Optional, Union, List
 import datetime
 
 class Practitioner(BaseModel):
@@ -31,8 +31,8 @@ class Attachment(BaseModel):
 class ClaimAsk(BaseModel):
     transaction: Optional[str] = "claim-ask"
     product_or_service: str
-    billable_period: datetime.date
-    serviced_date: datetime.date
+    billable_period: Optional[datetime.date]
+    serviced_date: Optional[datetime.date]
     prescription: Optional[Prescription] = None # modeling TODO
     pre_auth_ref: Optional[str] = None # in case of extend
     attachments: Optional[List[Attachment]] = []

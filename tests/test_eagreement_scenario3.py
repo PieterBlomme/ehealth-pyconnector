@@ -47,8 +47,33 @@ def default_input() -> AskAgreementInputModel:
         )
     )
  
-def test__6_3_1__fb_35_does_not_exist(sts_service, token, eagreement_service, default_input):
+@pytest.mark.manual
+def test_cancel_agreement(sts_service, token, eagreement_service, default_input):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        default_input.patient.ssin = "71070610591"
+        existing_agreements = get_existing_agreements(token, eagreement_service, default_input.patient)
+        logger.info(existing_agreements)
+        if len(existing_agreements) == 0:
+            return
+        
+        default_input.claim = ClaimAsk(
+            transaction="claim-cancel",
+            product_or_service="fa-1",
+            pre_auth_ref="10020000000000400373"
+        )
+
+        response = eagreement_service.cancel_agreement(
+            token=token,
+            input_model=default_input
+        )
+        logger.info(response)
+        existing_agreements = get_existing_agreements(token, eagreement_service, default_input.patient)
+        logger.info(existing_agreements)
+
+def test__6_3_1(sts_service, token, eagreement_service, default_input):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        existing_agreements = get_existing_agreements(token, eagreement_service, default_input.patient)
+        logger.info(existing_agreements)
         response = eagreement_service.ask_agreement(
             token=token,
             input_model=default_input

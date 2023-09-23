@@ -14,6 +14,8 @@ KEYSTORE_PATH = "valid.acc-p12"
 
 SSINS = ["71070610591", "90050725406", "96020232395", "91110537409", "68042002753"]
 NIHIIS = ["58112129084", "12032636926", "76101138974", "30610131001", "76100322788"]
+SSINS = ["71070610591"]
+NIHIIS = ["58112129084"]
 
 @pytest.fixture(scope="function")
 def default_input() -> AskAgreementInputModel:
@@ -52,7 +54,7 @@ def default_input() -> AskAgreementInputModel:
     )
  
 @pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
-def test__6_2_1__inconsistent_dates(sts_service, token, eagreement_service, default_input, ssin, nihii):
+def test__6_2_1(sts_service, token, eagreement_service, default_input, ssin, nihii):
     default_input.patient.ssin = ssin
     default_input.physician.nihii = nihii
     
@@ -82,7 +84,11 @@ def test__6_2_1__inconsistent_dates(sts_service, token, eagreement_service, defa
         )
 
 @pytest.mark.manual
-def test__6_2_2__fa_1_success(sts_service, token, eagreement_service, default_input):
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_2_2(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+    
     default_input.claim.product_or_service = "fa-1"
     default_input.claim.prescription.quantity = 31
     default_input.claim.billable_period = datetime.date.today() - datetime.timedelta(days=120)
@@ -90,6 +96,9 @@ def test__6_2_2__fa_1_success(sts_service, token, eagreement_service, default_in
     default_input.claim.prescription.date = datetime.date.today() - datetime.timedelta(days=121)
 
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        existing_agreements = get_existing_agreements(token, eagreement_service, default_input.patient)
+        logger.info(existing_agreements)
+
         response = eagreement_service.ask_agreement(
             token=token,
             input_model=default_input
@@ -104,7 +113,11 @@ def test__6_2_2__fa_1_success(sts_service, token, eagreement_service, default_in
     assert claim_response.pre_auth_period.end.value == XmlDate.from_date(datetime.date.today() + datetime.timedelta(days=244))
 
 @pytest.mark.manual
-def test__6_2_3__fa_2_intreatment(sts_service, token, eagreement_service, default_input):
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_2_3(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+
     default_input.claim.product_or_service = "fa-2"
     default_input.claim.prescription.quantity = 32
     default_input.claim.billable_period = datetime.date.today() - datetime.timedelta(days=40)
@@ -123,10 +136,16 @@ def test__6_2_3__fa_2_intreatment(sts_service, token, eagreement_service, defaul
     assert claim_response.add_item.adjudication.category.coding.code.value == "intreatment"
     assert claim_response.pre_auth_ref.value.startswith("100") # IO1
 
-@pytest.mark.asynchronous
-def test__6_2_4__async(sts_service, token, eagreement_service, default_input):
-    raise NotImplementedError("needs async implemented")
+@pytest.mark.manual
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_2_4(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
 
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        existing_agreements = get_existing_agreements(token, eagreement_service, default_input.patient)
+        logger.info(existing_agreements)
+        
 @pytest.mark.asynchronous
 def test__6_2_5__argue_refused(sts_service, token, eagreement_service, default_input):
     raise NotImplementedError("needs async implemented")

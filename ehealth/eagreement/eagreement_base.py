@@ -297,7 +297,6 @@ class AbstractEAgreementService:
         entry_uuid = str(uuid.uuid4())
 
         if claim_ask.product_or_service.split("-")[0] == "co":
-
             sub_type = "physiotherapy-common-" + claim_ask.product_or_service.split("-")[1]
         else:
             sub_type = "physiotherapy-" + claim_ask.product_or_service.split("-")[0]
@@ -365,7 +364,7 @@ class AbstractEAgreementService:
                                 Start(
                                     value=XmlDate.from_date(claim_ask.billable_period)
                                     )
-                            ),
+                            ) if claim_ask.billable_period else None,
                             created=Created(now.isoformat(timespec="seconds")),
                             enterer=Enterer(Reference("PractitionerRole/PractitionerRole1")),
                             provider=Provider(Reference("PractitionerRole/PractitionerRole1")),
@@ -386,15 +385,14 @@ class AbstractEAgreementService:
                                     ),
                                 ),
                                 serviced_date=ServicedDate(XmlDate.from_date(claim_ask.serviced_date)) if claim_ask.transaction != "claim-extend" else None
-                            )
-
+                            ) if claim_ask.transaction != "claim-cancel" else None
                         ),
                     )
                 )
         if service_request:
             entry.resource.claim.referral = Referral(Reference(service_request))
         return entry
-
+    
     @classmethod
     def _render_parameters(cls):
         entry_uuid = str(uuid.uuid4())
@@ -565,5 +563,54 @@ class AbstractEAgreementService:
             entry=entries
         )
         
+        template = self.serialize_template(bundle)
+        return template, id_
+    
+    def render_cancel_agreement_bundle(
+        self,
+        practitioner: Practitioner,
+        input_model: AskAgreementInputModel,
+        ):
+        id_ = str(uuid.uuid4())
+        now = datetime.datetime.now(pytz.timezone("Europe/Brussels"))
+        practitioner_physio = self._render_practitioner(
+            practitioner=practitioner,
+            practitioner_identifier="Practitioner1"
+        )
+        practitioner_role_physio = self._render_practitioner_role(
+            practitioner_role="PractitionerRole1",
+            practitioner=f"Practitioner/Practitioner1",
+            code="persphysiotherapist"
+        )
+        # organization = self._render_organization()
+        message_header = self._render_message_header(
+            practitioner_role_urn=practitioner_role_physio.full_url.value,
+            claim=input_model.claim.transaction
+            )
+
+        patient = self._render_patient(
+            patient=input_model.patient
+        )
+        entries = [
+               message_header,
+                # organization,
+                practitioner_role_physio,
+                practitioner_physio,
+                patient,
+        ]
+        
+        claim = self._render_claim(
+            now=now,
+            claim_ask=input_model.claim,
+            )
+        entries.append(claim)
+        
+        bundle = Bundle(
+            id=Id(id_),
+            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementdemand")),
+            timestamp=Timestamp(now.isoformat(timespec="seconds")),
+            type=TypeType(value="message"),
+            entry=entries
+        )
         template = self.serialize_template(bundle)
         return template, id_
