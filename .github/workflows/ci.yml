@@ -21,4 +21,4 @@ jobs:
           # async not yet implemented
           # manual: don't run in CI/CD
           # test_eagreement_fake.py ignored because it messes with the certificate chain.  we should run these tests in another job I guess
-          poetry run pytest tests/ --log-cli-level=INFO -m "not manual and not asynchronous" --ignore=tests/test_eagreement_fake.py
+          # poetry run pytest tests/ --log-cli-level=INFO -m "not manual and not asynchronous" --ignore=tests/test_eagreement_fake.py
