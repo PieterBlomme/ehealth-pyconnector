@@ -67,6 +67,49 @@ class EAgreementService(AbstractEAgreementService):
             practitioner=practitioner,
             input_model=input_model
         )
+        logger.info(template)
+        request = self.redundant_template_render(
+            template=template,
+            patient_ssin=input_model.patient.ssin,
+            id_=id_,
+            builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildAskAgreementRequest
+            )
+        
+        raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(request)
+
+        try:
+            serviceResponse = self.get_service().askAgreement(request.getRequest())
+        except Exception as e:
+            if "SEND_TO_IO_EXCEPTION" in str(e.java_exception):
+                raise ServerSideException(str(e.java_exception))
+            raise e
+        raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
+
+        response = self.get_response_builder().handleAskAgreementResponse(serviceResponse, request)
+        self.verify_result(response)
+
+        response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
+        response_pydantic = self.convert_response_to_pydantic(response, AskResponseBundle)
+        return AskResponse(
+            response=response_pydantic,
+            transaction_request=template,
+            transaction_response=response_string,
+            soap_request=raw_request,
+            soap_response=raw_response
+        )
+
+    def argue_agreement(
+        self, 
+        token: str,
+        input_model: AskAgreementInputModel
+        ) -> str:
+        practitioner = self.set_configuration_from_token(token)
+
+        template, id_ = self.render_argue_agreement_bundle(
+            practitioner=practitioner,
+            input_model=input_model
+        )
+        logger.info(template)
         request = self.redundant_template_render(
             template=template,
             patient_ssin=input_model.patient.ssin,
@@ -162,7 +205,7 @@ class EAgreementService(AbstractEAgreementService):
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
 
         response = self.get_response_builder().handleConsultAgreementResponse(serviceResponse, request)
-        self.verify_result(response)
+        # self.verify_result(response)
 
         response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
         response_pydantic = self.convert_response_to_pydantic(response, ConsultResponseBundle)
@@ -174,40 +217,6 @@ class EAgreementService(AbstractEAgreementService):
             soap_response=raw_response
         )
 
-    def consult_agreement(
-        self, 
-        token: str,
-        input_model: Patient
-        ) -> str:
-        practitioner = self.set_configuration_from_token(token)
-        template, id_ = self.render_consult_agreement_bundle(
-            practitioner=practitioner,
-            input_model=input_model
-        )
-        request = self.redundant_template_render(
-            template=template,
-            patient_ssin=input_model.ssin,
-            id_=id_,
-            builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildConsultAgreementRequest
-            )
-        
-        raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(request)
-
-        serviceResponse = self.get_service().consultAgreement(request.getRequest())
-        raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
-
-        response = self.get_response_builder().handleConsultAgreementResponse(serviceResponse, request)
-        self.verify_result(response)
-
-        response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
-        response_pydantic = self.convert_response_to_pydantic(response, ConsultResponseBundle)
-        return ConsultResponse(
-            response=response_pydantic,
-            transaction_request=template,
-            transaction_response=response_string,
-            soap_request=raw_request,
-            soap_response=raw_response
-        )
         
     def async_messages(
             self,

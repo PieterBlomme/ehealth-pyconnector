@@ -19,8 +19,8 @@ DATA_FOLDER = Path(__file__).parent.joinpath("data/faked_eagreement")
 
 SSINS = ["71020203354", "64051544103", "96010145781", "84080841501", "68042000773"]
 NIHIIS = ["00092210605", "09120132247", "74050344782", "64090403291", "90010352422"]
-SSINS = ["64051544103"]
-NIHIIS = ["09120132247"]
+SSINS = ["96010145781"]
+NIHIIS = ["74050344782"]
 
 def _get_existing_agreements(token, eagreement_service, patient) -> Dict[str, List[str]]:
     response = eagreement_service.consult_agreement(
@@ -28,6 +28,7 @@ def _get_existing_agreements(token, eagreement_service, patient) -> Dict[str, Li
         input_model=patient
     )
     bundle = [e.resource.bundle for e in response.response.entry if e.resource.bundle is not None]
+    logger.info(response.response)
     assert len(bundle) == 1
     bundle = bundle[0]
     claim_response = [e.resource.claim_response for e in bundle.entry if e.resource.claim_response is not None]
@@ -285,7 +286,7 @@ def test__6_1_7(sts_service, token, eagreement_service, default_input, ssin, nih
             assert (len(patients)) == 1
             patient = patients[0]
             if patient.identifier.value.value != ssin:
-                ConnectionRefusedError
+                continue
 
             # check claim response
             claim_responses = [e.resource.claim_response for e in response_async.response.entry if e.resource.claim_response is not None]
@@ -295,7 +296,7 @@ def test__6_1_7(sts_service, token, eagreement_service, default_input, ssin, nih
                 continue
             else:
                 found = True
-            claim_response.add_item.adjudication.category.coding.code.value == "agreement"
+            assert claim_response.add_item.adjudication.category.coding.code.value == "agreement"
         assert found, "No matching message found"
 
 @pytest.mark.manual

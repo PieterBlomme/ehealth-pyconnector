@@ -145,10 +145,63 @@ def test__6_2_4(sts_service, token, eagreement_service, default_input, ssin, nih
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         responses_async = eagreement_service.async_messages(token)
         assert len(responses_async) > 0
-        
-@pytest.mark.asynchronous
-def test__6_2_5__argue_refused(sts_service, token, eagreement_service, default_input):
-    raise NotImplementedError("needs async implemented")
+
+        found = False
+        for response_async in responses_async:
+            # check patient
+            patients = [e.resource.patient for e in response_async.response.entry if e.resource.patient is not None]
+            assert (len(patients)) == 1
+            patient = patients[0]
+            if patient.identifier.value.value != ssin:
+                continue
+
+            # check claim response
+            claim_responses = [e.resource.claim_response for e in response_async.response.entry if e.resource.claim_response is not None]
+            assert len(claim_responses) == 1
+            claim_response = claim_responses[0]
+            if claim_response.add_item.product_or_service.coding.code.value != "fa-2":
+                continue
+            else:
+                found = True
+            logger.info(claim_response)
+            assert claim_response.add_item.adjudication.category.coding.code.value == "wfi-physiotherapist"
+            # NOTE: unclear how we know what extra info is needed ...
+            assert claim_response.add_item.adjudication.reason.coding.code.value == "WFI_AGREE_SRV_PHYSIO_001"
+            logging.info(claim_response.pre_auth_ref)
+        assert found, "No matching message found"
+
+@pytest.mark.manual
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_2_5(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+
+    default_input.claim.transaction = "claim-argue"
+    default_input.claim.product_or_service = "fa-2"
+    default_input.claim.prescription = None
+    default_input.claim.attachments = []
+    default_input.claim.billable_period = None
+
+    # first consult to get the preAuthRef
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        existing_agreements = get_existing_agreements(token, eagreement_service, default_input.patient)
+        logger.info(existing_agreements)
+        if not existing_agreements.get("fa-2"):
+            pytest.xfail("An existing fa-2 agreement is needed for this test")
+        else:
+            pre_auth_ref = existing_agreements.get("fa-2")[0]
+        default_input.claim.pre_auth_ref = "10020000000000450085" # TODO too many matches
+
+        response = eagreement_service.argue_agreement(
+            token=token,
+            input_model=default_input
+        )
+    # check claim response
+    claim_response = [e.resource.claim_response for e in response.response.entry if e.resource.claim_response is not None]
+    assert len(claim_response) == 1
+    claim_response = claim_response[0]
+    assert claim_response.add_item.adjudication.category.coding.code.value == "intreatment"
+    assert claim_response.pre_auth_ref.value.startswith("100") # IO1
 
 @pytest.mark.asynchronous
 def test__6_2_6__argue_impossible_date(sts_service, token, eagreement_service, default_input):

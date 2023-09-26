@@ -315,30 +315,46 @@ class AbstractEAgreementService:
                                 pre_auth_ref=PreAuthRef(claim_ask.pre_auth_ref)
             )
         
-        attachments = [
-            SupportingInfo(
-                sequence=Sequence(seq+1),
-                category=Category(
-                    coding=Coding(
-                        system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
-                        code=Code("attachment")
+        if claim_ask.transaction == "claim-argue":
+            attachments = [
+                SupportingInfo(
+                    sequence=Sequence(1),
+                    category=Category(
+                        coding=Coding(
+                            system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
+                            code=Code("info")
+                        ),
                     ),
-                ),
-                code=NestedCode(
-                    coding=Coding(
-                            system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/annex-types"),
-                            code=Code(a.type)
-                        )
-                ),
-                value_attachment=ValueAttachment(
-                    content_type=ContentType(a.mimetype),
-                    data=Data(a.data_base64),
-                    title=Title(value=a.title)
-
+                    value_string=ValueString(
+                        value="additional info"
+                    )
                 )
-            )
-            for seq, a in enumerate(claim_ask.attachments)
-        ]
+            ]
+        else:
+            attachments = [
+                SupportingInfo(
+                    sequence=Sequence(seq+1),
+                    category=Category(
+                        coding=Coding(
+                            system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
+                            code=Code("attachment")
+                        ),
+                    ),
+                    code=NestedCode(
+                        coding=Coding(
+                                system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/annex-types"),
+                                code=Code(a.type)
+                            )
+                    ),
+                    value_attachment=ValueAttachment(
+                        content_type=ContentType(a.mimetype),
+                        data=Data(a.data_base64),
+                        title=Title(value=a.title)
+
+                    )
+                )
+                for seq, a in enumerate(claim_ask.attachments)
+            ]
         entry = Entry(
                     full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(
@@ -384,8 +400,8 @@ class AbstractEAgreementService:
                                         code=Code(claim_ask.product_or_service)
                                     ),
                                 ),
-                                serviced_date=ServicedDate(XmlDate.from_date(claim_ask.serviced_date)) if claim_ask.transaction != "claim-extend" else None
-                            ) if claim_ask.transaction != "claim-cancel" else None
+                                serviced_date=ServicedDate(XmlDate.from_date(claim_ask.serviced_date)) if claim_ask.transaction not in ("claim-extend", "claim-argue") else None
+                            ) if claim_ask.transaction not in ("claim-argue", "claim-cancel") else None
                         ),
                     )
                 )
@@ -509,6 +525,55 @@ class AbstractEAgreementService:
             now=now,
             claim_ask=input_model.claim,
             service_request=service_request
+            )
+        entries.append(claim)
+        
+        bundle = Bundle(
+            id=Id(id_),
+            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementdemand")),
+            timestamp=Timestamp(now.isoformat(timespec="seconds")),
+            type=TypeType(value="message"),
+            entry=entries
+        )
+        template = self.serialize_template(bundle)
+        return template, id_
+
+    def render_argue_agreement_bundle(
+        self,
+        practitioner: Practitioner,
+        input_model: AskAgreementInputModel,
+        ):
+        id_ = str(uuid.uuid4())
+        now = datetime.datetime.now(pytz.timezone("Europe/Brussels"))
+        practitioner_physio = self._render_practitioner(
+            practitioner=practitioner,
+            practitioner_identifier="Practitioner1"
+        )
+        practitioner_role_physio = self._render_practitioner_role(
+            practitioner_role="PractitionerRole1",
+            practitioner=f"Practitioner/Practitioner1",
+            code="persphysiotherapist"
+        )
+        # organization = self._render_organization()
+        message_header = self._render_message_header(
+            practitioner_role_urn=practitioner_role_physio.full_url.value,
+            claim=input_model.claim.transaction
+            )
+
+        patient = self._render_patient(
+            patient=input_model.patient
+        )
+        entries = [
+               message_header,
+                # organization,
+                practitioner_role_physio,
+                practitioner_physio,
+                patient,
+        ]
+        
+        claim = self._render_claim(
+            now=now,
+            claim_ask=input_model.claim,
             )
         entries.append(claim)
         
