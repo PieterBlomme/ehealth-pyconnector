@@ -880,14 +880,14 @@ class Insurance:
         }
     )
 
-    pre_auth_ref: Optional[PreAuthRef] = field(
+    coverage: Optional[Coverage] = field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    
-    coverage: Optional[Coverage] = field(
+
+    preAuthRef: Optional[PreAuthRef] = field(
         default=None,
         metadata={
             "type": "Element",

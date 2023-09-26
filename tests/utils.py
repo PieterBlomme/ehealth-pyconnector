@@ -17,9 +17,9 @@ def get_existing_agreements(token, eagreement_service, patient) -> Dict[str, Lis
         if c.status.value != "active":
             logger.info(f"Status {c.status.value} != 'active'")
             continue
-        if c.add_item.adjudication.category.coding.code.value != "agreement":
-            logger.info(f"Adjudication {c.add_item.adjudication.category.coding.code.value} != 'agreement' for {c.pre_auth_ref.value}")
         code = c.add_item.product_or_service.coding.code.value
+        if c.add_item.adjudication.category.coding.code.value != "agreement":
+            logger.info(f"Adjudication {c.add_item.adjudication.category.coding.code.value} for {code} != 'agreement' for {c.pre_auth_ref.value}")
 
         existing_agreements[code] = existing_agreements.get(code, []) + [c.pre_auth_ref.value]
     return existing_agreements

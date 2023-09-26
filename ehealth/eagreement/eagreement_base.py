@@ -312,49 +312,34 @@ class AbstractEAgreementService:
                                 sequence=Sequence(1),
                                 focal=Focal(True),
                                 coverage=Coverage(Display("use of mandatory insurance coverage, no further details provided here.")),
-                                pre_auth_ref=PreAuthRef(claim_ask.pre_auth_ref)
+                                preAuthRef=PreAuthRef(claim_ask.pre_auth_ref)
             )
         
-        if claim_ask.transaction == "claim-argue":
-            attachments = [
-                SupportingInfo(
-                    sequence=Sequence(1),
-                    category=Category(
-                        coding=Coding(
-                            system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
-                            code=Code("info")
-                        ),
-                    ),
-                    value_string=ValueString(
-                        value="additional info"
-                    )
-                )
-            ]
-        else:
-            attachments = [
-                SupportingInfo(
-                    sequence=Sequence(seq+1),
-                    category=Category(
-                        coding=Coding(
-                            system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
-                            code=Code("attachment")
-                        ),
-                    ),
-                    code=NestedCode(
-                        coding=Coding(
-                                system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/annex-types"),
-                                code=Code(a.type)
-                            )
-                    ),
-                    value_attachment=ValueAttachment(
-                        content_type=ContentType(a.mimetype),
-                        data=Data(a.data_base64),
-                        title=Title(value=a.title)
 
-                    )
+        attachments = [
+            SupportingInfo(
+                sequence=Sequence(seq+1),
+                category=Category(
+                    coding=Coding(
+                        system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
+                        code=Code("attachment")
+                    ),
+                ),
+                code=NestedCode(
+                    coding=Coding(
+                            system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/annex-types"),
+                            code=Code(a.type)
+                        )
+                ),
+                value_attachment=ValueAttachment(
+                    content_type=ContentType(a.mimetype),
+                    data=Data(a.data_base64),
+                    title=Title(value=a.title)
+
                 )
-                for seq, a in enumerate(claim_ask.attachments)
-            ]
+            )
+            for seq, a in enumerate(claim_ask.attachments)
+        ]
         entry = Entry(
                     full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(

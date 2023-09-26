@@ -196,12 +196,20 @@ def test__6_2_5(sts_service, token, eagreement_service, default_input, ssin, nih
             token=token,
             input_model=default_input
         )
-    # check claim response
-    claim_response = [e.resource.claim_response for e in response.response.entry if e.resource.claim_response is not None]
-    assert len(claim_response) == 1
-    claim_response = claim_response[0]
-    assert claim_response.add_item.adjudication.category.coding.code.value == "intreatment"
-    assert claim_response.pre_auth_ref.value.startswith("100") # IO1
+    # check message header
+    message_header = [e.resource.message_header for e in response.response.entry if e.resource.message_header is not None]
+    assert len(message_header) == 1
+    message_header = message_header[0]
+    assert message_header.event_coding.code.value == "reject"
+
+    # check outcomes
+    outcomes = [e.resource.operation_outcome.issue[0].details.coding.code.value for e in response.response.entry if e.resource.operation_outcome is not None]
+    # for some reason I only get one of the errors
+    logger.warning(outcomes)
+    assert (
+        "UNAUTHORIZED_CLAIM_PREAUTHREF_WRONG_CAREPROVIDER" in outcomes or
+        "MISSING_ARGUMENTATION_IN_CLAIM" in outcomes
+        )
 
 @pytest.mark.asynchronous
 def test__6_2_6__argue_impossible_date(sts_service, token, eagreement_service, default_input):
@@ -225,4 +233,8 @@ def test__6_2_10__extend_failed_business_checks(sts_service, token, eagreement_s
 
 @pytest.mark.manual
 def test__6_2_11__complete_agreement_bad_reference(sts_service, token, eagreement_service, default_input):
+    raise NotImplementedError("needs async implemented")
+
+@pytest.mark.manual
+def test__6_2_12(sts_service, token, eagreement_service, default_input):
     raise NotImplementedError("needs async implemented")

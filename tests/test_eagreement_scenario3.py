@@ -12,17 +12,22 @@ KEYSTORE_PASSPHRASE = os.environ.get("KEYSTORE_PASSPHRASE")
 KEYSTORE_SSIN = os.environ.get("KEYSTORE_SSIN")
 KEYSTORE_PATH = "valid.acc-p12"
 
+SSINS = ["87060215703", "87122330147", "96030160346", "70461304103", "68042110938"]
+NIHIIS = ["54032409450", "05452903529", "88112535643", "30610131001", "90010156541"]
+SSINS = ["87060215703"]
+NIHIIS = ["54032409450"]
+
 @pytest.fixture(scope="function")
 def default_input() -> AskAgreementInputModel:
     return AskAgreementInputModel(
         patient=Patient(
-            ssin="87060215703",
+            ssin="",
             givenname="John",
             surname="Smith",
             gender="male"
         ),
         physician=Practitioner(
-            nihii="54032409450",
+            nihii="",
             givenname="John",
             surname="Smith"
         ),
@@ -70,7 +75,11 @@ def test_cancel_agreement(sts_service, token, eagreement_service, default_input)
         existing_agreements = get_existing_agreements(token, eagreement_service, default_input.patient)
         logger.info(existing_agreements)
 
-def test__6_3_1(sts_service, token, eagreement_service, default_input):
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_3_1(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         existing_agreements = get_existing_agreements(token, eagreement_service, default_input.patient)
         logger.info(existing_agreements)
@@ -85,13 +94,17 @@ def test__6_3_1(sts_service, token, eagreement_service, default_input):
     assert message_header.event_coding.code.value == "reject"
 
     # check outcomes
-    outcomes = [e.resource.operation_outcome.issue.details.coding.code.value for e in response.response.entry if e.resource.operation_outcome is not None]
+    outcomes = [e.resource.operation_outcome.issue[0].details.coding.code.value for e in response.response.entry if e.resource.operation_outcome is not None]
     assert (
         "UNAUTHORIZED_PRODUCTORSERVICE_IN_CLAIM_ITEM_PRODUCTORSERVICE" in outcomes or
         "INCONSISTENT_CLAIM_PRODUCTORSERVICE_WITH_CLAIM_SUBTYPE" in outcomes
         )
-    
-def test__6_3_2__bad_age_requirements(sts_service, token, eagreement_service, default_input):
+
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_3_2(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+
     default_input.claim.product_or_service = "fb-51"
     default_input.claim.prescription.quantity = 51
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
@@ -107,10 +120,19 @@ def test__6_3_2__bad_age_requirements(sts_service, token, eagreement_service, de
     assert claim_response.pre_auth_ref.value.startswith("100") # IO1
     assert claim_response.add_item.adjudication.reason.coding.code.value == "REF_AGREE_SRV_PHYSIO_015"
 
-def test__6_3_3__fb_56(sts_service, token, eagreement_service, default_input):
+
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_3_3(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    # NOTE: xfail fb-56 shouldn't be allowed but I get an agreement
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+
     default_input.claim.product_or_service = "fb-56"
     default_input.claim.prescription.quantity = 52
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        existing_agreements = get_existing_agreements(token, eagreement_service, default_input.patient)
+        logger.info(existing_agreements)
+
         response = eagreement_service.ask_agreement(
             token=token,
             input_model=default_input
@@ -123,8 +145,11 @@ def test__6_3_3__fb_56(sts_service, token, eagreement_service, default_input):
     assert claim_response.pre_auth_ref.value.startswith("100") # IO1
     assert claim_response.add_item.adjudication.reason.coding.code.value == "REF_AGREE_SRV_PHYSIO_012"
 
-@pytest.mark.manual
-def test__6_3_4__fb_55_ok(sts_service, token, eagreement_service, default_input):
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_3_4(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+
     default_input.claim.product_or_service = "fb-55"
     default_input.claim.prescription.quantity = 53
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
@@ -144,7 +169,11 @@ def test__6_3_4__fb_55_ok(sts_service, token, eagreement_service, default_input)
         datetime.date(year=start_agreement.year + 2, month=12, day=31)
     )
 
-def test__6_3_5__fb_58(sts_service, token, eagreement_service, default_input):
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_3_5(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+    
     default_input.claim.product_or_service = "fb-58"
     default_input.claim.prescription.quantity = 54
     default_input.claim.prescription.date = datetime.date.today() - datetime.timedelta(days=188)
@@ -162,13 +191,17 @@ def test__6_3_5__fb_58(sts_service, token, eagreement_service, default_input):
     assert message_header.event_coding.code.value == "reject"
 
     # check outcomes
-    outcomes = [e.resource.operation_outcome.issue.details.coding.code.value for e in response.response.entry if e.resource.operation_outcome is not None]
+    outcomes = [e.resource.operation_outcome.issue[0].details.coding.code.value for e in response.response.entry if e.resource.operation_outcome is not None]
     assert (
         "INVALID_SERVICEREQUEST_PRESCRIPTIONDATE" in outcomes
         )
 
 @pytest.mark.manual
-def test__6_3_6__fb_58_ok(sts_service, token, eagreement_service, default_input):
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_3_6(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
+    
     default_input.claim.product_or_service = "fb-58"
     default_input.claim.prescription.quantity = 55
     default_input.claim.prescription.date = datetime.date.today() - datetime.timedelta(days=5)
@@ -187,9 +220,15 @@ def test__6_3_6__fb_58_ok(sts_service, token, eagreement_service, default_input)
     assert claim_response.pre_auth_ref.value.startswith("100") # IO1
 
 @pytest.mark.asynchronous
-def test__6_3_7__async(sts_service, token, eagreement_service, default_input):
-    raise NotImplementedError("needs async implemented")
+@pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
+def test__6_3_7(sts_service, token, eagreement_service, default_input, ssin, nihii):
+    default_input.patient.ssin = ssin
+    default_input.physician.nihii = nihii
 
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        existing_agreements = get_existing_agreements(token, eagreement_service, default_input.patient)
+        logger.info(existing_agreements)
+        
 @pytest.mark.asynchronous
 def test__6_3_8__async_closed(sts_service, token, eagreement_service, default_input):
     raise NotImplementedError("needs async implemented")
