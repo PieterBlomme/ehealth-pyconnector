@@ -136,15 +136,15 @@ def test__6_2_3(sts_service, token, eagreement_service, default_input, ssin, nih
     assert claim_response.add_item.adjudication.category.coding.code.value == "intreatment"
     assert claim_response.pre_auth_ref.value.startswith("100") # IO1
 
-@pytest.mark.manual
+@pytest.mark.asynchronous
 @pytest.mark.parametrize("ssin, nihii", zip(SSINS, NIHIIS))
 def test__6_2_4(sts_service, token, eagreement_service, default_input, ssin, nihii):
     default_input.patient.ssin = ssin
     default_input.physician.nihii = nihii
 
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        existing_agreements = get_existing_agreements(token, eagreement_service, default_input.patient)
-        logger.info(existing_agreements)
+        responses_async = eagreement_service.async_messages(token)
+        assert len(responses_async) > 0
         
 @pytest.mark.asynchronous
 def test__6_2_5__argue_refused(sts_service, token, eagreement_service, default_input):

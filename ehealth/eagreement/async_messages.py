@@ -704,7 +704,20 @@ class ProductOrService:
         }
     )
 
+@dataclass
+class Reason:
+    class Meta:
+        name = "reason"
+        namespace = "http://hl7.org/fhir"
 
+    coding: Optional[Coding] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+    
 @dataclass
 class SubType:
     class Meta:
@@ -788,7 +801,13 @@ class Adjudication:
             "required": True,
         }
     )
-
+    reason: Optional[Reason] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
 
 @dataclass
 class EventCoding:
