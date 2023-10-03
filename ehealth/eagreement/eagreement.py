@@ -81,7 +81,7 @@ class EAgreementService(AbstractEAgreementService):
         except Exception as e:
             if "SEND_TO_IO_EXCEPTION" in str(e.java_exception):
                 raise ServerSideException(str(e.java_exception))
-            raise e
+            raise Exception(str(e.java_exception))
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
 
         response = self.get_response_builder().handleAskAgreementResponse(serviceResponse, request)
