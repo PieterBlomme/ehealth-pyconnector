@@ -243,7 +243,5 @@ class EAgreementService(AbstractEAgreementService):
             )
             async_responses.append(async_response)
 
-        # TODO confirm delivery
-        # for now only if decisions, we don't know what to do in other cases
-        # service.confirmAllMessages(serviceResponse)
+        service.confirmAllMessages(serviceResponse)
         return async_responses
