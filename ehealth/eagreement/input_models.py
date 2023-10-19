@@ -40,5 +40,5 @@ class ClaimAsk(BaseModel):
 
 class AskAgreementInputModel(BaseModel):
     patient: Patient
-    physician: Practitioner
+    physician: Optional[Practitioner]
     claim: ClaimAsk
