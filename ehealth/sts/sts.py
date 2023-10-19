@@ -1,8 +1,10 @@
 import logging
+import shutil
 from io import StringIO
 from py4j.java_gateway import JavaGateway
 from py4j.protocol import Py4JJavaError
 from typing import Any
+from pathlib import Path
 from contextlib import contextmanager
 from .base import AbstractSTSService
 from .assertion import Assertion
@@ -18,8 +20,9 @@ PHYSIOTHERAPY_DESIGNATORS = [
         ("sessionmanager.samlattributedesignator.5", "urn:be:fgov:person:ssin:ehealth:1.0:givenname, urn:be:fgov:certified-namespace:ehealth"),
         ("sessionmanager.samlattributedesignator.6", "urn:be:fgov:person:ssin:ehealth:1.0:surname, urn:be:fgov:certified-namespace:ehealth"),
         ("sessionmanager.samlattributedesignator.7", "urn:be:fgov:person:ssin:ehealth:1.0:fpsph:physiotherapist:boolean, urn:be:fgov:certified-namespace:ehealth"),
-
 ]
+
+GATEWAY_ROOT = Path(__file__).parent.parent.parent
 
 class KeyStoreException(Exception):
     pass
@@ -33,8 +36,6 @@ class STSService(AbstractSTSService):
             sts_endpoint: str = "$uddi{uddi:ehealth-fgov-be:business:iamsecuritytokenservice:v1}",
             environment: str = "acc",
             keystore_dir: str = "tests/data/",
-            cakeystore_password: str = "system",
-            cakyestore_location: str = "java/config/P12/acc/caCertificateKeystore.jks"
     ):
         self.GATEWAY = JavaGateway()
         self.EHEALTH_JVM = self.GATEWAY.entry_point
@@ -42,11 +43,9 @@ class STSService(AbstractSTSService):
         self.config_validator = self.EHEALTH_JVM.getConfigValidator()
 
         # set up required configuration
-        self.config_validator.setProperty("endpoint.sts", sts_endpoint)
-        self.config_validator.setProperty("environment", environment)
         self.config_validator.setProperty("KEYSTORE_DIR", keystore_dir)
-        self.config_validator.setProperty("CAKEYSTORE_PASSWORD", cakeystore_password)
-        self.config_validator.setProperty("CAKEYSTORE_LOCATION", cakyestore_location)       
+        self.config_validator.setProperty("environment", environment)
+        self.config_validator.setProperty("endpoint.sts", sts_endpoint)
         
     def _build_designators_physiotherapy(self) -> Any:
 
@@ -166,10 +165,16 @@ class STSService(AbstractSTSService):
         service = self.GATEWAY.jvm.be.ehealth.technicalconnector.service.sts.security.impl.KeyStoreCredential(path, "authentication", pwd)
         token = self.GATEWAY.jvm.be.ehealth.technicalconnector.service.sts.SAMLTokenFactory.getInstance().createSamlToken(assertion, service)
         sessionmgmt = self.GATEWAY.jvm.be.ehealth.technicalconnector.session.Session.getInstance()
-        sessionmgmt.loadSession(token, pwd)
+
+        self.config_validator.setProperty("sessionmanager.holderofkey.keystore", path)
+        self.config_validator.setProperty("sessionmanager.encryption.keystore", path)
+        self.config_validator.setProperty("sessionmanager.identification.keystore", path)
+
+        sessionmgmt.loadSession(token, pwd, pwd)
+
         try:
             self.GATEWAY.jvm.org.junit.Assert.assertNotNull(token)
             self.GATEWAY.jvm.org.junit.Assert.assertEquals(True, sessionmgmt.hasValidSession())
-            yield None
+            yield sessionmgmt
         finally:
             sessionmgmt.unloadSession()

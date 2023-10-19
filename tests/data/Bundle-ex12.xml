@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Bundle xmlns="http://hl7.org/fhir">
+  <id value="ex12"/>
+  <meta>
+    <profile value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementconsult"/>
+  </meta>
+  <type value="message"/>
+  <timestamp value="2015-07-14T11:15:33+02:00"/>
+  <entry>
+    <fullUrl value="urn:uuid:ce2e2084-3f5c-4f52-8551-8088bb6d3491"/>
+    <resource>
+      <MessageHeader>
+        <id value="267b18ce-3d37-4581-9baa-6fada338038b"/>
+        <meta>
+          <profile value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-messageheader"/>
+        </meta>
+        <text>
+          <status value="generated"/><div xmlns="http://www.w3.org/1999/xhtml"><p><b>Generated Narrative: MessageHeader</b><a name="267b18ce-3d37-4581-9baa-6fada338038b"> </a></p><div style="display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%"><p style="margin-bottom: 0px">Resource MessageHeader &quot;267b18ce-3d37-4581-9baa-6fada338038b&quot; </p><p style="margin-bottom: 0px">Profile: <a href="StructureDefinition-be-messageheader.html">MyCareNet MessageHeader BE profile</a></p></div><p><b>event</b>: search-type (Details: http://hl7.org/fhir/restful-interaction code search-type = 'search-type', stated as 'null')</p><h3>Destinations</h3><table class="grid"><tr><td>-</td><td><b>Name</b></td><td><b>Endpoint</b></td></tr><tr><td>*</td><td>MyCareNet</td><td><code>MyCareNet</code></td></tr></table><p><b>sender</b>: <a href="#PractitionerRole_PractitionerRole1">See above (PractitionerRole/PractitionerRole1)</a></p><h3>Sources</h3><table class="grid"><tr><td>-</td><td><b>Endpoint</b></td></tr><tr><td>*</td><td><code>urn:uuid:1dc5d974-5447-4afe-a4ab-57081ca518c3</code></td></tr></table><p><b>focus</b>: <a href="#Parameters_Parameters1">See above (Parameters/Parameters1)</a></p></div>
+        </text>
+        <eventCoding>
+          <system value="http://hl7.org/fhir/restful-interaction"/>
+          <code value="search-type"/>
+        </eventCoding>
+        <destination>
+          <name value="MyCareNet"/>
+          <endpoint value="MyCareNet"/>
+        </destination>
+        <sender>
+          <reference value="PractitionerRole/PractitionerRole1"/>
+        </sender>
+        <source>
+          <endpoint value="urn:uuid:1dc5d974-5447-4afe-a4ab-57081ca518c3"/>
+        </source>
+        <focus>
+          <reference value="Parameters/Parameters1"/>
+        </focus>
+      </MessageHeader>
+    </resource>
+  </entry>
+  <entry>
+    <fullUrl value="urn:uuid:1dc5d974-5447-4afe-a4ab-57081ca518c3"/>
+    <resource>
+      <PractitionerRole>
+        <id value="PractitionerRole1"/>
+        <meta>
+          <profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitionerrole"/>
+        </meta>
+        <text>
+          <status value="generated"/><div xmlns="http://www.w3.org/1999/xhtml"><p><b>Generated Narrative: PractitionerRole</b><a name="PractitionerRole1"> </a></p><div style="display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%"><p style="margin-bottom: 0px">Resource PractitionerRole &quot;PractitionerRole1&quot; </p><p style="margin-bottom: 0px">Profile: <a href="https://www.ehealth.fgov.be/standards/fhir/core/2.0.0/StructureDefinition-be-practitionerrole.html">Practitioner role core BE profile</a></p></div><p><b>practitioner</b>: <a href="#Practitioner_Practitioner1">See above (Practitioner/Practitioner1)</a></p><p><b>code</b>: physiotherapist <span style="background: LightGoldenRodYellow; margin: 4px; border: 1px solid khaki"> (<a href="https://www.ehealth.fgov.be/standards/fhir/core/2.0.0/CodeSystem-cd-hcparty.html">HCParty</a>#persphysiotherapist)</span></p></div>
+        </text>
+        <practitioner>
+          <reference value="Practitioner/Practitioner1"/>
+        </practitioner>
+        <code>
+          <coding>
+            <system value="https://www.ehealth.fgov.be/standards/fhir/core/CodeSystem/cd-hcparty"/>
+            <code value="persphysiotherapist"/>
+          </coding>
+        </code>
+      </PractitionerRole>
+    </resource>
+  </entry>
+  <entry>
+    <fullUrl value="urn:uuid:03972cc4-d781-4285-8d79-0f05810e1931"/>
+    <resource>
+      <Practitioner>
+        <id value="Practitioner1"/>
+        <meta>
+          <profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitioner"/>
+        </meta>
+        <text>
+          <status value="generated"/><div xmlns="http://www.w3.org/1999/xhtml"><p><b>Generated Narrative: Practitioner</b><a name="Practitioner1"> </a></p><div style="display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%"><p style="margin-bottom: 0px">Resource Practitioner &quot;Practitioner1&quot; </p><p style="margin-bottom: 0px">Profile: <a href="https://www.ehealth.fgov.be/standards/fhir/core/2.0.0/StructureDefinition-be-practitioner.html">Practitioner core BE profile</a></p></div><p><b>identifier</b>: id: 54263481527</p><p><b>name</b>: John Smith </p></div>
+        </text>
+        <identifier>
+          <system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi"/>
+          <value value="54263481527"/>
+        </identifier>
+        <name>
+          <family value="Smith"/>
+          <given value="John"/>
+        </name>
+      </Practitioner>
+    </resource>
+  </entry>
+  <entry>
+    <fullUrl value="urn:uuid:76076b8a-6ee1-4c84-9850-aca6fdf69757"/>
+    <resource>
+      <Parameters>
+        <id value="Parameters1"/>
+        <parameter>
+          <name value="resourceType"/>
+          <valueString value="ClaimResponse"/>
+        </parameter>
+        <parameter>
+          <name value="patient"/>
+          <valueReference>
+            <reference value="Patient/Patient1"/>
+          </valueReference>
+        </parameter>
+        <parameter>
+          <name value="use"/>
+          <valueCode value="preauthorization"/>
+        </parameter>
+        <parameter>
+          <name value="subType"/>
+          <valueCoding>
+            <system value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/agreement-types"/>
+            <code value="physiotherapy"/>
+          </valueCoding>
+        </parameter>
+      </Parameters>
+    </resource>
+  </entry>
+  <entry>
+    <fullUrl value="urn:uuid:a52efcb6-1f81-4333-a115-d45bd3183686"/>
+    <resource>
+      <Patient>
+        <id value="Patient1"/>
+        <meta>
+          <profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-patient"/>
+        </meta>
+        <text>
+          <status value="generated"/><div xmlns="http://www.w3.org/1999/xhtml"><p><b>Generated Narrative: Patient</b><a name="Patient1"> </a></p><div style="display: inline-block; background-color: #d9e0e7; padding: 6px; margin: 4px; border: 1px solid #8da1b4; border-radius: 5px; line-height: 60%"><p style="margin-bottom: 0px">Resource Patient &quot;Patient1&quot; </p><p style="margin-bottom: 0px">Profile: <a href="https://www.ehealth.fgov.be/standards/fhir/core/2.0.0/StructureDefinition-be-patient.html">Patient core BE profile</a></p></div><p><b>identifier</b>: id: n° inscription mutualiste</p><p><b>name</b>: Jean Dupont </p><p><b>gender</b>: male</p></div>
+        </text>
+        <identifier>
+          <system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/insurancymembership"/>
+          <value value="n° inscription mutualiste"/>
+          <assigner>
+            <identifier>
+              <system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/insurancenumber"/>
+              <value value="n° mutualité"/>
+            </identifier>
+          </assigner>
+        </identifier>
+        <name>
+          <family value="Dupont"/>
+          <given value="Jean"/>
+        </name>
+        <gender value="male"/>
+      </Patient>
+    </resource>
+  </entry>
+</Bundle>

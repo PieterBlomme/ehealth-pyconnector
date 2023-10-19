@@ -15,7 +15,7 @@ import be.ehealth.businessconnector.test.testcommons.utils.FileTestUtils;
 
 public class JavaGateway {
 
-  public static void main(String[] args) {
+  public static void main(String[] args) throws Exception {
     JavaGateway app = new JavaGateway();
     // app is now the gateway.entry_point
     GatewayServer server = new GatewayServer(app);
