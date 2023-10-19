@@ -36,6 +36,7 @@ class ClaimAsk(BaseModel):
     prescription: Optional[Prescription] = None # modeling TODO
     pre_auth_ref: Optional[str] = None # in case of extend
     attachments: Optional[List[Attachment]] = []
+    supporting_infos: Optional[List[str]] = []
 
 class AskAgreementInputModel(BaseModel):
     patient: Patient
