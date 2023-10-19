@@ -340,6 +340,20 @@ class AbstractEAgreementService:
             )
             for seq, a in enumerate(claim_ask.attachments)
         ]
+        attachments += [
+            SupportingInfo(
+                sequence=Sequence(seq+1),
+                category=Category(
+                    coding=Coding(
+                        system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
+                        code=Code("info")
+                    ),
+                ),
+                value_string=ValueString(value=a)
+            )
+            for seq, a in enumerate(claim_ask.supporting_infos)
+        ]
+        
         entry = Entry(
                     full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(
