@@ -358,7 +358,7 @@ class Value:
         name = "value"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[Union[str, int]] = field(
+    value: Optional[str] = field(
         default=None,
         metadata={
             "type": "Attribute",
