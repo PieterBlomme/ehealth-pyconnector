@@ -31,6 +31,7 @@ class Attachment(BaseModel):
 class ClaimAsk(BaseModel):
     transaction: Optional[str] = "claim-ask"
     product_or_service: str
+    sub_type: Optional[str] = None
     billable_period: Optional[datetime.date]
     serviced_date: Optional[datetime.date]
     prescription: Optional[Prescription] = None # modeling TODO

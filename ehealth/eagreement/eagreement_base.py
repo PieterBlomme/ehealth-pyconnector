@@ -295,8 +295,10 @@ class AbstractEAgreementService:
                       service_request: Optional[str] = None
                       ):
         entry_uuid = str(uuid.uuid4())
-
-        if claim_ask.product_or_service.split("-")[0] == "co":
+        
+        if claim_ask.sub_type:
+            sub_type = claim_ask.sub_type
+        elif claim_ask.product_or_service.split("-")[0] == "co":
             sub_type = "physiotherapy-common-" + claim_ask.product_or_service.split("-")[1]
         else:
             sub_type = "physiotherapy-" + claim_ask.product_or_service.split("-")[0]
