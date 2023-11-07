@@ -830,6 +830,26 @@ class EventCoding:
         }
     )
 
+@dataclass
+class Response:
+    class Meta:
+        name = "response"
+        namespace = "http://hl7.org/fhir"
+
+    identifier: Optional[Identifier] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+    code: Optional[Code] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
 
 @dataclass
 class MessageHeader:
@@ -886,7 +906,13 @@ class MessageHeader:
             "required": True,
         }
     )
-
+    response: Optional[Response] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
 
 @dataclass
 class AddItem:
