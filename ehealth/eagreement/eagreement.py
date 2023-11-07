@@ -1,6 +1,6 @@
 import logging
 from io import StringIO
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 from xsdata_pydantic.bindings import XmlParser
 from .input_models import Patient, AskAgreementInputModel
 from .ask_agreement import Bundle as AskResponseBundle, Response as AskResponse
@@ -21,6 +21,7 @@ class EAgreementService(AbstractEAgreementService):
             mycarenet_license_password: str,
             etk_endpoint: str = "$uddi{uddi:ehealth-fgov-be:business:etkdepot:v1}",
             environment: str = "acc",
+            confirm_messages: Optional[bool] = False
     ):
         super().__init__(environment=environment)
     
@@ -28,7 +29,10 @@ class EAgreementService(AbstractEAgreementService):
         self.config_validator.setProperty("mycarenet.licence.username", mycarenet_license_username)
         self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
         self.config_validator.setProperty("endpoint.etk", etk_endpoint)
-    
+
+        # whether to confirm messages or not
+        self.confirm_messages = confirm_messages
+
     def get_service(self):
         return self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.session.AgreementSessionServiceFactory.getAgreementService()
     
@@ -243,5 +247,6 @@ class EAgreementService(AbstractEAgreementService):
             )
             async_responses.append(async_response)
 
-        service.confirmAllMessages(serviceResponse)
+        if self.confirm_messages:
+            service.confirmAllMessages(serviceResponse)
         return async_responses
