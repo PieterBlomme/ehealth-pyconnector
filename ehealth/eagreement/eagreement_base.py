@@ -401,7 +401,7 @@ class AbstractEAgreementService:
                                         code=Code(claim_ask.product_or_service)
                                     ),
                                 ),
-                                serviced_date=ServicedDate(XmlDate.from_date(claim_ask.serviced_date)) if claim_ask.transaction not in ("claim-extend", "claim-argue") else None
+                                serviced_date=ServicedDate(XmlDate.from_date(claim_ask.serviced_date)) if claim_ask.transaction not in ("claim-extend", "claim-argue", "claim-completeAgreement") else None
                             ) if claim_ask.transaction not in ("claim-argue", "claim-cancel") else None
                         ),
                     )
