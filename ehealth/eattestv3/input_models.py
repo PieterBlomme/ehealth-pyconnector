@@ -6,3 +6,4 @@ class Practitioner(BaseModel):
     nihii: str
     givenname: str
     surname: str
+    ssin: str

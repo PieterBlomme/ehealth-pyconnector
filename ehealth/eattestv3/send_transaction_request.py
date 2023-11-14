@@ -1,4 +1,5 @@
-from dataclasses import dataclass, field
+from dataclasses import field
+from pydantic.dataclasses import dataclass
 from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDate, XmlTime
 
@@ -10,15 +11,15 @@ class Id2:
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
     s: Optional[str] = field(
-        default=None,
+        default="ID_KMEHR",
         metadata={
             "name": "S",
             "type": "Attribute",
             "required": True,
         }
     )
-    sv: Optional[float] = field(
-        default=None,
+    sv: Optional[str] = field(
+        default="1.0",
         metadata={
             "name": "SV",
             "type": "Attribute",
@@ -54,7 +55,7 @@ class Cd:
             "type": "Attribute",
         }
     )
-    sv: Optional[float] = field(
+    sv: Optional[str] = field(
         default=None,
         metadata={
             "name": "SV",
@@ -84,8 +85,8 @@ class Id1:
             "required": True,
         }
     )
-    sv: Optional[float] = field(
-        default=None,
+    sv: Optional[str] = field(
+        default="1.0",
         metadata={
             "name": "SV",
             "type": "Attribute",
@@ -615,11 +616,9 @@ class Kmehrmessage:
 
 @dataclass
 class SendTransactionRequest:
-    class Meta:
-        namespace = "http://www.ehealth.fgov.be/messageservices/protocol/v1"
 
-    message_protocole_schema_version: Optional[float] = field(
-        default=None,
+    message_protocole_schema_version: Optional[str] = field(
+        default="1.25",
         metadata={
             "name": "messageProtocoleSchemaVersion",
             "type": "Attribute",

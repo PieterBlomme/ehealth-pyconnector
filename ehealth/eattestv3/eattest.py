@@ -1,13 +1,29 @@
 from py4j.java_gateway import JavaGateway
 from typing import Any
-import uuid
+import datetime
+from random import randint
 import logging
 from .input_models import Practitioner
 from io import StringIO
 from ..sts.assertion import Assertion
-from xsdata_pydantic.bindings import XmlParser
+from xsdata.models.datatype import XmlDate, XmlTime
+from xsdata_pydantic.bindings import XmlSerializer, XmlParser
+from pydantic import BaseModel
+from .send_transaction_request import (
+    SendTransactionRequest,
+    Request,
+    Id2,
+    Author2,
+    Hcparty,
+    Id1, Cd
+)
 
 logger = logging.getLogger(__name__)
+
+def random_with_N_digits(n):
+    range_start = 10**(n-1)
+    range_end = (10**n)-1
+    return randint(range_start, range_end)
 
 class EAttestV3Service:
     def __init__(
@@ -65,6 +81,7 @@ class EAttestV3Service:
                 nihii=nihii,
                 givenname=givenname,
                 surname=surname,
+                ssin=ssin
             )
     
     def verify_result(self, response: Any):
@@ -72,9 +89,48 @@ class EAttestV3Service:
         for entry in signVerifResult.getErrors():
             self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
                 entry.getValue().isValid())
-                
+    
+    def render_request(self, practitioner: Practitioner):
+        random_n14 = random_with_N_digits(14)
+        now = datetime.datetime.now().replace(microsecond=0)
+        return Request(
+            id=Id2(value=f"{practitioner.nihii}.{random_n14}"),
+            author=Author2(
+                hcparty=Hcparty(
+                    id=[
+                        Id1(s="ID-HCPARTY", value=practitioner.nihii),
+                        Id1(s="INSS", value=practitioner.ssin),                        
+                    ],
+                    cd=Cd(s="CD-HCPARTY", sv="1.14", value="persphysiotherapist"),
+                    firstname=practitioner.givenname,
+                    familyname=practitioner.surname
+                )
+            ),
+            date=XmlDate.from_date(now),
+            time=XmlTime.from_time(now),
+        )
+
+    @classmethod
+    def serialize_template(cls, bundle: BaseModel):
+        serializer = XmlSerializer()
+        serializer.config.pretty_print = True
+        # serializer.config.xml_declaration = True
+        ns_map = {
+            "" : "",
+            "xmlns": "http://www.ehealth.fgov.be/messageservices/protocol/v1",
+            "msgws": "http://www.ehealth.fgov.be/messageservices/core/v1",
+            "kmehr": "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
+        }
+        return serializer.render(bundle, ns_map)
+    
     def send_attestation(self, token: str):
         practitioner = self.set_configuration_from_token(token)
+        kmehrmessage = SendTransactionRequest(
+            request=self.render_request(practitioner)
+        )
+        template = self.serialize_template(kmehrmessage)
+        logger.info(template)
+        return
 
         with open("/home/pieter/repos/ehealth-pyconnector/java/config/examples/mycarenet/attestv3/requests/mha-request-detail.xml", "rb") as f:
             kmehrmessage = f.read()
