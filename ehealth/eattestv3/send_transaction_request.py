@@ -11,7 +11,7 @@ class Id2:
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
     s: Optional[str] = field(
-        default="ID_KMEHR",
+        default="ID-KMEHR",
         metadata={
             "name": "S",
             "type": "Attribute",
@@ -93,7 +93,7 @@ class Id1:
             "required": True,
         }
     )
-    value: Union[int, str] = field(
+    value: str = field(
         default=""
     )
 
@@ -191,7 +191,7 @@ class Insurancymembership:
             "required": True,
         }
     )
-    membership: Optional[int] = field(
+    membership: Optional[str] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -222,7 +222,7 @@ class Standard:
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
     cd: Optional[Cd] = field(
-        default=None,
+        default=Cd(s="CD-STANDARD", sv="1.26", value="20180601"),
         metadata={
             "type": "Element",
             "required": True,
@@ -290,7 +290,7 @@ class Cost:
         }
     )
     unit: Optional[Unit] = field(
-        default=None,
+        default=Unit(cd=Cd(s="CD-CURRENCY", sv="1.0", value="EUR")),
         metadata={
             "type": "Element",
             "required": True,
@@ -414,7 +414,7 @@ class Header:
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
     standard: Optional[Standard] = field(
-        default=None,
+        default=Standard(),
         metadata={
             "type": "Element",
             "required": True,

@@ -3,7 +3,7 @@ from typing import Any
 import datetime
 from random import randint
 import logging
-from .input_models import Practitioner
+from .input_models import Practitioner, Patient as PatientIn, EAttestInputModel, Transaction as TransactionIn
 from io import StringIO
 from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
@@ -15,7 +15,21 @@ from .send_transaction_request import (
     Id2,
     Author2,
     Hcparty,
-    Id1, Cd
+    Id1, Cd,
+    Kmehrmessage,
+    Header,
+    Sender,
+    Recipient,
+    Patient,
+    Folder,
+    Insurancymembership,
+    Sex,
+    Transaction,
+    Author1,
+    Item,
+    Cost,
+    Content,
+    Quantity
 )
 
 logger = logging.getLogger(__name__)
@@ -90,13 +104,8 @@ class EAttestV3Service:
             self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
                 entry.getValue().isValid())
     
-    def render_request(self, practitioner: Practitioner):
-        random_n14 = random_with_N_digits(14)
-        now = datetime.datetime.now().replace(microsecond=0)
-        return Request(
-            id=Id2(value=f"{practitioner.nihii}.{random_n14}"),
-            author=Author2(
-                hcparty=Hcparty(
+    def render_sender(self, practitioner: Practitioner):
+        return Hcparty(
                     id=[
                         Id1(s="ID-HCPARTY", value=practitioner.nihii),
                         Id1(s="INSS", value=practitioner.ssin),                        
@@ -105,9 +114,118 @@ class EAttestV3Service:
                     firstname=practitioner.givenname,
                     familyname=practitioner.surname
                 )
-            ),
+    
+    def render_request(self, practitioner: Practitioner, now: datetime.datetime):
+        random_n14 = random_with_N_digits(14)
+        return Request(
+            id=Id2(value=f"{practitioner.nihii}.{random_n14}"),
+            author=Author2(hcparty=self.render_sender(practitioner)),
             date=XmlDate.from_date(now),
             time=XmlTime.from_time(now),
+        )
+    
+    def render_transaction(self, transaction: TransactionIn, practitioner: Practitioner, now: datetime.datetime):
+        cga = Transaction(
+            id=Id1(s="ID-KMEHR", sv="1.0", value=1),
+            cd=Cd(sv="1.4", s="CD-TRANSACTION-MYCARENET", value="cga"),
+            author=Author1(hcparty=self.render_sender(practitioner)),
+            date=XmlDate.from_date(now),
+            time=XmlTime.from_time(now),
+            iscomplete=True,
+            isvalidated=True,
+            item=[
+                Item(
+                    id=Id1(s="ID-KMEHR", sv="1.0", value=1),
+                    cd=Cd(s="CD-ITEM-MYCARENET", sv="1.4", value="patientpaid"),
+                    cost=Cost(decimal=transaction.amount)
+                ),
+                Item(
+                    id=Id1(s="ID-KMEHR", sv="1.0", value=2),
+                    cd=Cd(s="CD-ITEM-MYCARENET", sv="1.4", value="paymentreceivingparty"),
+                    content=[Content(
+                        id=Id1(s="ID-CBE", sv="1.0", value=transaction.bank_account)
+                    )]
+                )
+            ])
+
+        cgd = Transaction(
+            id=Id1(s="ID-KMEHR", sv="1.0", value=2),
+            cd=Cd(sv="1.4", s="CD-TRANSACTION-MYCARENET", value="cgd"),
+            author=Author1(hcparty=self.render_sender(practitioner)),
+            date=XmlDate.from_date(now),
+            time=XmlTime.from_time(now),
+            iscomplete=True,
+            isvalidated=True,
+            item=[
+                Item(
+                    id=Id1(s="ID-KMEHR", sv="1.0", value=1),
+                    cd=Cd(s="CD-ITEM", sv="1.11", value="claim"),
+                    content=[
+                        Content(
+                            cd=Cd(s="CD-NIHDI", sv="1.0", value=transaction.nihdi)
+                        ),
+                        Content(
+                            cd=Cd(s="LOCAL", sl="NIHDI-CLAIM-NORM", sv="1.0", value=transaction.claim)
+                        ),
+                        Content(
+                            cd=Cd(s="CD-NIHDI-RELATEDSERVICE", sv="1.0", value=transaction.relatedservice)
+                        ),
+                    ],
+                    quantity=Quantity(decimal=1)
+                ),
+                Item(
+                    id=Id1(s="ID-KMEHR", sv="1.0", value=2),
+                    cd=Cd(s="CD-ITEM", sv="1.11", value="encounterdatetime"),
+                    content=[
+                        Content(
+                            date=XmlDate.from_date(transaction.encounterdatetime)
+                        ),
+                    ],
+                    quanityt=Quantity(decimal=1)
+                ),
+            ])
+        return [cga, cgd]
+    
+    def render_patient(self, patient: PatientIn):
+        if patient.ssin:
+            insurance_membership = None
+        else:
+            insurance_membership = Insurancymembership(
+                id=Id1(s="ID-INSURANCE", sv="1.0", value=patient.insurance_io),
+                membership=patient.insurance_number
+            )
+        return Patient(
+            id=Id1(s="ID-PATIENT", sv="1.0", value=patient.ssin or ""),
+            firstname=patient.givenname,
+            familyname=patient.surname,
+            # NOT IMPLEMENTED, OPTIONAL
+            # birthdate=patient.birth_date.isoformat(),
+            sex=Sex(cd=Cd(s="CD-SEX", sv="1.1", value=patient.gender)),
+            insurancymembership=insurance_membership
+        )
+
+    def render_message(self, practitioner: Practitioner, now: datetime.datetime, input_model: EAttestInputModel):
+
+        logger.info("transaction")
+        logger.info(self.render_transaction(input_model.transaction, practitioner, now))
+        return Kmehrmessage(
+            header=Header(
+                id=Id1(s="ID-KMEHR", sv="1.0", value=random_with_N_digits(14)),
+                date=XmlDate.from_date(now),
+                time=XmlTime.from_time(now),
+                sender=Sender(hcparty=self.render_sender(practitioner)),
+                recipient=Recipient(hcparty=Hcparty(
+                    cd=Cd(s="CD-PARTY", sv="1.14", value="application"),
+                    name="mycarenet"
+                ))
+            ),
+            # NOTE: folder should actually be a list
+            folder=Folder(
+                id=Id1(s="ID-KMEHR", sv="1.0", value="1"),
+                patient=self.render_patient(input_model.patient),
+                # NOTE: there could be multiple attestations in a single request?
+                transaction=self.render_transaction(input_model.transaction, practitioner, now)
+            )
         )
 
     @classmethod
@@ -116,23 +234,26 @@ class EAttestV3Service:
         serializer.config.pretty_print = True
         # serializer.config.xml_declaration = True
         ns_map = {
-            "" : "",
+            # "" : "",
             "xmlns": "http://www.ehealth.fgov.be/messageservices/protocol/v1",
             "msgws": "http://www.ehealth.fgov.be/messageservices/core/v1",
             "kmehr": "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
         }
         return serializer.render(bundle, ns_map)
     
-    def send_attestation(self, token: str):
+    def send_attestation(self, token: str, input_model: EAttestInputModel):
+        now = datetime.datetime.now().replace(microsecond=0)
         practitioner = self.set_configuration_from_token(token)
         kmehrmessage = SendTransactionRequest(
-            request=self.render_request(practitioner)
+            request=self.render_request(practitioner, now),
+            kmehrmessage=self.render_message(practitioner, now, input_model)
         )
-        template = self.serialize_template(kmehrmessage)
-        logger.info(template)
-        return
+        kmehrmessage = self.serialize_template(kmehrmessage)
 
-        with open("/home/pieter/repos/ehealth-pyconnector/java/config/examples/mycarenet/attestv3/requests/mha-request-detail.xml", "rb") as f:
+        with open("test.xml", "w") as f:
+            f.write(kmehrmessage)
+
+        with open("test.xml", "rb") as f:
             kmehrmessage = f.read()
 
         inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference("01-KIN-EMEH")
