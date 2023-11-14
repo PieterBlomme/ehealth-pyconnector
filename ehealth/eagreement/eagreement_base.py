@@ -292,7 +292,8 @@ class AbstractEAgreementService:
     def _render_claim(cls,
                       now: datetime.datetime,
                       claim_ask: ClaimAsk,
-                      service_request: Optional[str] = None
+                      service_request: Optional[str] = None,
+                      previous_service_request: Optional[str] = None,
                       ):
         entry_uuid = str(uuid.uuid4())
         
@@ -317,44 +318,55 @@ class AbstractEAgreementService:
                                 preAuthRef=PreAuthRef(claim_ask.pre_auth_ref)
             )
         
-
-        attachments = [
-            SupportingInfo(
-                sequence=Sequence(seq+1),
-                category=Category(
-                    coding=Coding(
-                        system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
-                        code=Code("attachment")
+        seq = 1
+        for a in claim_ask.attachments:
+            attachments += [
+                SupportingInfo(
+                    sequence=Sequence(seq+1),
+                    category=Category(
+                        coding=Coding(
+                            system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
+                            code=Code("attachment")
+                        ),
                     ),
-                ),
-                code=NestedCode(
-                    coding=Coding(
-                            system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/annex-types"),
-                            code=Code(a.type)
-                        )
-                ),
-                value_attachment=ValueAttachment(
-                    content_type=ContentType(a.mimetype),
-                    data=Data(a.data_base64),
-                    title=Title(value=a.title)
+                    code=NestedCode(
+                        coding=Coding(
+                                system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/annex-types"),
+                                code=Code(a.type)
+                            )
+                    ),
+                    value_attachment=ValueAttachment(
+                        content_type=ContentType(a.mimetype),
+                        data=Data(a.data_base64),
+                        title=Title(value=a.title)
 
+                    )
                 )
-            )
-            for seq, a in enumerate(claim_ask.attachments)
-        ]
-        attachments += [
-            SupportingInfo(
-                sequence=Sequence(seq+1),
-                category=Category(
-                    coding=Coding(
-                        system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
-                        code=Code("info")
+            ]
+            seq += 1
+
+        for a in claim_ask.supporting_infos:
+            attachments += [
+                SupportingInfo(
+                    sequence=Sequence(seq+1),
+                    category=Category(
+                        coding=Coding(
+                            system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
+                            code=Code("attachment")
+                        ),
                     ),
-                ),
-                value_string=ValueString(value=a)
+                    value_string=ValueString(value=a)
+                )
+            ]
+            seq += 1
+
+        if previous_service_request:
+            attachments += [
+                SupportingInfo(
+                sequence=Sequence(seq),
+                value_reference=ValueReference(Reference(value=previous_service_request))
             )
-            for seq, a in enumerate(claim_ask.supporting_infos)
-        ]
+            ]
         
         entry = Entry(
                     full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
@@ -522,10 +534,19 @@ class AbstractEAgreementService:
             # entries.append(prescription)
         else:
             service_request = None
+
+        if input_model.claim.previous_prescription:
+            annex = self._render_service_request_1(input_model.claim.previous_prescription)
+            entries.append(annex)
+            previous_service_request = f"ServiceRequest/{annex.resource.service_request.id.value}"
+        else:
+            previous_service_request = None
+
         claim = self._render_claim(
             now=now,
             claim_ask=input_model.claim,
-            service_request=service_request
+            service_request=service_request,
+            previous_service_request=previous_service_request
             )
         entries.append(claim)
         

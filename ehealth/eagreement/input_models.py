@@ -35,6 +35,7 @@ class ClaimAsk(BaseModel):
     billable_period: Optional[datetime.date]
     serviced_date: Optional[datetime.date]
     prescription: Optional[Prescription] = None # modeling TODO
+    previous_prescription: Optional[Prescription] = None # modeling TODO
     pre_auth_ref: Optional[str] = None # in case of extend
     attachments: Optional[List[Attachment]] = []
     supporting_infos: Optional[List[str]] = []
