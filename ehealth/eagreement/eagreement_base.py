@@ -225,17 +225,17 @@ class AbstractEAgreementService:
                 )
     
     @classmethod
-    def _render_service_request_1(cls, prescription: Prescription):
+    def _render_service_request(cls, prescription: Prescription, seq: int):
         entry_uuid = str(uuid.uuid4())        
         return Entry(
                     full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
                     resource=Resource(
                         service_request=ServiceRequest(
-                            id=Id("ServiceRequest1"),
+                            id=Id(f"ServiceRequest{seq}"),
                             meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementservicerequest")),
                             contained=Contained(
                                 binary=Binary(
-                                    id=Id("annexSR1"),
+                                    id=Id(f"annexSR{seq}"),
                                     content_type=ContentType(prescription.data_mimetype),
                                     data=Data(prescription.data_base64) # "QW5uZXhlIGlubGluZSwgYmFzZTY0ZWQ="
                                 )
@@ -260,30 +260,7 @@ class AbstractEAgreementService:
                                 reference=Reference("Patient/Patient1")
                             ),
                             requester=Requester(Reference("PractitionerRole/PractitionerRole2")),
-                            supporting_info=SupportingInfo(reference=Reference("#annexSR1"))
-                        ),
-                    )
-                )
-
-    @classmethod
-    def render_service_request_2(cls):
-        entry_uuid = str(uuid.uuid4())
-        return Entry(
-                    full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
-                    resource=Resource(
-                        service_request=ServiceRequest(
-                            id=Id("ServiceRequest2"),
-                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementservicerequest")),
-                            identifier=Identifier(
-                                system=System("https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/uhmep"),
-                                value=Value("71000436000")
-                            ),
-                            status=Status("active"),
-                            intent=Intent("order"),
-                            subject=Subject(
-                                reference=Reference("Patient/Patient1")
-                            ),
-                            requester=Requester(Reference("PractitionerRole/PractitionerRole2")),
+                            supporting_info=SupportingInfo(reference=Reference(f"#annexSR{seq}"))
                         ),
                     )
                 )
@@ -319,6 +296,7 @@ class AbstractEAgreementService:
             )
         
         seq = 1
+        attachments = []
         for a in claim_ask.attachments:
             attachments += [
                 SupportingInfo(
@@ -527,16 +505,14 @@ class AbstractEAgreementService:
                 practitioner_physician,
         ]
         if input_model.claim.prescription:
-            annex = self._render_service_request_1(input_model.claim.prescription)
+            annex = self._render_service_request(input_model.claim.prescription, seq=1)
             entries.append(annex)
             service_request = f"ServiceRequest/{annex.resource.service_request.id.value}"
-            # prescription = self.render_service_request_2()
-            # entries.append(prescription)
         else:
             service_request = None
 
         if input_model.claim.previous_prescription:
-            annex = self._render_service_request_1(input_model.claim.previous_prescription)
+            annex = self._render_service_request(input_model.claim.previous_prescription, seq=2)
             entries.append(annex)
             previous_service_request = f"ServiceRequest/{annex.resource.service_request.id.value}"
         else:

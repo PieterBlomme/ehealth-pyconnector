@@ -71,6 +71,7 @@ class EAgreementService(AbstractEAgreementService):
             practitioner=practitioner,
             input_model=input_model
         )
+        logger.info(template)
         request = self.redundant_template_render(
             template=template,
             patient_ssin=input_model.patient.ssin,
