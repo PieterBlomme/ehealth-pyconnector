@@ -10,6 +10,7 @@ import be.ehealth.technicalconnector.service.sts.security.SAMLToken;
 import be.ehealth.technicalconnector.session.Session;
 import be.ehealth.technicalconnector.session.SessionManager;
 import be.ehealth.technicalconnector.config.ConfigValidator;
+import be.ehealth.business.mycarenetdomaincommons.domain.Attribute;
 
 import be.ehealth.businessconnector.test.testcommons.utils.FileTestUtils;
 
@@ -48,5 +49,16 @@ public class JavaGateway {
 
   public AttributeQuery createAttributeQueryFromTemplate(Map<String, Object> testFileParams, String requestLocation) throws Exception {
       return FileTestUtils.toObject(testFileParams, requestLocation, AttributeQuery.class);
+  }
+
+  public List commonInputAttributes() {
+    return Arrays.asList(Attribute.builder()
+                .key("urn:be:cin:nippin:purpose")
+                .value("some purpose")
+                .build(),
+        Attribute.builder()
+                .key("urn:be:cin:nippin:attemptNbr")
+                .value(1)
+                .build());
   }
 }

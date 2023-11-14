@@ -1,5 +1,13 @@
 from py4j.java_gateway import JavaGateway
+from typing import Any
 import uuid
+import logging
+from .input_models import Practitioner
+from io import StringIO
+from ..sts.assertion import Assertion
+from xsdata_pydantic.bindings import XmlParser
+
+logger = logging.getLogger(__name__)
 
 class EAttestV3Service:
     def __init__(
@@ -24,19 +32,55 @@ class EAttestV3Service:
         self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
         self.config_validator.setProperty("endpoint.etk", etk_endpoint)
 
-    def send_attestation(self):
+    def set_configuration_from_token(self, token: str) -> Practitioner:
+        # TODO copy paste from MDA
+        parser = XmlParser()
+        token_pydantic = parser.parse(StringIO(token), Assertion)
+        
+        surname = None
+        givenname = None
+        nihii = None
+        ssin = None
+        quality = None
+                                     
+        for attribute in token_pydantic.attribute_statement.attribute:
+            if attribute.attribute_name == 'urn:be:fgov:ehealth:1.0:certificateholder:person:ssin':
+                ssin = attribute.attribute_value
+            elif attribute.attribute_name.startswith('urn:be:fgov:person:ssin:ehealth:1.0:nihii'):
+                nihii = attribute.attribute_value
+            elif attribute.attribute_name  == 'urn:be:fgov:person:ssin:ehealth:1.0:givenname':
+                givenname = attribute.attribute_value
+            elif attribute.attribute_name  == 'urn:be:fgov:person:ssin:ehealth:1.0:surname':
+                surname = attribute.attribute_value
+            elif attribute.attribute_name.startswith('urn:be:fgov:person:ssin:ehealth:1.0:fpsph'):
+                if attribute.attribute_value:
+                    quality = attribute.attribute_name.split(':')[-2]
+
+        logger.info(f"Name: {givenname} {surname}, SSIN {ssin}, NIHII {nihii}, quality {quality}")
+        self.config_validator.setProperty("mycarenet.default.careprovider.nihii.value", nihii)
+        self.config_validator.setProperty("mycarenet.default.careprovider.nihii.quality", quality)
+        self.config_validator.setProperty("mycarenet.default.careprovider.physicalperson.ssin", ssin)
+        self.config_validator.setProperty("mycarenet.default.careprovider.physicalperson.name", f"{givenname} {surname}")
+        return Practitioner(
+                nihii=nihii,
+                givenname=givenname,
+                surname=surname,
+            )
+    
+    def verify_result(self, response: Any):
+        signVerifResult = response.getSignatureVerificationResult()
+        for entry in signVerifResult.getErrors():
+            self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
+                entry.getValue().isValid())
+                
+    def send_attestation(self, token: str):
+        practitioner = self.set_configuration_from_token(token)
+
         with open("/home/pieter/repos/ehealth-pyconnector/java/config/examples/mycarenet/attestv3/requests/mha-request-detail.xml", "rb") as f:
             kmehrmessage = f.read()
 
-        inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(str(uuid.uuid4()))
-        purpose = (self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.Attribute.builder()
-                                                .key("urn:be:cin:nippin:purpose")
-                                                .value("some purpose")
-                                                .build())
-        attemptNbr = (self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.Attribute.builder()
-                                                .key("urn:be:cin:nippin:attemptNbr")
-                                                .value(1)
-                                                .build())
+        inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference("01-KIN-EMEH")
+
         # inputAttrs = self.GATEWAY.jvm.java.util.Arrays.asList(purpose, attemptNbr)
         send_attest_request = (self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.SendAttestationRequestInput
                                .builder()
@@ -47,16 +91,7 @@ class EAttestV3Service:
                                 .referenceDate(self.GATEWAY.jvm.java.time.LocalDateTime.now())
                                 .messageVersion("3.0")
                                 .issuer("some issuer")
-                                .commonInputAttributes(
-                                    self.GATEWAY.jvm.java.util.Arrays.asList(self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.Attribute.builder()
-                                                .key("urn:be:cin:nippin:purpose")
-                                                .value("some purpose")
-                                                .build()),
-                                        self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.Attribute.builder()
-                                                .key("urn:be:cin:nippin:attemptNbr")
-                                                .value(1)
-                                                .build()
-                                                )
+                                .commonInputAttributes(self.EHEALTH_JVM.commonInputAttributes())
                                 .build())       
         attestBuilderRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.RequestObjectBuilderFactory.getRequestObjectBuilder().buildSendAttestationRequest(
             send_attest_request
@@ -64,11 +99,6 @@ class EAttestV3Service:
         sendAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().sendAttestation(attestBuilderRequest.getSendAttestationRequest())
 
         attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilderRequest);
-    
-        import logging
-        logging.info(attestResponse)
-        signatureVerificationResult = attestResponse.getSignatureVerificationResult()
-        logging.info(signatureVerificationResult)
-        # Assert.assertTrue("Errors found in the signature verification", signatureVerificationResult.isValid());
-        # String expectedResponse = ConnectorIOUtils.getResourceAsString("/examples/mycarenet/attestv3/responses/mha-response-detail-" + inputReference + ".xml");
-        # XmlAsserter.assertSimilar(expectedResponse, new String(attestResponse.getBusinessResponse(), UTF_8.name()));
+        self.verify_result(attestResponse)
+        response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
+        logger.info(response_string)

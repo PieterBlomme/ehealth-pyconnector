@@ -24,4 +24,4 @@ def eattest_service():
 
 def test_happy_path(sts_service, token, eattest_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        response = eattest_service.send_attestation()
+        response = eattest_service.send_attestation(token)
