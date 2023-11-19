@@ -226,45 +226,66 @@ class AbstractEAgreementService:
     
     @classmethod
     def _render_service_request(cls, prescription: Prescription, seq: int):
-        entry_uuid = str(uuid.uuid4())        
-        return Entry(
-                    full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
-                    resource=Resource(
-                        service_request=ServiceRequest(
-                            id=Id(f"ServiceRequest{seq}"),
-                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementservicerequest")),
-                            contained=Contained(
-                                binary=Binary(
-                                    id=Id(f"annexSR{seq}"),
-                                    content_type=ContentType(prescription.data_mimetype),
-                                    data=Data(prescription.data_base64) # "QW5uZXhlIGlubGluZSwgYmFzZTY0ZWQ="
-                                )
+        entry_uuid = str(uuid.uuid4())
+
+        if prescription.identifier:
+            return Entry(
+                        full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
+                        resource=Resource(
+                            service_request=ServiceRequest(
+                                id=Id(f"ServiceRequest{seq}"),
+                                meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementservicerequest")),
+                                status=Status("active"),
+                                intent=Intent("order"),
+                                identifier=Identifier(
+                                    system=System("https://www.ehealth.fgov.be/standards/fhir/NamingSystem/uhmep"),
+                                    value=Value(prescription.identifier)
+                                ),
+                                subject=Subject(
+                                    reference=Reference("Patient/Patient1")
+                                ),
+                                requester=Requester(Reference("PractitionerRole/PractitionerRole2")),
                             ),
-                            status=Status("active"),
-                            intent=Intent("order"),
-                            category=Category(
-                                coding=Coding(
-                                    system=System("http://snomed.info/sct"),
-                                    code=Code(prescription.snomed_category), # "91251008"
-                                )
-                            ),
-                            code=NestedCode(
-                                coding=Coding(
-                                    system=System("http://snomed.info/sct"),
-                                    code=Code(prescription.snomed_code), # "91251008"
-                                )
-                            ),
-                            quantity_quantity=QuantityQuantity(Value(prescription.quantity)), # 15
-                            authored_on=AuthoredOn(XmlDate.from_date(prescription.date)), # datetime.date.today() - datetime.timedelta(days=145)
-                            subject=Subject(
-                                reference=Reference("Patient/Patient1")
-                            ),
-                            requester=Requester(Reference("PractitionerRole/PractitionerRole2")),
-                            supporting_info=SupportingInfo(reference=Reference(f"#annexSR{seq}"))
-                        ),
+                        )
                     )
-                )
-    
+        else:
+            return Entry(
+                        full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
+                        resource=Resource(
+                            service_request=ServiceRequest(
+                                id=Id(f"ServiceRequest{seq}"),
+                                meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementservicerequest")),
+                                contained=Contained(
+                                    binary=Binary(
+                                        id=Id(f"annexSR{seq}"),
+                                        content_type=ContentType(prescription.data_mimetype),
+                                        data=Data(prescription.data_base64) # "QW5uZXhlIGlubGluZSwgYmFzZTY0ZWQ="
+                                    )
+                                ),
+                                status=Status("active"),
+                                intent=Intent("order"),
+                                category=Category(
+                                    coding=Coding(
+                                        system=System("http://snomed.info/sct"),
+                                        code=Code(prescription.snomed_category), # "91251008"
+                                    )
+                                ),
+                                code=NestedCode(
+                                    coding=Coding(
+                                        system=System("http://snomed.info/sct"),
+                                        code=Code(prescription.snomed_code), # "91251008"
+                                    )
+                                ),
+                                quantity_quantity=QuantityQuantity(Value(prescription.quantity)) if isinstance(prescription, Prescription) else None, # 15
+                                authored_on=AuthoredOn(XmlDate.from_date(prescription.date)) if isinstance(prescription, Prescription) else None, # datetime.date.today() - datetime.timedelta(days=145)
+                                subject=Subject(
+                                    reference=Reference("Patient/Patient1")
+                                ),
+                                requester=Requester(Reference("PractitionerRole/PractitionerRole2")),
+                                supporting_info=SupportingInfo(reference=Reference(f"#annexSR{seq}"))
+                            ),
+                        )
+                    )
     @classmethod
     def _render_claim(cls,
                       now: datetime.datetime,
@@ -326,7 +347,7 @@ class AbstractEAgreementService:
         for a in claim_ask.supporting_infos:
             attachments += [
                 SupportingInfo(
-                    sequence=Sequence(seq+1),
+                    sequence=Sequence(seq),
                     category=Category(
                         coding=Coding(
                             system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
@@ -341,9 +362,15 @@ class AbstractEAgreementService:
         if previous_service_request:
             attachments += [
                 SupportingInfo(
-                sequence=Sequence(seq),
-                value_reference=ValueReference(Reference(value=previous_service_request))
-            )
+                    sequence=Sequence(seq),
+                    category=Category(
+                        coding=Coding(
+                            system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
+                            code=Code("info")
+                        ),
+                    ),
+                    value_reference=ValueReference(Reference(value=previous_service_request))
+                )
             ]
         
         entry = Entry(

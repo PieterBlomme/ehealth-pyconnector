@@ -14,13 +14,14 @@ class Patient(BaseModel):
     gender: str
 
 class Prescription(BaseModel):
-    # TODO wip eg. prescription number
     data_base64: str
     data_mimetype: Optional[str] = "application/pdf"
+    # TODO wip eg. prescription number
     snomed_category: int
     snomed_code: int
-    date: datetime.date
-    quantity: int
+    identifier: Optional[str]
+    date: Optional[datetime.date]
+    quantity: Optional[int]
 
 class Attachment(BaseModel):
     data_base64: str
