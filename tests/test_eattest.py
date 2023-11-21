@@ -5,7 +5,7 @@ import pytest
 import logging
 from pathlib import Path
 from ehealth.eattestv3.eattest import EAttestV3Service
-from ehealth.eattestv3.input_models import EAttestInputModel, Patient, Transaction
+from ehealth.eattestv3.input_models import EAttestInputModel, Patient, Transaction, CGDItem
 from .conftest import MYCARENET_PWD, MYCARENET_USER
 
 logger = logging.getLogger(__name__)
@@ -131,3 +131,113 @@ def test_4_1_3(sts_service, token, eattest_service):
 def test_4_1_4(sts_service, token, eattest_service):
     # manual testing
     pass
+
+def test_4_1_5(sts_service, token, eattest_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        response = eattest_service.send_attestation(
+            token, 
+            input_model=EAttestInputModel(
+                patient=Patient(
+                    givenname="John",
+                    surname="Doe",
+                    gender="male",
+                    ssin="54032409450"
+                ),
+                transaction=Transaction(
+                    amount=38.86,
+                    bank_account="0635769870",
+                    nihdi="560652",
+                    cgds=[
+                        CGDItem(
+                            claim="567011",
+                            decisionreference="10016856095552803978",
+                            encounterdatetime=datetime.date.today().isoformat(),
+                            amount=38.86,
+                            bank_account="0635769870"
+                        ),
+                        CGDItem(
+                            claim="567011",
+                            decisionreference="10016856095552803978",
+                            encounterdatetime=(datetime.date.today() - datetime.timedelta(days=-1)).isoformat(),
+                            amount=38.86,
+                            bank_account="0635769870"
+                        ),
+                    ]
+                )
+            )
+        )
+    
+    acknowledge = response.response.acknowledge
+    assert acknowledge.error is not None
+    assert acknowledge.error.cd.value == 271
+    logger.info(acknowledge.error.cd.value)
+
+def test_4_1_6(sts_service, token, eattest_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        response = eattest_service.send_attestation(
+            token, 
+            input_model=EAttestInputModel(
+                patient=Patient(
+                    givenname="John",
+                    surname="Doe",
+                    gender="male",
+                    ssin="58112129084"
+                ),
+                transaction=Transaction(
+                    amount=38.86,
+                    bank_account="0635769870",
+                    cgds=[
+                        CGDItem(
+                            claim="567011",
+                            decisionreference="10016856095552803978",
+                            encounterdatetime=datetime.date.today().isoformat(),
+                            amount=38.86,
+                            bank_account="0635769870"
+                        ),
+                    ]
+                )
+            )
+        )
+    
+    acknowledge = response.response.acknowledge
+    assert acknowledge.error is not None
+    assert acknowledge.error.cd.value == 274
+    logger.info(acknowledge.error.cd.value)
+
+def test_4_2_1(sts_service, token, eattest_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        response = eattest_service.send_attestation(
+            token, 
+            input_model=EAttestInputModel(
+                patient=Patient(
+                    givenname="John",
+                    surname="Doe",
+                    gender="male",
+                    ssin="58112129084"
+                ),
+                transaction=Transaction(
+                    amount=38.86,
+                    bank_account="0635769870",
+                    cgds=[
+                        CGDItem(
+                            claim="567011",
+                            decisionreference="10016856093831735305",
+                            encounterdatetime=datetime.date.today().isoformat(),
+                            amount=38.86,
+                            bank_account="0635769870"
+                        ),
+                        # CGDItem(
+                        #     claim="567033",
+                        #     decisionreference="10016856093831735305",
+                        #     encounterdatetime=datetime.date.today().isoformat(),
+                        #     amount=38.86,
+                        #     bank_account="0635769870"
+                        # ),
+                    ]
+                )
+            )
+        )
+    
+    acknowledge = response.response.acknowledge
+    logger.info(acknowledge.error)
+    assert acknowledge.error is None

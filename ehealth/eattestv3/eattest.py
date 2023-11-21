@@ -122,8 +122,11 @@ class EAttestV3Service:
         )
     
     def render_transaction(self, transaction: TransactionIn, practitioner: Practitioner, now: datetime.datetime):
+        transaction_seq = 1
+
+        amount = sum([cgd.amount for cgd in transaction.cgds])
         cga = Transaction(
-            id=Id1(s="ID-KMEHR", sv="1.0", value=1),
+            id=Id1(s="ID-KMEHR", sv="1.0", value=transaction_seq),
             cd=Cd(sv="1.4", s="CD-TRANSACTION-MYCARENET", value="cga"),
             author=Author1(hcparty=self.render_sender(practitioner)),
             date=XmlDate.from_date(now),
@@ -134,7 +137,7 @@ class EAttestV3Service:
                 Item(
                     id=Id1(s="ID-KMEHR", sv="1.0", value=1),
                     cd=Cd(s="CD-ITEM-MYCARENET", sv="1.4", value="patientpaid"),
-                    cost=Cost(decimal=transaction.amount)
+                    cost=Cost(decimal=amount)
                 ),
                 Item(
                     id=Id1(s="ID-KMEHR", sv="1.0", value=2),
@@ -144,63 +147,68 @@ class EAttestV3Service:
                     )]
                 )
             ])
-                
-        cgd = Transaction(
-            id=Id1(s="ID-KMEHR", sv="1.0", value=2),
-            cd=Cd(sv="1.4", s="CD-TRANSACTION-MYCARENET", value="cgd"),
-            author=Author1(hcparty=self.render_sender(practitioner)),
-            date=XmlDate.from_date(now),
-            time=XmlTime.from_time(now),
-            iscomplete=True,
-            isvalidated=True,
-            item=[
-                Item(
-                    id=Id1(s="ID-KMEHR", sv="1.0", value=1),
-                    cd=Cd(s="CD-ITEM", sv="1.11", value="claim"),
-                    content=[
-                        Content(
-                            cd=Cd(s="CD-NIHDI", sv="1.0", value=transaction.nihdi)
-                        ),
-                        Content(
-                            cd=Cd(s="LOCAL", sl="NIHDI-CLAIM-NORM", sv="1.0", value=transaction.claim)
-                        ),
-                        # Content(
-                        #     cd=Cd(s="CD-NIHDI-RELATEDSERVICE", sv="1.0", value=transaction.relatedservice)
-                        # ),
-                    ],
-                    quantity=Quantity(decimal=1)
-                ),
-                Item(
-                    id=Id1(s="ID-KMEHR", sv="1.0", value=2),
-                    cd=Cd(s="CD-ITEM", sv="1.11", value="encounterdatetime"),
-                    content=[
-                        Content(
-                            date=XmlDate.from_date(transaction.encounterdatetime)
-                        ),
-                    ],
-                    quanityt=Quantity(decimal=1)
-                ),
-                Item(
-                    id=Id1(s="ID-KMEHR", sv="1.0", value=3),
-                    cd=Cd(s="CD-ITEM-MYCARENET", sv="1.6", value="patientpaid"),
-                    cost=Cost(decimal=transaction.amount)
-                ),
-                Item(
-                    id=Id1(s="ID-KMEHR", sv="1.0", value=4),
-                    cd=Cd(s="CD-ITEM-MYCARENET", sv="1.6", value="decisionreference"),
-                    content=[Content(
-                        id=Id1(s="LOCAL", sl="OAreferencesystemname", sv="1.0", value=transaction.decisionreference)
-                    )]
-                ),
-                Item(
-                    id=Id1(s="ID-KMEHR", sv="1.0", value=5),
-                    cd=Cd(s="CD-ITEM-MYCARENET", sv="1.6", value="paymentreceivingparty"),
-                    content=[Content(
-                        id=Id1(s="ID-CBE", sv="1.0", value=transaction.bank_account)
-                    )]
-                )
-            ])
-        return [cga, cgd]
+        
+        transactions = [cga]
+
+        for cgd in transaction.cgds:
+            transaction_seq += 1
+            cgd = Transaction(
+                id=Id1(s="ID-KMEHR", sv="1.0", value=transaction_seq),
+                cd=Cd(sv="1.4", s="CD-TRANSACTION-MYCARENET", value="cgd"),
+                author=Author1(hcparty=self.render_sender(practitioner)),
+                date=XmlDate.from_date(now),
+                time=XmlTime.from_time(now),
+                iscomplete=True,
+                isvalidated=True,
+                item=[
+                    Item(
+                        id=Id1(s="ID-KMEHR", sv="1.0", value=1),
+                        cd=Cd(s="CD-ITEM", sv="1.11", value="claim"),
+                        content=[
+                            Content(
+                                cd=Cd(s="CD-NIHDI", sv="1.0", value=cgd.claim)
+                            ),
+                            Content(
+                                cd=Cd(s="LOCAL", sl="NIHDI-CLAIM-NORM", sv="1.0", value="0")
+                            ),
+                            # Content(
+                            #     cd=Cd(s="CD-NIHDI-RELATEDSERVICE", sv="1.0", value=transaction.relatedservice)
+                            # ),
+                        ],
+                        quantity=Quantity(decimal=1)
+                    ),
+                    Item(
+                        id=Id1(s="ID-KMEHR", sv="1.0", value=2),
+                        cd=Cd(s="CD-ITEM", sv="1.11", value="encounterdatetime"),
+                        content=[
+                            Content(
+                                date=XmlDate.from_date(cgd.encounterdatetime)
+                            ),
+                        ],
+                        quanityt=Quantity(decimal=1)
+                    ),
+                    Item(
+                        id=Id1(s="ID-KMEHR", sv="1.0", value=3),
+                        cd=Cd(s="CD-ITEM-MYCARENET", sv="1.6", value="patientpaid"),
+                        cost=Cost(decimal=cgd.amount)
+                    ),
+                    Item(
+                        id=Id1(s="ID-KMEHR", sv="1.0", value=4),
+                        cd=Cd(s="CD-ITEM-MYCARENET", sv="1.6", value="decisionreference"),
+                        content=[Content(
+                            id=Id1(s="LOCAL", sl="OAreferencesystemname", sv="1.0", value=cgd.decisionreference)
+                        )]
+                    ),
+                    Item(
+                        id=Id1(s="ID-KMEHR", sv="1.0", value=5),
+                        cd=Cd(s="CD-ITEM-MYCARENET", sv="1.6", value="paymentreceivingparty"),
+                        content=[Content(
+                            id=Id1(s="ID-CBE", sv="1.0", value=cgd.bank_account)
+                        )]
+                    )
+                ])
+            transactions.append(cgd)
+        return transactions
     
     def render_patient(self, patient: PatientIn):
         if patient.ssin:

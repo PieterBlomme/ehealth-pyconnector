@@ -17,14 +17,17 @@ class Patient(BaseModel):
     insurance_io: Optional[str]
     insurance_number: Optional[str]
 
-class Transaction(BaseModel):
-    amount: float
-    bank_account: str
-    nihdi: str
+class CGDItem(BaseModel):
     claim: str
-    relatedservice: Optional[str]
     decisionreference: str
     encounterdatetime: datetime.date
+    amount: float
+    bank_account: str
+
+class Transaction(BaseModel):
+    bank_account: str
+    relatedservice: Optional[str]
+    cgds: List[CGDItem]
 
 class EAttestInputModel(BaseModel):
     patient: Patient
