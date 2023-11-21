@@ -9,6 +9,7 @@ from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from pydantic import BaseModel
+import tempfile
 from .send_transaction_request import (
     SendTransactionRequest,
     Request,
@@ -31,6 +32,7 @@ from .send_transaction_request import (
     Content,
     Quantity
 )
+from .send_transaction_response import EAttestV3, SendTransactionResponse
 
 logger = logging.getLogger(__name__)
 
@@ -205,17 +207,14 @@ class EAttestV3Service:
         )
 
     def render_message(self, practitioner: Practitioner, now: datetime.datetime, input_model: EAttestInputModel):
-
-        logger.info("transaction")
-        logger.info(self.render_transaction(input_model.transaction, practitioner, now))
         return Kmehrmessage(
             header=Header(
-                id=Id1(s="ID-KMEHR", sv="1.0", value=random_with_N_digits(14)),
+                id=Id1(s="ID-KMEHR", sv="1.0", value=1),
                 date=XmlDate.from_date(now),
                 time=XmlTime.from_time(now),
                 sender=Sender(hcparty=self.render_sender(practitioner)),
                 recipient=Recipient(hcparty=Hcparty(
-                    cd=Cd(s="CD-PARTY", sv="1.14", value="application"),
+                    cd=Cd(s="CD-HCPARTY", sv="1.14", value="application"),
                     name="mycarenet"
                 ))
             ),
@@ -244,26 +243,23 @@ class EAttestV3Service:
     def send_attestation(self, token: str, input_model: EAttestInputModel):
         now = datetime.datetime.now().replace(microsecond=0)
         practitioner = self.set_configuration_from_token(token)
-        kmehrmessage = SendTransactionRequest(
+        kmehrmessage_pydantic = SendTransactionRequest(
             request=self.render_request(practitioner, now),
             kmehrmessage=self.render_message(practitioner, now, input_model)
         )
-        kmehrmessage = self.serialize_template(kmehrmessage)
+        template = self.serialize_template(kmehrmessage_pydantic).replace('xmlns:xmlns="http://www.ehealth.fgov.be/messageservices/protocol/v1"', 'xmlns="http://www.ehealth.fgov.be/messageservices/protocol/v1"')
 
-        with open("test.xml", "w") as f:
-            f.write(kmehrmessage)
-
-        with open("test.xml", "rb") as f:
-            kmehrmessage = f.read()
+        # obviously this is lazy ...
+        with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
+            tmp.write(template)
 
         inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference("01-KIN-EMEH")
 
-        # inputAttrs = self.GATEWAY.jvm.java.util.Arrays.asList(purpose, attemptNbr)
         send_attest_request = (self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.SendAttestationRequestInput
                                .builder()
                                .isTest(self.is_test)
                                .inputReference(inputReference)
-                               .kmehrmessage(kmehrmessage)
+                               .kmehrmessage(self.EHEALTH_JVM.getBytesFromFile(tmp.name))
                                 .patientSsin(self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.Ssin("72070539942"))
                                 .referenceDate(self.GATEWAY.jvm.java.time.LocalDateTime.now())
                                 .messageVersion("3.0")
@@ -272,10 +268,26 @@ class EAttestV3Service:
                                 .build())       
         attestBuilderRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.RequestObjectBuilderFactory.getRequestObjectBuilder().buildSendAttestationRequest(
             send_attest_request
-        )
-        sendAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().sendAttestation(attestBuilderRequest.getSendAttestationRequest())
+        ).getSendAttestationRequest()
+        
+        raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(attestBuilderRequest)
+
+        sendAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().sendAttestation(attestBuilderRequest)
+
+        raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(sendAttestationResponse)
 
         attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilderRequest);
         self.verify_result(attestResponse)
         response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
-        logger.info(response_string)
+
+
+        parser = XmlParser()
+        response_pydantic = parser.parse(StringIO(response_string), SendTransactionResponse)
+        
+        return EAttestV3(
+            response=response_pydantic,
+            transaction_request=template,
+            transaction_response=response_string,
+            soap_request=raw_request,
+            soap_response=raw_response
+        )

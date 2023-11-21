@@ -11,6 +11,9 @@ import be.ehealth.technicalconnector.session.Session;
 import be.ehealth.technicalconnector.session.SessionManager;
 import be.ehealth.technicalconnector.config.ConfigValidator;
 import be.ehealth.business.mycarenetdomaincommons.domain.Attribute;
+import be.ehealth.technicalconnector.utils.ConnectorIOUtils;
+import java.nio.charset.StandardCharsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 import be.ehealth.businessconnector.test.testcommons.utils.FileTestUtils;
 
@@ -61,4 +64,9 @@ public class JavaGateway {
                 .value(1)
                 .build());
   }
+
+  public byte[] getBytesFromFile(String path) throws Exception{
+          return ConnectorIOUtils.getResourceAsString(path).getBytes(StandardCharsets.UTF_8);
+  }
+
 }
