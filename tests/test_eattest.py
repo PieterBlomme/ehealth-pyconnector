@@ -22,31 +22,7 @@ def eattest_service():
         mycarenet_license_password=MYCARENET_PWD,
     )
 
-# def test_happy_path(sts_service, token, eattest_service):
-#     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-#         response = eattest_service.send_attestation(
-#             token, 
-#             input_model=EAttestInputModel(
-#                 patient=Patient(
-#                     surname="Leclerc",
-#                     givenname="Julien",
-#                     gender="male",
-#                     insurance_io="206",
-#                     insurance_number="72070539942"
-#                 ),
-#                 transaction=Transaction(
-#                     amount=38.86,
-#                     bank_account="0635769870",
-#                     nihdi="475075",
-#                     claim="0",
-#                     relatedservice="767071",
-#                     encounterdatetime=datetime.date.fromisoformat("2017-01-27")
-#                 )
-#             )
-#         )
-#         logger.info(response.response)
-
-# TODO requestor, claim??
+# TODO requestor
 def test_4_1_1(sts_service, token, eattest_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         response = eattest_service.send_attestation(
@@ -59,12 +35,16 @@ def test_4_1_1(sts_service, token, eattest_service):
                     ssin="00092210605"
                 ),
                 transaction=Transaction(
-                    amount=38.86,
                     bank_account="0635769870",
-                    nihdi="560652",
-                    claim="0",
                     decisionreference="10020000000003100613",
-                    encounterdatetime=datetime.date.today().isoformat()
+                    cgds=[
+                        CGDItem(
+                            claim="560652",
+                            decisionreference="10020000000003100613",
+                            encounterdatetime=datetime.date.today().isoformat(),
+                            amount=38.86,
+                        ),
+                    ]
                 )
             )
         )
@@ -86,12 +66,16 @@ def test_4_1_2(sts_service, token, eattest_service):
                     ssin="58112129084"
                 ),
                 transaction=Transaction(
-                    amount=38.86,
                     bank_account="0635769870",
-                    nihdi="567011",
-                    claim="0",
-                    decisionreference="10020000000003100614",
-                    encounterdatetime=datetime.date.today().isoformat()
+                    decisionreference="10020000000003100613",
+                    cgds=[
+                        CGDItem(
+                            claim="567011",
+                            decisionreference="10020000000003100614",
+                            encounterdatetime=datetime.date.today().isoformat(),
+                            amount=38.86,
+                        ),
+                    ]
                 )
             )
         )
@@ -113,12 +97,15 @@ def test_4_1_3(sts_service, token, eattest_service):
                     ssin="58112129084"
                 ),
                 transaction=Transaction(
-                    amount=38.86,
                     bank_account="0635769870",
-                    nihdi="560652",
-                    claim="0",
-                    decisionreference="10016856093831735305",
-                    encounterdatetime=datetime.date.today().isoformat()
+                    cgds=[
+                        CGDItem(
+                            claim="560652",
+                            decisionreference="10016856093831735305",
+                            encounterdatetime=datetime.date.today().isoformat(),
+                            amount=38.86,
+                        ),
+                    ]
                 )
             )
         )
@@ -128,6 +115,7 @@ def test_4_1_3(sts_service, token, eattest_service):
     assert acknowledge.error.cd.value == 268
     logger.info(acknowledge.error.cd.value)
 
+@pytest.mark.skip
 def test_4_1_4(sts_service, token, eattest_service):
     # manual testing
     pass
@@ -144,23 +132,19 @@ def test_4_1_5(sts_service, token, eattest_service):
                     ssin="54032409450"
                 ),
                 transaction=Transaction(
-                    amount=38.86,
                     bank_account="0635769870",
-                    nihdi="560652",
                     cgds=[
                         CGDItem(
                             claim="567011",
                             decisionreference="10016856095552803978",
                             encounterdatetime=datetime.date.today().isoformat(),
                             amount=38.86,
-                            bank_account="0635769870"
                         ),
                         CGDItem(
                             claim="567011",
                             decisionreference="10016856095552803978",
                             encounterdatetime=(datetime.date.today() - datetime.timedelta(days=-1)).isoformat(),
                             amount=38.86,
-                            bank_account="0635769870"
                         ),
                     ]
                 )
@@ -216,7 +200,6 @@ def test_4_2_1(sts_service, token, eattest_service):
                     ssin="58112129084"
                 ),
                 transaction=Transaction(
-                    amount=38.86,
                     bank_account="0635769870",
                     cgds=[
                         CGDItem(
@@ -224,15 +207,13 @@ def test_4_2_1(sts_service, token, eattest_service):
                             decisionreference="10016856093831735305",
                             encounterdatetime=datetime.date.today().isoformat(),
                             amount=38.86,
-                            bank_account="0635769870"
                         ),
-                        # CGDItem(
-                        #     claim="567033",
-                        #     decisionreference="10016856093831735305",
-                        #     encounterdatetime=datetime.date.today().isoformat(),
-                        #     amount=38.86,
-                        #     bank_account="0635769870"
-                        # ),
+                        CGDItem(
+                            claim="567033",
+                            decisionreference="10016856093831735305",
+                            encounterdatetime=datetime.date.today().isoformat(),
+                            amount=38.86,
+                        ),
                     ]
                 )
             )

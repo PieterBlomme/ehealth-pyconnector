@@ -22,7 +22,6 @@ class CGDItem(BaseModel):
     decisionreference: str
     encounterdatetime: datetime.date
     amount: float
-    bank_account: str
 
 class Transaction(BaseModel):
     bank_account: str

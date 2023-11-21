@@ -185,7 +185,6 @@ class EAttestV3Service:
                                 date=XmlDate.from_date(cgd.encounterdatetime)
                             ),
                         ],
-                        quanityt=Quantity(decimal=1)
                     ),
                     Item(
                         id=Id1(s="ID-KMEHR", sv="1.0", value=3),
@@ -199,13 +198,6 @@ class EAttestV3Service:
                             id=Id1(s="LOCAL", sl="OAreferencesystemname", sv="1.0", value=cgd.decisionreference)
                         )]
                     ),
-                    Item(
-                        id=Id1(s="ID-KMEHR", sv="1.0", value=5),
-                        cd=Cd(s="CD-ITEM-MYCARENET", sv="1.6", value="paymentreceivingparty"),
-                        content=[Content(
-                            id=Id1(s="ID-CBE", sv="1.0", value=cgd.bank_account)
-                        )]
-                    )
                 ])
             transactions.append(cgd)
         return transactions

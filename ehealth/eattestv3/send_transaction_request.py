@@ -114,32 +114,6 @@ class Quantity:
 
 
 @dataclass
-class Content:
-    class Meta:
-        name = "content"
-        namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
-
-    date: Optional[XmlDate] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-        }
-    )
-    cd: Optional[Cd] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-        }
-    )
-    id: Optional[Id1] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-        }
-    )
-
-
-@dataclass
 class Hcparty:
     class Meta:
         name = "hcparty"
@@ -174,6 +148,39 @@ class Hcparty:
         default=None,
         metadata={
             "type": "Element",
+        }
+    )
+
+@dataclass
+class Content:
+    class Meta:
+        name = "content"
+        namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
+
+    date: Optional[XmlDate] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+        }
+    )
+    cd: Optional[Cd] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+        }
+    )
+    id: Optional[Id1] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+        }
+    )
+    hcparty: Optional[Hcparty] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "namespace": "http://www.ehealth.fgov.be/standards/kmehr/schema/v1",
+            "required": True,
         }
     )
 
