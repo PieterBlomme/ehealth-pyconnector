@@ -253,6 +253,7 @@ class EAttestV3Service:
         with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
             tmp.write(template)
 
+        import uuid
         inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference("01-KIN-EMEH")
 
         send_attest_request = (self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.SendAttestationRequestInput
@@ -266,9 +267,10 @@ class EAttestV3Service:
                                 .issuer("some issuer")
                                 .commonInputAttributes(self.EHEALTH_JVM.commonInputAttributes())
                                 .build())       
-        attestBuilderRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.RequestObjectBuilderFactory.getRequestObjectBuilder().buildSendAttestationRequest(
+        attestBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.RequestObjectBuilderFactory.getRequestObjectBuilder().buildSendAttestationRequest(
             send_attest_request
-        ).getSendAttestationRequest()
+        )
+        attestBuilderRequest = attestBuilder.getSendAttestationRequest()
         
         raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(attestBuilderRequest)
 
@@ -276,7 +278,7 @@ class EAttestV3Service:
 
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(sendAttestationResponse)
 
-        attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilderRequest);
+        attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilder)
         self.verify_result(attestResponse)
         response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
 
