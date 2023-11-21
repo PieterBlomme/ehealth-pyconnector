@@ -36,11 +36,6 @@ from .send_transaction_response import EAttestV3, SendTransactionResponse
 
 logger = logging.getLogger(__name__)
 
-def random_with_N_digits(n):
-    range_start = 10**(n-1)
-    range_end = (10**n)-1
-    return randint(range_start, range_end)
-
 class EAttestV3Service:
     def __init__(
             self,
@@ -112,15 +107,15 @@ class EAttestV3Service:
                         Id1(s="ID-HCPARTY", value=practitioner.nihii),
                         Id1(s="INSS", value=practitioner.ssin),                        
                     ],
-                    cd=Cd(s="CD-HCPARTY", sv="1.14", value="persphysiotherapist"),
+                    cd=Cd(s="CD-HCPARTY", sv="1.16", value="persphysiotherapist"),
                     firstname=practitioner.givenname,
                     familyname=practitioner.surname
                 )
     
     def render_request(self, practitioner: Practitioner, now: datetime.datetime):
-        random_n14 = random_with_N_digits(14)
+        n14 = datetime.datetime.now().isoformat().replace('-', '').replace(':', '').replace('T', '').replace('.', '')[2:16]
         return Request(
-            id=Id2(value=f"{practitioner.nihii}.{random_n14}"),
+            id=Id2(value=f"{practitioner.nihii}.{n14}", sv="1.0"),
             author=Author2(hcparty=self.render_sender(practitioner)),
             date=XmlDate.from_date(now),
             time=XmlTime.from_time(now),
@@ -149,7 +144,7 @@ class EAttestV3Service:
                     )]
                 )
             ])
-
+                
         cgd = Transaction(
             id=Id1(s="ID-KMEHR", sv="1.0", value=2),
             cd=Cd(sv="1.4", s="CD-TRANSACTION-MYCARENET", value="cgd"),
@@ -169,9 +164,9 @@ class EAttestV3Service:
                         Content(
                             cd=Cd(s="LOCAL", sl="NIHDI-CLAIM-NORM", sv="1.0", value=transaction.claim)
                         ),
-                        Content(
-                            cd=Cd(s="CD-NIHDI-RELATEDSERVICE", sv="1.0", value=transaction.relatedservice)
-                        ),
+                        # Content(
+                        #     cd=Cd(s="CD-NIHDI-RELATEDSERVICE", sv="1.0", value=transaction.relatedservice)
+                        # ),
                     ],
                     quantity=Quantity(decimal=1)
                 ),
@@ -185,6 +180,25 @@ class EAttestV3Service:
                     ],
                     quanityt=Quantity(decimal=1)
                 ),
+                Item(
+                    id=Id1(s="ID-KMEHR", sv="1.0", value=3),
+                    cd=Cd(s="CD-ITEM-MYCARENET", sv="1.6", value="patientpaid"),
+                    cost=Cost(decimal=transaction.amount)
+                ),
+                Item(
+                    id=Id1(s="ID-KMEHR", sv="1.0", value=4),
+                    cd=Cd(s="CD-ITEM-MYCARENET", sv="1.6", value="decisionreference"),
+                    content=[Content(
+                        id=Id1(s="LOCAL", sl="OAreferencesystemname", sv="1.0", value=transaction.decisionreference)
+                    )]
+                ),
+                Item(
+                    id=Id1(s="ID-KMEHR", sv="1.0", value=5),
+                    cd=Cd(s="CD-ITEM-MYCARENET", sv="1.6", value="paymentreceivingparty"),
+                    content=[Content(
+                        id=Id1(s="ID-CBE", sv="1.0", value=transaction.bank_account)
+                    )]
+                )
             ])
         return [cga, cgd]
     
@@ -248,24 +262,28 @@ class EAttestV3Service:
             kmehrmessage=self.render_message(practitioner, now, input_model)
         )
         template = self.serialize_template(kmehrmessage_pydantic).replace('xmlns:xmlns="http://www.ehealth.fgov.be/messageservices/protocol/v1"', 'xmlns="http://www.ehealth.fgov.be/messageservices/protocol/v1"')
-
         # obviously this is lazy ...
         with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
             tmp.write(template)
 
-        import uuid
-        inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference("01-KIN-EMEH")
+        input_reference_str = kmehrmessage_pydantic.request.id.value.split('.')[1]
+        inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(input_reference_str)
 
+        if input_model.patient.ssin:
+            ssin = input_model.patient.ssin
+        else:
+            ssin = input_model.patient.insurance_number
+        
         send_attest_request = (self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.SendAttestationRequestInput
                                .builder()
                                .isTest(self.is_test)
                                .inputReference(inputReference)
                                .kmehrmessage(self.EHEALTH_JVM.getBytesFromFile(tmp.name))
-                                .patientSsin(self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.Ssin("72070539942"))
+                                .patientSsin(self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.Ssin(ssin))
                                 .referenceDate(self.GATEWAY.jvm.java.time.LocalDateTime.now())
                                 .messageVersion("3.0")
                                 .issuer("some issuer")
-                                .commonInputAttributes(self.EHEALTH_JVM.commonInputAttributes())
+                                .commonInputAttributes(self.EHEALTH_JVM.commonInputAttributes()) # TODO probably also needs some updates still
                                 .build())       
         attestBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.RequestObjectBuilderFactory.getRequestObjectBuilder().buildSendAttestationRequest(
             send_attest_request
@@ -281,8 +299,7 @@ class EAttestV3Service:
         attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilder)
         self.verify_result(attestResponse)
         response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
-
-
+        
         parser = XmlParser()
         response_pydantic = parser.parse(StringIO(response_string), SendTransactionResponse)
         

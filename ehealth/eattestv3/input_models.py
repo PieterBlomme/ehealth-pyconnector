@@ -22,7 +22,8 @@ class Transaction(BaseModel):
     bank_account: str
     nihdi: str
     claim: str
-    relatedservice: str
+    relatedservice: Optional[str]
+    decisionreference: str
     encounterdatetime: datetime.date
 
 class EAttestInputModel(BaseModel):

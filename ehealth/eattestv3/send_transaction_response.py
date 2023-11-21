@@ -5,6 +5,83 @@ from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDate, XmlTime
 from pydantic import Extra
 
+
+@dataclass
+class Cd:
+    class Meta:
+        name = "cd"
+        namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
+
+    s: Optional[str] = field(
+        default=None,
+        metadata={
+            "name": "S",
+            "type": "Attribute",
+            "required": True,
+        }
+    )
+    sv: Optional[float] = field(
+        default=None,
+        metadata={
+            "name": "SV",
+            "type": "Attribute",
+            "required": True,
+        }
+    )
+    value: Union[int, str] = field(
+        default="",
+        metadata={
+            "required": True,
+        }
+    )
+
+
+@dataclass
+class Description:
+    class Meta:
+        name = "description"
+        namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
+
+    l: Optional[str] = field(
+        default=None,
+        metadata={
+            "name": "L",
+            "type": "Attribute",
+            "required": True,
+        }
+    )
+    
+@dataclass
+class Error:
+    class Meta:
+        name = "error"
+        namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
+
+    cd: Optional[Cd] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "namespace": "http://www.ehealth.fgov.be/standards/kmehr/schema/v1",
+            "required": True,
+        }
+    )
+    description: Optional[Description] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "namespace": "http://www.ehealth.fgov.be/standards/kmehr/schema/v1",
+            "required": True,
+        }
+    )
+    url: Optional[str] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "namespace": "http://www.ehealth.fgov.be/standards/kmehr/schema/v1",
+            "required": True,
+        }
+    )
+
 @dataclass
 class Acknowledge:
     class Meta:
@@ -12,6 +89,13 @@ class Acknowledge:
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
     iscomplete: Optional[bool] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+    error: Optional[Error] = field(
         default=None,
         metadata={
             "type": "Element",

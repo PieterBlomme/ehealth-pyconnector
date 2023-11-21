@@ -222,7 +222,7 @@ class Standard:
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
     cd: Optional[Cd] = field(
-        default=Cd(s="CD-STANDARD", sv="1.26", value="20180601"),
+        default=Cd(s="CD-STANDARD", sv="1.35", value="20210120"),
         metadata={
             "type": "Element",
             "required": True,
@@ -618,7 +618,7 @@ class Kmehrmessage:
 class SendTransactionRequest:
 
     message_protocole_schema_version: Optional[str] = field(
-        default="1.25",
+        default="1.34",
         metadata={
             "name": "messageProtocoleSchemaVersion",
             "type": "Attribute",
