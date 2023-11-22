@@ -48,12 +48,11 @@ def input_with_previous_prescription() -> AskAgreementInputModel:
                 date=datetime.date.today() - datetime.timedelta(days=150),
                 snomed_category=91251008,
                 snomed_code=91251008,
-                identifier="123456"
             ),
         )
     )
 
-def test__6_1_1(sts_service, token, eagreement_service, input_with_previous_prescription):
+def test_previous_prescription(sts_service, token, eagreement_service, input_with_previous_prescription):
 
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         response = eagreement_service.ask_agreement(

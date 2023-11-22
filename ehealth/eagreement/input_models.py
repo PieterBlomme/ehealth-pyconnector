@@ -14,7 +14,7 @@ class Patient(BaseModel):
     gender: str
 
 class Prescription(BaseModel):
-    data_base64: str
+    data_base64: Optional[str]
     data_mimetype: Optional[str] = "application/pdf"
     # TODO wip eg. prescription number
     snomed_category: int
