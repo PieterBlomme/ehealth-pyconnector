@@ -14,13 +14,14 @@ class Patient(BaseModel):
     gender: str
 
 class Prescription(BaseModel):
-    # TODO wip eg. prescription number
-    data_base64: str
+    data_base64: Optional[str]
     data_mimetype: Optional[str] = "application/pdf"
+    # TODO wip eg. prescription number
     snomed_category: int
     snomed_code: int
-    date: datetime.date
-    quantity: int
+    identifier: Optional[str]
+    date: Optional[datetime.date]
+    quantity: Optional[int]
 
 class Attachment(BaseModel):
     data_base64: str
@@ -35,6 +36,7 @@ class ClaimAsk(BaseModel):
     billable_period: Optional[datetime.date]
     serviced_date: Optional[datetime.date]
     prescription: Optional[Prescription] = None # modeling TODO
+    previous_prescription: Optional[Prescription] = None # modeling TODO
     pre_auth_ref: Optional[str] = None # in case of extend
     attachments: Optional[List[Attachment]] = []
     supporting_infos: Optional[List[str]] = []
