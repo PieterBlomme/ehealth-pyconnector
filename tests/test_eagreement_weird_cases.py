@@ -45,9 +45,10 @@ def input_with_previous_prescription() -> AskAgreementInputModel:
             ),
             previous_prescription=Prescription(
                 data_base64="QW5uZXhlIGlubGluZSwgYmFzZTY0ZWQ=",
-                date=datetime.date.today() - datetime.timedelta(days=150),
+                date=datetime.date.today() - datetime.timedelta(days=55),
                 snomed_category=91251008,
                 snomed_code=91251008,
+                quantity=20
             ),
         )
     )
