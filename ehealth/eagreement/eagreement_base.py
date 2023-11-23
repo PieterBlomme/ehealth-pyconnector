@@ -321,7 +321,7 @@ class AbstractEAgreementService:
         for a in claim_ask.attachments:
             attachments += [
                 SupportingInfo(
-                    sequence=Sequence(seq+1),
+                    sequence=Sequence(seq),
                     category=Category(
                         coding=Coding(
                             system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
