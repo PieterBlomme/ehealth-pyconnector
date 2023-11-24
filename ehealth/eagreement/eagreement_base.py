@@ -351,8 +351,14 @@ class AbstractEAgreementService:
                     category=Category(
                         coding=Coding(
                             system=System("http://terminology.hl7.org/CodeSystem/claiminformationcategory"),
-                            code=Code("attachment")
+                            code=Code("info")
                         ),
+                    ),
+                    code=NestedCode(
+                        coding=Coding(
+                                system=System("https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/annex-types"),
+                                code=Code("other")
+                            )
                     ),
                     value_string=ValueString(value=a)
                 )
