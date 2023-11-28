@@ -10,7 +10,8 @@ import be.ehealth.technicalconnector.service.sts.security.SAMLToken;
 import be.ehealth.technicalconnector.session.Session;
 import be.ehealth.technicalconnector.session.SessionManager;
 import be.ehealth.technicalconnector.config.ConfigValidator;
-
+import be.ehealth.businessconnector.genericasync.mappers.CommonInputMapper;
+import org.mapstruct.factory.Mappers;
 import be.ehealth.businessconnector.test.testcommons.utils.FileTestUtils;
 
 public class JavaGateway {
@@ -48,5 +49,11 @@ public class JavaGateway {
 
   public AttributeQuery createAttributeQueryFromTemplate(Map<String, Object> testFileParams, String requestLocation) throws Exception {
       return FileTestUtils.toObject(testFileParams, requestLocation, AttributeQuery.class);
+  }
+
+  public CommonInputMapper getCommontInputMapper(){
+    return Mappers.getMapper(
+                CommonInputMapper.class
+            );
   }
 }
