@@ -132,7 +132,7 @@ class Record10(BaseModel):
     financieel_rekeningnummer_b: Optional[str] = "000000000000"
     code_afschaffing_papieren_factuur: Optional[str] = "0"
     code_afrekeningsbestand: Optional[str] = "0"
-    inhoud_facturatie: str # code mutualiteit?
+    inhoud_facturatie: str
     nummer_derdebetalende: str
     nummer_accreditering_nic: Optional[str] = "000000000000"
     beroepscode_facturerende_derde: Optional[str] = "000"
@@ -270,13 +270,217 @@ class Record10(BaseModel):
         to_str += control
 
         return to_str
+
+class Record20(BaseModel):
+    record: Optional[str] = "20"
+    num_record: Optional[str] = "000002"
+    toestemming_derdebetalende: Optional[str] = "0"
+    uur_van_opname: Optional[str] = "0000000"
+    datum_van_opname: Optional[str] = "00000000"
+    datum_van_ontslag_1: Optional[str] = "0000"
+    datum_van_ontslag_2: Optional[str] = "0000"
+    nummer_ziekenfonds_aansluiting: str
+    identificatie_rechthebbende_1: str
+    identificatie_rechthebbende_2: str
+    geslacht_rechthebbende: str
+    type_factuur: str
+    type_facturering: Optional[str] = "0"
+    dienst_721_bis: Optional[str] = "000"
+    nummer_facturerende_instelling: str
+    instelling_van_verblijf: Optional[str] = "000000000000"
+    code_stuiten_verjaringstermijn: Optional[str] = "0"
+    reden_behandeling: Optional[str] = "0000"
+    nummer_ziekenfonds_bestemming: str
+    nummer_opname: Optional[str] = "000000000000"
+    datum_akkoord_revalidatie_1: Optional[str] = "0000000"
+    datum_akkoord_revalidatie_2: Optional[str] = "0"
+    uur_van_ontslag: Optional[str] = "00000"
+    nummer_individuele_factuur_1: str
+    nummer_individuele_factuur_2: Optional[str] = "0000000"
+    toepassing_sociale_franchise: Optional[str] = "0"
+    cg1_cg2: str
+    referentie_instelling: str
+    nummer_vorige_factuur_1: Optional[str] = "00"
+    nummer_vorige_factuur_2: Optional[str] = "00"
+    nummer_vorige_factuur_3: Optional[str] = "00000000"
+    flag_identificatie_rechthebbende: Optional[str] = "1"
+    nummer_vorige_zending_1: Optional[str] = "0"
+    nummer_vorige_zending_2: Optional[str] = "0"
+    nummer_vorige_zending_3: Optional[str] = "0"
+    nummer_ziekenfonds_vorige_facturering: Optional[str] = "000"
+    referentie_ziekenfonds_financieel_rekeningnummer_a_1: Optional[str] = ""
+    referentie_ziekenfonds_financieel_rekeningnummer_a_2: Optional[str] = ""
+    vorig_gefactureerd_jaar_en_maand: Optional[str] = "000000"
+    referentiegegevens_netwerk_1: Optional[str] = ""
+    referentiegegevens_netwerk_2: Optional[str] = ""
+    referentiegegevens_netwerk_3: Optional[str] = ""
+    referentiegegevens_netwerk_4: Optional[str] = ""
+    referentiegegevens_netwerk_5: Optional[str] = ""
+    datum_facturering_1: Optional[str] = "0000000"
+    datum_facturering_2: Optional[str] = "0"
+    referentie_ziekenfonds_financieel_rekeningnummer_b_1: Optional[str] = ""
+    referentie_ziekenfonds_financieel_rekeningnummer_b_2: Optional[str] = ""
+    referentie_ziekenfonds_financieel_rekeningnummer_b_2bis: Optional[str] = ""
+    referentie_ziekenfonds_financieel_rekeningnummer_b_3: Optional[str] = ""
+    opnamenummer_moeder: Optional[str] = "000000000000"
+    begindatum_verzekerbaarheid: Optional[str] = "00000000"
+    einddatum_verzekerbaarheid_1: Optional[str] = "000"
+    einddatum_verzekerbaarheid_2: Optional[str] = "0"
+    einddatum_verzekerbaarheid_3: Optional[str] = "0000"
+    datum_mededeling_informatie: Optional[str] = "00000000"
+    maf_lopend_jaar: Optional[str] = "0000"
+    maf_lopend_jaar_min1: Optional[str] = "0000"
+    maf_lopend_jaar_min2: Optional[str] = "0000"
+
+    def __str__(self):
+        to_str = ""
+        assert len(self.record) == 2
+        to_str += self.record
+        assert len(self.num_record) == 6
+        to_str += self.num_record
+        assert len(self.toestemming_derdebetalende) == 1
+        to_str += self.toestemming_derdebetalende
+        assert len(self.uur_van_opname) == 7
+        to_str += self.uur_van_opname
+        assert len(self.datum_van_opname) == 8
+        to_str += self.datum_van_opname
+        assert len(self.datum_van_ontslag_1) == 4
+        to_str += self.datum_van_ontslag_1
+        assert len(self.datum_van_ontslag_2) == 4
+        to_str += self.datum_van_ontslag_2
+
+        assert len(self.nummer_ziekenfonds_aansluiting) == 3
+        to_str += self.nummer_ziekenfonds_aansluiting
+        assert len(self.identificatie_rechthebbende_1) == 12
+        to_str += self.identificatie_rechthebbende_1
+        assert len(self.identificatie_rechthebbende_2) == 1
+        to_str += self.identificatie_rechthebbende_2
+        assert len(self.geslacht_rechthebbende) == 1
+        to_str += self.geslacht_rechthebbende
+
+        assert len(self.type_factuur) == 1
+        to_str += self.type_factuur
+        assert len(self.type_facturering) == 1
+        to_str += self.type_facturering
+        reserve = "0" * 1
+        to_str += reserve
+        assert len(self.dienst_721_bis) == 3
+        to_str += self.dienst_721_bis
+
+        assert len(self.nummer_facturerende_instelling) == 12
+        to_str += self.nummer_facturerende_instelling
+        assert len(self.instelling_van_verblijf) == 12
+        to_str += self.instelling_van_verblijf
+        assert len(self.code_stuiten_verjaringstermijn) == 1
+        to_str += self.code_stuiten_verjaringstermijn
+        assert len(self.reden_behandeling) == 4
+        to_str += self.reden_behandeling
+
+        assert len(self.nummer_ziekenfonds_bestemming) == 3
+        to_str += self.nummer_ziekenfonds_bestemming
+        assert len(self.nummer_opname) == 12
+        to_str += self.nummer_opname
+        assert len(self.datum_akkoord_revalidatie_1) == 7
+        to_str += self.datum_akkoord_revalidatie_1
+        assert len(self.datum_akkoord_revalidatie_2) == 1
+        to_str += self.datum_akkoord_revalidatie_2
+
+        assert len(self.uur_van_ontslag) == 5
+        to_str += self.uur_van_ontslag
+        reserve = "0" * 2
+        to_str += reserve
+        assert len(self.nummer_individuele_factuur_1) == 5
+        to_str += self.nummer_individuele_factuur_1
+        assert len(self.nummer_individuele_factuur_2) == 7
+        to_str += self.nummer_individuele_factuur_2
+
+        assert len(self.toepassing_sociale_franchise) == 1
+        to_str += self.toepassing_sociale_franchise
+        assert len(self.cg1_cg2) == 10
+        to_str += self.cg1_cg2
+        to_str += self.referentie_instelling.ljust(25)
+
+        assert len(self.nummer_vorige_factuur_1) == 2
+        to_str += self.nummer_vorige_factuur_1
+        assert len(self.nummer_vorige_factuur_2) == 2
+        to_str += self.nummer_vorige_factuur_2
+        assert len(self.nummer_vorige_factuur_3) == 8
+        to_str += self.nummer_vorige_factuur_3
+
+        assert len(self.flag_identificatie_rechthebbende) == 1
+        to_str += self.flag_identificatie_rechthebbende
+        reserve = "0" * 1
+        to_str += reserve
+        assert len(self.nummer_vorige_zending_1) == 1
+        to_str += self.nummer_vorige_zending_1
+        assert len(self.nummer_vorige_zending_2) == 1
+        to_str += self.nummer_vorige_zending_2
+        assert len(self.nummer_vorige_zending_3) == 1
+        to_str += self.nummer_vorige_zending_3
+
+        assert len(self.nummer_ziekenfonds_vorige_facturering) == 3
+        to_str += self.nummer_ziekenfonds_vorige_facturering
+        to_str += self.referentie_ziekenfonds_financieel_rekeningnummer_a_1.ljust(12)
+        to_str += self.referentie_ziekenfonds_financieel_rekeningnummer_a_2.ljust(10)
+        reserve = "0" * 2
+        to_str += reserve
+
+        assert len(self.vorig_gefactureerd_jaar_en_maand) == 6
+        to_str += self.vorig_gefactureerd_jaar_en_maand
+        to_str += self.referentiegegevens_netwerk_1.ljust(6, "0")
+        to_str += self.referentiegegevens_netwerk_2.ljust(11, "0")
+        to_str += self.referentiegegevens_netwerk_3.ljust(1, "0")
+        to_str += self.referentiegegevens_netwerk_4.ljust(4, "0")
+        to_str += self.referentiegegevens_netwerk_5.ljust(26, "0")
+        reserve = "0" * 1
+        to_str += reserve
+
+        assert len(self.datum_facturering_1) == 7
+        to_str += self.datum_facturering_1
+        assert len(self.datum_facturering_2) == 1
+        to_str += self.datum_facturering_2
+        reserve = "0" * 1
+        to_str += reserve 
+
+        to_str += self.referentie_ziekenfonds_financieel_rekeningnummer_b_1.ljust(12)
+        to_str += self.referentie_ziekenfonds_financieel_rekeningnummer_b_2.ljust(3)
+        to_str += self.referentie_ziekenfonds_financieel_rekeningnummer_b_2bis.ljust(1)
+        to_str += self.referentie_ziekenfonds_financieel_rekeningnummer_b_3.ljust(6)
+
+        assert len(self.opnamenummer_moeder) == 12
+        to_str += self.opnamenummer_moeder
+        assert len(self.begindatum_verzekerbaarheid) == 8
+        to_str += self.begindatum_verzekerbaarheid
+        assert len(self.einddatum_verzekerbaarheid_1) == 3
+        to_str += self.einddatum_verzekerbaarheid_1
+        assert len(self.einddatum_verzekerbaarheid_2) == 1
+        to_str += self.einddatum_verzekerbaarheid_2
+        assert len(self.einddatum_verzekerbaarheid_3) == 4
+        to_str += self.einddatum_verzekerbaarheid_3
+
+        assert len(self.datum_mededeling_informatie) == 8
+        to_str += self.datum_mededeling_informatie
+        assert len(self.maf_lopend_jaar) == 4
+        to_str += self.maf_lopend_jaar
+        assert len(self.maf_lopend_jaar_min1) == 4
+        to_str += self.maf_lopend_jaar_min1
+        assert len(self.maf_lopend_jaar_min2) == 4
+        to_str += self.maf_lopend_jaar_min2
+
+        reserve = "0" * 6
+        to_str += reserve 
+        reserve = "0" * 2
+        to_str += reserve
+
+        control = "01" # constant?
+        to_str += control
+        return to_str
     
 class Message200(BaseModel):
     header_200: Header200
     header_300: Header300
     record_10: Record10
-
-    remainder: str
+    record_20: Record20
 
     def from_str(self):
         raise NotImplementedError
@@ -284,4 +488,4 @@ class Message200(BaseModel):
     def __str__(self):
         # add assertions
         assert len(f'{str(self.header_200)}{str(self.header_300)}') == 227
-        return f'{str(self.header_200)}{str(self.header_300)}{self.remainder}'
+        return f'{str(self.header_200)}{str(self.header_300)}'
