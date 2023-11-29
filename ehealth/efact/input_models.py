@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 class Header200(BaseModel):
     name: Optional[str] = "920000"
@@ -475,12 +475,188 @@ class Record20(BaseModel):
         control = "01" # constant?
         to_str += control
         return to_str
+
+class Record50(BaseModel):
+    record: Optional[str] = "50"
+    num_record: Optional[str] = "000003"
+    norm_vertrekking: Optional[str] = "0"
+    nomenclatuur: str
+    datum_eerste_verstrekking: str
+    datum_laatste_verstrekking: str
+    nummer_ziekenfonds_rechthebbende: str
+    identificatie_rechthebbende_1: str
+    identificatie_rechthebbende_2: str
+    geslacht_rechthebbende: str
+    bevalling: Optional[str] = "0"
+    verwijzing_financieel_rekeningnummer: Optional[str] = "0"
+    nacht_weekeinde_feestdag: Optional[str] = "0"
+    dienstcode: Optional[str] = "990" # for test??
+    plaats_van_verstrekking: Optional[str] = "000000000000"
+    identificatie_verstrekker: str
+    norm_verstrekker: Optional[str] = "1"
+    betrekkelijke_verstrekking_1: Optional[str] = "0000"
+    betrekkelijke_verstrekking_2: Optional[str] = "000"
+    bedrag_verzekeringstegemoetkoming: str
+    datum_voorschrift: str
+    aantal: int
+    afwijking_maximaal_aantal_of_identieke_prestatie: Optional[str] = "00"
+    identificatie_voorschrijver: str
+    norm_voorschrijver: Optional[str] = "0"
+    persoonlijk_aandeel_patient: str
+    referentie_instelling: str
+    behandelde_tand: Optional[str] = "00"
+    bedrag_supplement: str
+    uitzondering_derdebetalersregeling: Optional[str] = "0"
+    code_facturering_persoonlijk_aandeel_of_supplement: Optional[str] = "0"
+    behandeld_lid: Optional[str] = "0"
+    geconventioneerde_verstrekker: str
+    uur_van_prestatie: Optional[str] = "0000"
+    identificatie_toediener_bloed: Optional[str] = "000000000000"
+    nummer_attest_van_toediening: Optional[str] = "0" * 12
+    nummer_afleveringsbon: Optional[str] = "0" * 12
+    code_implant: Optional[str] = "0" * 12
+    omschrijving_product: Optional[str] = "+" * 30
+    norm_plafond: Optional[str] = "0"
+    basiswaarde_verstrekking: Optional[str] = "0" * 8
+    transplantatie: Optional[str] = "0"
+    identificatie_bijkomende_verstrekker: Optional[str] = "0" * 12
+    aandeel_in_forfait: Optional[str] = "0" * 3
+    aanduiding_prestatie_in_kader_lectuur_eid: Optional[str] = "0"
+    ziekenhuissite: Optional[str] = "0" * 6
+    identificatie_associatie_zorggebied: Optional[str] = "0" * 12
+    ritnummer: Optional[str] = "0" * 11
+    flag_gps: Optional[str] = "0"
+    notificatiecode_implantaat: Optional[str] = "0" * 12
+    registratiecode: Optional[str] = "0" * 14
+    flag_btw: Optional[str] = "00"
+
+    def __str__(self):
+        to_str = ""
+        assert len(self.record) == 2
+        to_str += self.record
+        assert len(self.num_record) == 6
+        to_str += self.num_record
+
+        assert len(self.norm_vertrekking) == 1
+        to_str += self.norm_vertrekking
+        assert len(self.nomenclatuur) == 7
+        to_str += self.nomenclatuur
+        assert len(self.datum_eerste_verstrekking) == 8
+        to_str += self.datum_eerste_verstrekking
+        assert len(self.datum_laatste_verstrekking) == 8
+        to_str += self.datum_laatste_verstrekking
+
+        assert len(self.nummer_ziekenfonds_rechthebbende) == 3
+        to_str += self.nummer_ziekenfonds_rechthebbende
+        assert len(self.identificatie_rechthebbende_1) == 12
+        to_str += self.identificatie_rechthebbende_1
+        assert len(self.identificatie_rechthebbende_2) == 1
+        to_str += self.identificatie_rechthebbende_2
+        assert len(self.geslacht_rechthebbende) == 1
+        to_str += self.geslacht_rechthebbende
+
+        assert len(self.bevalling) == 1
+        to_str += self.bevalling
+        assert len(self.verwijzing_financieel_rekeningnummer) == 1
+        to_str += self.verwijzing_financieel_rekeningnummer
+        assert len(self.nacht_weekeinde_feestdag) == 1
+        to_str += self.nacht_weekeinde_feestdag
+        assert len(self.dienstcode) == 3
+        to_str += self.dienstcode
+        assert len(self.plaats_van_verstrekking) == 12
+        to_str += self.plaats_van_verstrekking
+
+        assert len(self.identificatie_verstrekker) == 12
+        to_str += self.identificatie_verstrekker
+        assert len(self.norm_verstrekker) == 1
+        to_str += self.norm_verstrekker
+        assert len(self.betrekkelijke_verstrekking_1) == 4
+        to_str += self.betrekkelijke_verstrekking_1
+        assert len(self.betrekkelijke_verstrekking_2) == 3
+        to_str += self.betrekkelijke_verstrekking_2
+
+        to_str += ("+" + self.bedrag_verzekeringstegemoetkoming.rjust(11, "0"))
+        assert len(self.datum_voorschrift) == 8
+        to_str += self.datum_voorschrift
+
+        to_str += ("+" + str(self.aantal).rjust(4, "0"))
+        assert len(self.afwijking_maximaal_aantal_of_identieke_prestatie) == 2
+        to_str += self.afwijking_maximaal_aantal_of_identieke_prestatie
+        assert len(self.identificatie_voorschrijver) == 12
+        to_str += self.identificatie_voorschrijver
+        assert len(self.norm_voorschrijver) == 1
+        to_str += self.norm_voorschrijver
+
+        to_str += ("+" + self.persoonlijk_aandeel_patient.rjust(9, "0"))
+        to_str += self.referentie_instelling.ljust(25)
+
+        assert len(self.behandelde_tand) == 2
+        to_str += self.behandelde_tand
+        to_str += ("+" + self.bedrag_supplement.rjust(9, "0"))
+        assert len(self.uitzondering_derdebetalersregeling) == 1
+        to_str += self.uitzondering_derdebetalersregeling
+        assert len(self.code_facturering_persoonlijk_aandeel_of_supplement) == 1
+        to_str += self.code_facturering_persoonlijk_aandeel_of_supplement
+        assert len(self.behandeld_lid) == 1
+        to_str += self.behandeld_lid
+        assert len(self.geconventioneerde_verstrekker) == 1
+        to_str += self.geconventioneerde_verstrekker
+        assert len(self.uur_van_prestatie) == 4
+        to_str += self.uur_van_prestatie
+        assert len(self.identificatie_toediener_bloed) == 12
+        to_str += self.identificatie_toediener_bloed
+        assert len(self.nummer_attest_van_toediening) == 12
+        to_str += self.nummer_attest_van_toediening
+        assert len(self.nummer_afleveringsbon) == 12
+        to_str += self.nummer_attest_van_toediening
+        assert len(self.code_implant) == 12
+        to_str += self.code_implant
+        assert len(self.omschrijving_product) == 30
+        to_str += self.omschrijving_product
+
+        assert len(self.norm_plafond) == 1
+        to_str += self.norm_plafond
+        assert len(self.basiswaarde_verstrekking) == 8
+        to_str += self.basiswaarde_verstrekking
+        assert len(self.transplantatie) == 1
+        to_str += self.transplantatie
+        assert len(self.identificatie_bijkomende_verstrekker) == 12
+        to_str += self.identificatie_bijkomende_verstrekker
+
+        assert len(self.aandeel_in_forfait) == 3
+        to_str += self.aandeel_in_forfait
+        assert len(self.aanduiding_prestatie_in_kader_lectuur_eid) == 1
+        to_str += self.aanduiding_prestatie_in_kader_lectuur_eid
+        assert len(self.ziekenhuissite) == 6
+        to_str += self.ziekenhuissite
+        assert len(self.identificatie_associatie_zorggebied) == 12
+        to_str += self.identificatie_associatie_zorggebied
+
+        assert len(self.ritnummer) == 11
+        to_str += self.ritnummer
+        assert len(self.flag_gps) == 1
+        to_str += self.flag_gps
+        
+        reserve = "0" * 4
+        to_str += reserve
+
+        assert len(self.notificatiecode_implantaat) == 12
+        to_str += self.notificatiecode_implantaat
+        assert len(self.registratiecode) == 14
+        to_str += self.registratiecode
+        assert len(self.flag_btw) == 2
+        to_str += self.flag_btw
+
+        control = "06" # constant?
+        to_str += control
+        return to_str
     
 class Message200(BaseModel):
     header_200: Header200
     header_300: Header300
     record_10: Record10
     record_20: Record20
+    record_50s: List[Record50]
 
     def from_str(self):
         raise NotImplementedError

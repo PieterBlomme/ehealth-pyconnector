@@ -5,7 +5,7 @@ import pytest
 import logging
 from pathlib import Path
 from ehealth.efact.efact import EFactService
-from ehealth.efact.input_models import Header200, Message200, Header300, Record10, Record20
+from ehealth.efact.input_models import Header200, Message200, Header300, Record10, Record20, Record50
 from .conftest import MYCARENET_PWD, MYCARENET_USER
 
 logger = logging.getLogger(__name__)
@@ -69,6 +69,24 @@ def test_create_message():
             cg1_cg2="0000131131",
             referentie_instelling="Fichier genere au CIN" # zie ook record10
         ),
+        record_50s=[Record50(
+            nomenclatuur="0101032",
+            datum_eerste_verstrekking="20141125",
+            datum_laatste_verstrekking="20141125",
+            nummer_ziekenfonds_rechthebbende="131",
+            identificatie_rechthebbende_1="003612101539",
+            identificatie_rechthebbende_2="6",
+            geslacht_rechthebbende="1",
+            identificatie_verstrekker="018334780004",
+            bedrag_verzekeringstegemoetkoming="1942",
+            datum_voorschrift="00000000",
+            aantal=1,
+            identificatie_voorschrijver="000000000000",
+            persoonlijk_aandeel_patient="0150",
+            referentie_instelling="Fichier genere au CIN", # zie ook record10
+            bedrag_supplement="0",
+            geconventioneerde_verstrekker="1"
+        )]
     )
     # check that headers are equal
     assert target_message[:227] == str(efact_message)[:227]
@@ -81,10 +99,14 @@ def test_create_message():
 
     # check that record20 matches
     # record 20: identificatie van de eerste factuur
-    logger.info(target_message[227+350:227+350+350])
-    logger.info(str(efact_message.record_20))
-    assert target_message[227+350:227+350+350].startswith(str(efact_message.record_20))
     assert target_message[227+350:227+350+350] == str(efact_message.record_20)
+
+    # check that record50 matches
+    # record 50: verstrekkingen
+    logger.info(target_message[227+350+350:227+350+350+350])
+    logger.info(str(efact_message.record_50s[0]))
+    assert target_message[227+350+350:227+350+350+350].startswith(str(efact_message.record_50s[0]))
+    assert target_message[227+350+350:227+350+350+350] == str(efact_message.record_50s[0])
 
     # record 50: verstrekkingen
     # record 51: bijkomende tariefverbintenis
