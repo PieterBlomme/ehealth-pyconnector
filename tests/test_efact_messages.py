@@ -115,7 +115,7 @@ pydantic_with_files = [
                 gevraagd_bedrag_b="0",
                 gevraagd_bedrag_a_b_c="1942",
                 aantal_records="6",
-                controle_nummer_per_mutualiteit="13"
+                controle_nummer_per_mutualiteit=calculate_invoice_control(["0101032", "0101032"])
             ),
             footer_96=Footer96(
                 nummer_mutualiteit="199",
@@ -123,7 +123,7 @@ pydantic_with_files = [
                 gevraagd_bedrag_b="0",
                 gevraagd_bedrag_a_b_c="1942",
                 aantal_records="8",
-                controle_nummer_per_mutualiteit="13"
+                controle_nummer_per_mutualiteit=calculate_invoice_control(["0101032", "0101032"])
             )
         )
     ),
@@ -231,7 +231,7 @@ pydantic_with_files = [
                 gevraagd_bedrag_b="0",
                 gevraagd_bedrag_a_b_c="1942",
                 aantal_records="6",
-                controle_nummer_per_mutualiteit="13"
+                controle_nummer_per_mutualiteit=calculate_invoice_control(["0101032", "0101032"])
             ),
             footer_96=Footer96(
                 nummer_mutualiteit="199",
@@ -239,7 +239,7 @@ pydantic_with_files = [
                 gevraagd_bedrag_b="0",
                 gevraagd_bedrag_a_b_c="1942",
                 aantal_records="8",
-                controle_nummer_per_mutualiteit="13"
+                controle_nummer_per_mutualiteit=calculate_invoice_control(["0101032", "0101032"])
             )
         )
     ),
@@ -349,7 +349,7 @@ pydantic_with_files = [
                 gevraagd_bedrag_b="0",
                 gevraagd_bedrag_a_b_c="1692",
                 aantal_records="6",
-                controle_nummer_per_mutualiteit="13"
+                controle_nummer_per_mutualiteit=calculate_invoice_control(["0101032", "0101032"])
             ),
             footer_96=Footer96(
                 nummer_mutualiteit="199",
@@ -357,7 +357,7 @@ pydantic_with_files = [
                 gevraagd_bedrag_b="0",
                 gevraagd_bedrag_a_b_c="1692",
                 aantal_records="8",
-                controle_nummer_per_mutualiteit="13"
+                controle_nummer_per_mutualiteit=calculate_invoice_control(["0101032", "0101032"])
             )
         )
     ),
@@ -458,7 +458,7 @@ pydantic_with_files = [
                 gevraagd_bedrag_b="0",
                 gevraagd_bedrag_a_b_c="1942",
                 aantal_records="6", # heh?
-                controle_nummer_per_mutualiteit="55" # TODO
+                controle_nummer_per_mutualiteit=calculate_invoice_control(["0101032"])
             ),
             footer_96=Footer96(
                 nummer_mutualiteit="199",
@@ -466,7 +466,7 @@ pydantic_with_files = [
                 gevraagd_bedrag_b="0",
                 gevraagd_bedrag_a_b_c="1942",
                 aantal_records="8",
-                controle_nummer_per_mutualiteit="55" # TODO
+                controle_nummer_per_mutualiteit=calculate_invoice_control(["0101032"])
             )
         )
     ),
@@ -567,7 +567,7 @@ pydantic_with_files = [
                 gevraagd_bedrag_b="0",
                 gevraagd_bedrag_a_b_c="1942",
                 aantal_records="6", # heh?
-                controle_nummer_per_mutualiteit="55" # TODO
+                controle_nummer_per_mutualiteit=calculate_invoice_control(["0101032"])
             ),
             footer_96=Footer96(
                 nummer_mutualiteit="199",
@@ -575,7 +575,7 @@ pydantic_with_files = [
                 gevraagd_bedrag_b="0",
                 gevraagd_bedrag_a_b_c="1942",
                 aantal_records="8",
-                controle_nummer_per_mutualiteit="55" # TODO
+                controle_nummer_per_mutualiteit=calculate_invoice_control(["0101032"])
             )
         )
     ),
