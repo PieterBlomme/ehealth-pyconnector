@@ -1,5 +1,48 @@
 from pydantic import BaseModel
 from typing import Optional, List
+import logging
+
+logger = logging.getLogger(__name__)
+
+def calculate_control(text) -> str:
+    assert len(text) == 348 # always?? to check
+    control = 0
+
+    CHARS = [
+        "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+        " ",
+        "a", "b", "c", "d", "e", "f",
+        "g", "h", "i", "j", "k", "l",
+        "m", "n", "o", "p", "q", "r",
+        "s", "t", "u", "v", "w", "x",
+        "y", "z"
+    ]
+    for c in text:
+        try:
+            control_number = CHARS.index(c.lower())
+        except ValueError:
+            control_number = 37
+        control += control_number
+
+    control += 10 # missing blank??
+
+    control = control % 97
+    if control == 0:
+        control = 97
+    return str(control).rjust(2, "0")
+
+def calculate_invoice_control(nomenclatures: List[str]) -> str:
+    total = [0,0,0,0,0,0,0,]
+    for n in nomenclatures:
+        assert len(n) == 7
+        for i, c in enumerate(n):
+            total[i] += int(c)
+
+    control = int("".join([str(e) for e in total]))
+    control = control % 97
+    if control == 0:
+        control = 97
+    return str(control).rjust(2, "0")
 
 class Header200(BaseModel):
     name: Optional[str] = "920000"
@@ -266,7 +309,7 @@ class Record10(BaseModel):
         reserve = "0" * 33
         to_str += reserve
 
-        control = "20" # constant?
+        control = calculate_control(to_str)
         to_str += control
 
         return to_str
@@ -472,7 +515,8 @@ class Record20(BaseModel):
         reserve = "0" * 2
         to_str += reserve
 
-        control = "01" # constant?
+        control = calculate_control(to_str)
+
         to_str += control
         return to_str
 
@@ -647,7 +691,7 @@ class Record50(BaseModel):
         assert len(self.flag_btw) == 2
         to_str += self.flag_btw
 
-        control = "06" # constant?
+        control = calculate_control(to_str)
         to_str += control
         return to_str
 
@@ -719,7 +763,7 @@ class Record51(BaseModel):
         reserve = "0" * 20
         to_str += reserve
 
-        control = "35" # constant?
+        control = calculate_control(to_str)
         to_str += control
         return to_str
     
@@ -749,6 +793,7 @@ class Record80(BaseModel):
     bedrag_supplement: str
     flag_identificatie_rechthebbende: Optional[str] = "1"
     voorschot_financieel_rekeningnummer_a: str
+    control_invoice: str
 
     def __str__(self):
         to_str = ""
@@ -819,10 +864,10 @@ class Record80(BaseModel):
         to_str += reserve
 
 
-        control_invoice = "13" # constant?
-        to_str += control_invoice
+        assert len(self.control_invoice) == 2
+        to_str += self.control_invoice
 
-        control_record = "62" # constant?
+        control_record = calculate_control(to_str)
         to_str += control_record
         return to_str
 
@@ -843,6 +888,7 @@ class Record90(BaseModel):
     iban_bank: str
     bic_bank_2: Optional[str] = ""
     iban_bank_2: Optional[str] = ""
+    control_message: str
 
     def __str__(self):
         to_str = ""
@@ -924,10 +970,10 @@ class Record90(BaseModel):
         # the remainder in one go
         reserve = "0" * 31
         to_str += reserve
-
-        control_message = "13" # constant?
-        to_str += control_message
-        control_record = "52" # constant?
+        
+        assert len(self.control_message) == 2
+        to_str += self.control_message
+        control_record = calculate_control(to_str)
         to_str += control_record
         return to_str
 

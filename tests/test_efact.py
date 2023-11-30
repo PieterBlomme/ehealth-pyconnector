@@ -6,7 +6,8 @@ from pathlib import Path
 from ehealth.efact.efact import EFactService
 from ehealth.efact.input_models import (
     Header200, Message200, Header300, Record10, Record20, Record50,
-    Record51, Record80, Record90, Footer95, Footer96
+    Record51, Record80, Record90, Footer95, Footer96,
+    calculate_invoice_control
 )
 from .conftest import MYCARENET_PWD, MYCARENET_USER
 
@@ -115,7 +116,8 @@ def test_create_message():
             persoonlijk_aandeel_patient="0150",
             referentie_instelling="Fichier genere au CIN", # zie ook record10      
             bedrag_supplement="0",
-            voorschot_financieel_rekeningnummer_a="0"           
+            voorschot_financieel_rekeningnummer_a="0",
+            control_invoice=calculate_invoice_control(["0101032", "0101032"])
         ),
         record_90=Record90(
             zendingsnummer="509",
@@ -126,7 +128,8 @@ def test_create_message():
             bic_bank="GEBABEBB",
             iban_bank="BE10001232152604",
             bedrag_financieel_rekeningnummer_a="1942",
-            bedrag_financieel_rekeningnummer_b="0"
+            bedrag_financieel_rekeningnummer_b="0",
+            control_message=calculate_invoice_control(["0101032", "0101032"])
         ),
         footer_95=Footer95(
             nummer_mutualiteit="131",
