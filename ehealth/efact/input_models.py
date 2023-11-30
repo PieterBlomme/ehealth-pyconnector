@@ -1134,9 +1134,9 @@ class Message200(BaseModel):
         to_str += str(self.record_10)
         to_str += str(self.record_20)
 
-        assert len(self.record_50s) == len(self.record_51s)
-        for a,b in zip(self.record_50s, self.record_51s):
+        for a in self.record_50s:
             to_str += str(a)
+        for b in self.record_51s:
             to_str += str(b)
         to_str += str(self.record_80)
         to_str += str(self.record_90)
