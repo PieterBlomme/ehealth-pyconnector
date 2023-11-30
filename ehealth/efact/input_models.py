@@ -723,6 +723,350 @@ class Record51(BaseModel):
         to_str += control
         return to_str
     
+class Record80(BaseModel):
+    record: Optional[str] = "80"
+    num_record: Optional[str] = "000005"
+    uur_van_opname: Optional[str] = "0000000"
+    datum_van_opname: Optional[str] = "00000000"
+    datum_van_ontslag: Optional[str] = "00000000"
+    nummer_ziekenfonds_aansluiting: str
+    identificatie_rechthebbende_1: str
+    identificatie_rechthebbende_2: str
+    geslacht_rechthebbende: str
+    type_factuur: str
+    dienst_721_bis: Optional[str] = "000"
+    nummer_facturerende_instelling: str
+    bedrag_financieel_rekeningnummer_b: str
+    reden_behandeling: Optional[str] = "0000"
+    nummer_ziekenfonds_bestemming: str
+    bedrag_financieel_rekeningnummer_a: str
+    factuurdatum: Optional[str] = "00000000"
+    uur_van_ontslag: Optional[str] = "00000"
+    nummer_individuele_factuur_1: Optional[str] = "00000"
+    nummer_individuele_factuur_2: Optional[str] = "0000000"
+    persoonlijk_aandeel_patient: str
+    referentie_instelling: str
+    bedrag_supplement: str
+    flag_identificatie_rechthebbende: Optional[str] = "1"
+    voorschot_financieel_rekeningnummer_a: str
+
+    def __str__(self):
+        to_str = ""
+        assert len(self.record) == 2
+        to_str += self.record
+        assert len(self.num_record) == 6
+        to_str += self.num_record
+        reserve = "0" * 1
+        to_str += reserve
+
+        assert len(self.uur_van_opname) == 7
+        to_str += self.uur_van_opname
+        assert len(self.datum_van_opname) == 8
+        to_str += self.datum_van_opname
+        assert len(self.datum_van_ontslag) == 8
+        to_str += self.datum_van_ontslag
+
+        assert len(self.nummer_ziekenfonds_aansluiting) == 3
+        to_str += self.nummer_ziekenfonds_aansluiting
+        assert len(self.identificatie_rechthebbende_1) == 12
+        to_str += self.identificatie_rechthebbende_1
+        assert len(self.identificatie_rechthebbende_2) == 1
+        to_str += self.identificatie_rechthebbende_2
+        assert len(self.geslacht_rechthebbende) == 1
+        to_str += self.geslacht_rechthebbende
+        assert len(self.type_factuur) == 1
+        to_str += self.type_factuur
+
+        reserve = "0" * 2
+        to_str += reserve
+        assert len(self.dienst_721_bis) == 3
+        to_str += self.dienst_721_bis
+        assert len(self.nummer_facturerende_instelling) == 12
+        to_str += self.nummer_facturerende_instelling
+
+        to_str += ("+" + self.bedrag_financieel_rekeningnummer_b.rjust(11, "0"))
+        reserve = "0" * 1
+        to_str += reserve
+        assert len(self.reden_behandeling) == 4
+        to_str += self.reden_behandeling
+        assert len(self.nummer_ziekenfonds_bestemming) == 3
+        to_str += self.nummer_ziekenfonds_bestemming
+        to_str += ("+" + self.bedrag_financieel_rekeningnummer_a.rjust(11, "0"))
+
+        assert len(self.factuurdatum) == 8
+        to_str += self.factuurdatum
+        assert len(self.uur_van_ontslag) == 5
+        to_str += self.uur_van_ontslag
+        reserve = "0" * 2
+        to_str += reserve
+        assert len(self.nummer_individuele_factuur_1) == 5
+        to_str += self.nummer_individuele_factuur_1
+        assert len(self.nummer_individuele_factuur_2) == 7
+        to_str += self.nummer_individuele_factuur_2
+        reserve = "0" * 1
+        to_str += reserve
+        to_str += ("+" + self.persoonlijk_aandeel_patient.rjust(9, "0"))
+        to_str += self.referentie_instelling.ljust(25)
+        reserve = "0" * 2
+        to_str += reserve
+        to_str += ("+" + self.bedrag_supplement.rjust(9, "0"))
+        assert len(self.flag_identificatie_rechthebbende) == 1
+        to_str += self.flag_identificatie_rechthebbende
+        reserve = "0" * 7
+        to_str += reserve
+        to_str += ("+" + self.voorschot_financieel_rekeningnummer_a.rjust(11, "0"))
+        reserve = "0" * 152
+        to_str += reserve
+
+
+        control_invoice = "13" # constant?
+        to_str += control_invoice
+
+        control_record = "62" # constant?
+        to_str += control_record
+        return to_str
+
+class Record90(BaseModel):
+    record: Optional[str] = "90"
+    num_record: Optional[str] = "000006"
+    financieel_rekeningnummer_a_1: Optional[str] = "00000000"
+    financieel_rekeningnummer_a_2: Optional[str] = "0000"
+    zendingsnummer: str # nummer mutualiteit
+    financieel_rekeningnummer_b: Optional[str] = "000000000000"
+    nummer_derdebetalende: str
+    bedrag_financieel_rekeningnummer_b: str
+    bedrag_financieel_rekeningnummer_a: str
+    date_creation: str
+    kbo_number: Optional[str] = "0000000000"
+    reference: str
+    bic_bank: str
+    iban_bank: str
+    bic_bank_2: Optional[str] = ""
+    iban_bank_2: Optional[str] = ""
+
+    def __str__(self):
+        to_str = ""
+        assert len(self.record) == 2
+        to_str += self.record
+        assert len(self.num_record) == 6
+        to_str += self.num_record
+        reserve = "0" * 8
+        to_str += reserve
+        assert len(self.financieel_rekeningnummer_a_1) == 8
+        to_str += self.financieel_rekeningnummer_a_1
+        assert len(self.financieel_rekeningnummer_a_2) == 4
+        to_str += self.financieel_rekeningnummer_a_2
+
+        reserve = "0" * 4
+        to_str += reserve
+
+        assert len(self.zendingsnummer) == 3
+        to_str += self.zendingsnummer
+        assert len(self.financieel_rekeningnummer_b) == 12
+        to_str += self.financieel_rekeningnummer_b
+
+        reserve = "0" * 8
+        to_str += reserve
+
+        assert len(self.nummer_derdebetalende) == 12
+        to_str += self.nummer_derdebetalende
+        to_str += ("+" + self.bedrag_financieel_rekeningnummer_b.rjust(11, "0"))
+        reserve = "0" * 8
+        to_str += reserve
+        to_str += ("+" + self.bedrag_financieel_rekeningnummer_a.rjust(11, "0"))
+        reserve = "0" * 8
+        to_str += reserve
+
+        to_str += ("0" + self.date_creation[:4]) # year
+        to_str += self.date_creation[4:6] # month
+
+        reserve = "0" * 13
+        to_str += reserve
+
+        assert len(self.kbo_number) == 10
+        to_str += self.kbo_number
+
+        to_str += self.reference.ljust(25)
+
+        reserve = "0" * 4
+        to_str += reserve
+
+        # actually 8+1+1+1, but that's silly
+        to_str += self.bic_bank.ljust(11)
+
+        reserve = "0" * 1
+        to_str += reserve
+
+        # actually 1+3+12+10+2+6, but that's silly
+        to_str += self.iban_bank.ljust(34)
+
+        reserve = "0" * 6
+        to_str += reserve
+
+        to_str += self.bic_bank_2.ljust(11)
+
+        reserve = "0" * 5
+        to_str += reserve
+
+        # reserve staatshervorming
+        reserve = "0" * 34
+        to_str += reserve
+
+        reserve = "0" * 2
+        to_str += reserve
+
+        to_str += self.iban_bank_2.ljust(34)
+
+        # reserve staatshervorming
+        reserve = "0" * 11
+        to_str += reserve
+
+        # the remainder in one go
+        reserve = "0" * 31
+        to_str += reserve
+
+        control_message = "13" # constant?
+        to_str += control_message
+        control_record = "52" # constant?
+        to_str += control_record
+        return to_str
+
+class Footer95(BaseModel):
+    name: Optional[str] = "95"
+    error_name: Optional[str] = "00"
+    nummer_mutualiteit: str
+    error_nummer_mutualiteit: Optional[str] = "00"
+    nummer_verzamelfactuur: Optional[str] = "3"
+    error_nummer_verzamelfactuur: Optional[str] = "00"
+    teken_gevraagd_bedrag_a: Optional[str] = "+"
+    gevraagd_bedrag_a: str
+    error_gevraagd_bedrag_a: Optional[str] = "00"
+    teken_gevraagd_bedrag_b: Optional[str] = "+"
+    gevraagd_bedrag_b: str
+    error_gevraagd_bedrag_b: Optional[str] = "00"
+    teken_gevraagd_bedrag_a_b_c: Optional[str] = "+"
+    gevraagd_bedrag_a_b_c: Optional[str] = "0"
+    error_gevraagd_bedrag_a_b_c: Optional[str] = "00"
+    aantal_records: str
+    error_aantal_records: Optional[str] = "00"
+    controle_nummer_per_mutualiteit: str
+    error_controle_nummer: Optional[str] = "00"
+
+    def __str__(self):
+        to_str = ""
+        assert len(self.name) == 2
+        to_str += self.name
+        assert len(self.error_name) == 2
+        to_str += self.error_name
+        assert len(self.nummer_mutualiteit) == 3
+        to_str += self.nummer_mutualiteit
+        assert len(self.error_nummer_mutualiteit) == 2
+        to_str += self.error_nummer_mutualiteit
+        to_str += self.nummer_verzamelfactuur.rjust(12, "0")
+        assert len(self.error_nummer_verzamelfactuur) == 2
+        to_str += self.error_nummer_verzamelfactuur
+        assert len(self.teken_gevraagd_bedrag_a) == 1
+        to_str += self.teken_gevraagd_bedrag_a
+        to_str += self.gevraagd_bedrag_a.rjust(11, "0")
+        assert len(self.error_gevraagd_bedrag_a) == 2
+        to_str += self.error_gevraagd_bedrag_a
+        assert len(self.teken_gevraagd_bedrag_b) == 1
+        to_str += self.teken_gevraagd_bedrag_b
+        to_str += self.gevraagd_bedrag_b.rjust(11, "0")
+        assert len(self.error_gevraagd_bedrag_b) == 2
+        to_str += self.error_gevraagd_bedrag_b
+        assert len(self.teken_gevraagd_bedrag_a_b_c) == 1
+        to_str += self.teken_gevraagd_bedrag_a_b_c
+        to_str += self.gevraagd_bedrag_a_b_c.rjust(11, "0")
+        assert len(self.error_gevraagd_bedrag_a_b_c) == 2
+        to_str += self.error_gevraagd_bedrag_a_b_c
+
+        to_str += self.aantal_records.rjust(8, "0")
+        assert len(self.error_aantal_records) == 2
+        to_str += self.error_aantal_records
+
+        assert len(self.controle_nummer_per_mutualiteit) == 2
+        to_str += self.controle_nummer_per_mutualiteit
+        assert len(self.error_controle_nummer) == 2
+        to_str += self.error_controle_nummer
+
+        # bedrag c we fill with 0s
+        reserve = " ".ljust(14)
+        to_str += reserve
+
+        reserve = " ".ljust(257)
+        to_str += reserve
+        return to_str
+
+
+class Footer96(BaseModel):
+    name: Optional[str] = "96"
+    error_name: Optional[str] = "00"
+    nummer_mutualiteit: str
+    error_nummer_mutualiteit: Optional[str] = "00"
+    error_nummer_verzamelfactuur: Optional[str] = "00"
+    teken_gevraagd_bedrag_a: Optional[str] = "+"
+    gevraagd_bedrag_a: str
+    error_gevraagd_bedrag_a: Optional[str] = "00"
+    teken_gevraagd_bedrag_b: Optional[str] = "+"
+    gevraagd_bedrag_b: str
+    error_gevraagd_bedrag_b: Optional[str] = "00"
+    teken_gevraagd_bedrag_a_b_c: Optional[str] = "+"
+    gevraagd_bedrag_a_b_c: Optional[str] = "0"
+    error_gevraagd_bedrag_a_b_c: Optional[str] = "00"
+    aantal_records: str
+    error_aantal_records: Optional[str] = "00"
+    controle_nummer_per_mutualiteit: str
+    error_controle_nummer: Optional[str] = "00"
+
+    def __str__(self):
+        to_str = ""
+        assert len(self.name) == 2
+        to_str += self.name
+        assert len(self.error_name) == 2
+        to_str += self.error_name
+        assert len(self.nummer_mutualiteit) == 3
+        to_str += self.nummer_mutualiteit
+        assert len(self.error_nummer_mutualiteit) == 2
+        to_str += self.error_nummer_mutualiteit
+
+        reserve = "0" * 12
+        to_str += reserve
+        assert len(self.error_nummer_verzamelfactuur) == 2
+        to_str += self.error_nummer_verzamelfactuur
+        assert len(self.teken_gevraagd_bedrag_a) == 1
+        to_str += self.teken_gevraagd_bedrag_a
+        to_str += self.gevraagd_bedrag_a.rjust(11, "0")
+        assert len(self.error_gevraagd_bedrag_a) == 2
+        to_str += self.error_gevraagd_bedrag_a
+        assert len(self.teken_gevraagd_bedrag_b) == 1
+        to_str += self.teken_gevraagd_bedrag_b
+        to_str += self.gevraagd_bedrag_b.rjust(11, "0")
+        assert len(self.error_gevraagd_bedrag_b) == 2
+        to_str += self.error_gevraagd_bedrag_b
+        assert len(self.teken_gevraagd_bedrag_a_b_c) == 1
+        to_str += self.teken_gevraagd_bedrag_a_b_c
+        to_str += self.gevraagd_bedrag_a_b_c.rjust(11, "0")
+        assert len(self.error_gevraagd_bedrag_a_b_c) == 2
+        to_str += self.error_gevraagd_bedrag_a_b_c
+
+        to_str += self.aantal_records.rjust(8, "0")
+        assert len(self.error_aantal_records) == 2
+        to_str += self.error_aantal_records
+
+        assert len(self.controle_nummer_per_mutualiteit) == 2
+        to_str += self.controle_nummer_per_mutualiteit
+        assert len(self.error_controle_nummer) == 2
+        to_str += self.error_controle_nummer
+
+        # bedrag c we fill with 0s
+        reserve = " ".ljust(14)
+        to_str += reserve
+
+        reserve = " ".ljust(257)
+        to_str += reserve
+        return to_str
+
 class Message200(BaseModel):
     header_200: Header200
     header_300: Header300
@@ -730,11 +1074,26 @@ class Message200(BaseModel):
     record_20: Record20
     record_50s: List[Record50]
     record_51s: List[Record51]
+    record_80: Record80
+    record_90: Record90
+    footer_95: Footer95
+    footer_96: Footer96
 
     def from_str(self):
         raise NotImplementedError
     
     def __str__(self):
         # add assertions
-        assert len(f'{str(self.header_200)}{str(self.header_300)}') == 227
-        return f'{str(self.header_200)}{str(self.header_300)}'
+        to_str = f'{str(self.header_200)}{str(self.header_300)}'
+        to_str += str(self.record_10)
+        to_str += str(self.record_20)
+
+        assert len(self.record_50s) == len(self.record_51s)
+        for a,b in zip(self.record_50s, self.record_51s):
+            to_str += str(a)
+            to_str += str(b)
+        to_str += str(self.record_80)
+        to_str += str(self.record_90)
+        to_str += str(self.footer_95)
+        to_str += str(self.footer_96)
+        return to_str

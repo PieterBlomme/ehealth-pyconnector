@@ -1,4 +1,3 @@
-from xsdata.models.datatype import XmlDate
 import os
 import datetime
 import pytest
@@ -7,7 +6,7 @@ from pathlib import Path
 from ehealth.efact.efact import EFactService
 from ehealth.efact.input_models import (
     Header200, Message200, Header300, Record10, Record20, Record50,
-    Record51
+    Record51, Record80, Record90, Footer95, Footer96
 )
 from .conftest import MYCARENET_PWD, MYCARENET_USER
 
@@ -100,38 +99,76 @@ def test_create_message():
             code_gerechtigde="0000131131",
             nummer_akkoord_tariefverbintenis="547KCNOI4P5M04NFJ0CVLCXP9FZLLK450000000000002000",
             datum_mededeling_informatie="20141125"
-        )]
+        )],
+        record_80=Record80(
+            nummer_ziekenfonds_aansluiting="131",
+            identificatie_rechthebbende_1="003612101539",
+            identificatie_rechthebbende_2="6",
+            geslacht_rechthebbende="1",
+            type_factuur=3, # ??? is this a fixed value?
+            nummer_facturerende_instelling="018334780004", # zie ook record10
+            bedrag_financieel_rekeningnummer_b="0",
+            nummer_ziekenfonds_bestemming="131",
+            bedrag_financieel_rekeningnummer_a="1942",
+            nummer_individuele_factuur_1="14100",
+            nummer_individuele_factuur_2="0000001",
+            persoonlijk_aandeel_patient="0150",
+            referentie_instelling="Fichier genere au CIN", # zie ook record10      
+            bedrag_supplement="0",
+            voorschot_financieel_rekeningnummer_a="0"           
+        ),
+        record_90=Record90(
+            zendingsnummer="509",
+            inhoud_facturatie="040", # ??? is this a fixed value?
+            nummer_derdebetalende="018334780004",
+            date_creation="20141125",
+            reference="Fichier genere au CIN",
+            bic_bank="GEBABEBB",
+            iban_bank="BE10001232152604",
+            bedrag_financieel_rekeningnummer_a="1942",
+            bedrag_financieel_rekeningnummer_b="0"
+        ),
+        footer_95=Footer95(
+            nummer_mutualiteit="131",
+            gevraagd_bedrag_a="1942",
+            gevraagd_bedrag_b="0",
+            gevraagd_bedrag_a_b_c="1942",
+            aantal_records="6",
+            controle_nummer_per_mutualiteit="13"
+        ),
+        footer_96=Footer96(
+            nummer_mutualiteit="199",
+            gevraagd_bedrag_a="1942",
+            gevraagd_bedrag_b="0",
+            gevraagd_bedrag_a_b_c="1942",
+            aantal_records="8",
+            controle_nummer_per_mutualiteit="13"
+        )
     )
     # check that headers are equal
     assert target_message[:227] == str(efact_message)[:227]
 
     # https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf
 
-    # check that record10 matches
     # record 10: identificatie van de zending
     assert target_message[227:227+350] == str(efact_message.record_10)
 
-    # check that record20 matches
     # record 20: identificatie van de eerste factuur
     assert target_message[227+350:227+350+350] == str(efact_message.record_20)
 
-    # check that record50 matches
     # record 50: verstrekkingen
     assert target_message[227+350+350:227+350+350+350] == str(efact_message.record_50s[0])
 
-    # check that record51 matches
     # record 51: bijkomende tariefverbintenis
     r = target_message[227+350*3:227+350*4]
-    logger.info(r)
-    logger.info(str(efact_message.record_51s[0]))
-    assert r.startswith(str(efact_message.record_51s[0]))
     assert r == str(efact_message.record_51s[0])
 
     # record 80: totaal bedrag eerste factuur
-    # record 90: totaal bedrag van de zending
-    for i in range(6):
-        if i in (0, 1, 2):
-            continue
-        logger.info(target_message[227+i*350:227+(i+1)*350])
+    r = target_message[227+350*4:227+350*5]
+    assert r == str(efact_message.record_80)
 
-    # assert str(efact_message) == target_message
+    # record 90: totaal bedrag van de zending
+    r = target_message[227+350*5:227+350*6]
+    assert r == str(efact_message.record_90)
+
+    assert str(efact_message) == target_message
