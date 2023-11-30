@@ -8,6 +8,7 @@ from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from pydantic import BaseModel
+from .input_models import Message200
 import tempfile
 
 logger = logging.getLogger(__name__)
@@ -71,8 +72,13 @@ class EFactService:
             self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
                 entry.getValue().isValid())
 
-    def send_efact(self, token: str):
-        fp = "/home/pieter/repos/ehealth-pyconnector/java/config/examples/request/TFAC1SC09.509E"
+    def send_efact(self, token: str, input_model: Message200):
+        template = str(input_model)
+        with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
+            # obviously this is lazy ...
+            tmp.write(template)
+
+        fp = tmp.name
         mutuality = "500"
 
         self.set_configuration_from_token(token)
