@@ -5,7 +5,10 @@ import pytest
 import logging
 from pathlib import Path
 from ehealth.efact.efact import EFactService
-from ehealth.efact.input_models import Header200, Message200, Header300, Record10, Record20, Record50
+from ehealth.efact.input_models import (
+    Header200, Message200, Header300, Record10, Record20, Record50,
+    Record51
+)
 from .conftest import MYCARENET_PWD, MYCARENET_USER
 
 logger = logging.getLogger(__name__)
@@ -86,6 +89,17 @@ def test_create_message():
             referentie_instelling="Fichier genere au CIN", # zie ook record10
             bedrag_supplement="0",
             geconventioneerde_verstrekker="1"
+        )],
+        record_51s=[Record51(
+            nomenclatuur="0101032",
+            datum_verstrekking="20141125",
+            identificatie_rechthebbende_1="003612101539",
+            identificatie_rechthebbende_2="6",
+            identificatie_verstrekker="018334780004",
+            bedrag_verzekeringstegemoetkoming="1942",
+            code_gerechtigde="0000131131",
+            nummer_akkoord_tariefverbintenis="547KCNOI4P5M04NFJ0CVLCXP9FZLLK450000000000002000",
+            datum_mededeling_informatie="20141125"
         )]
     )
     # check that headers are equal
@@ -103,16 +117,21 @@ def test_create_message():
 
     # check that record50 matches
     # record 50: verstrekkingen
-    logger.info(target_message[227+350+350:227+350+350+350])
-    logger.info(str(efact_message.record_50s[0]))
-    assert target_message[227+350+350:227+350+350+350].startswith(str(efact_message.record_50s[0]))
     assert target_message[227+350+350:227+350+350+350] == str(efact_message.record_50s[0])
 
-    # record 50: verstrekkingen
+    # check that record51 matches
     # record 51: bijkomende tariefverbintenis
+    r = target_message[227+350*3:227+350*4]
+    logger.info(r)
+    logger.info(str(efact_message.record_51s[0]))
+    assert r.startswith(str(efact_message.record_51s[0]))
+    assert r == str(efact_message.record_51s[0])
+
     # record 80: totaal bedrag eerste factuur
     # record 90: totaal bedrag van de zending
     for i in range(6):
+        if i in (0, 1, 2):
+            continue
         logger.info(target_message[227+i*350:227+(i+1)*350])
 
     # assert str(efact_message) == target_message

@@ -650,6 +650,78 @@ class Record50(BaseModel):
         control = "06" # constant?
         to_str += control
         return to_str
+
+
+class Record51(BaseModel):
+    record: Optional[str] = "51"
+    num_record: Optional[str] = "000004"
+    nomenclatuur: str
+    datum_verstrekking: str
+    identificatie_rechthebbende_1: str
+    identificatie_rechthebbende_2: str
+    identificatie_verstrekker: str
+    betrekkelijke_verstrekking: Optional[str] = "0000000"
+    bedrag_verzekeringstegemoetkoming: str
+    code_gerechtigde: str
+    nummer_akkoord_tariefverbintenis: str
+    datum_mededeling_informatie: str
+
+    def __str__(self):
+        to_str = ""
+        assert len(self.record) == 2
+        to_str += self.record
+        assert len(self.num_record) == 6
+        to_str += self.num_record
+        
+        reserve = "0" * 1
+        to_str += reserve
+
+        assert len(self.nomenclatuur) == 7
+        to_str += self.nomenclatuur
+        assert len(self.datum_verstrekking) == 8
+        to_str += self.datum_verstrekking
+
+        reserve = "0" * 11
+        to_str += reserve
+
+        assert len(self.identificatie_rechthebbende_1) == 12
+        to_str += self.identificatie_rechthebbende_1
+        assert len(self.identificatie_rechthebbende_2) == 1
+        to_str += self.identificatie_rechthebbende_2
+
+        reserve = "0" * 19
+        to_str += reserve
+
+        assert len(self.identificatie_verstrekker) == 12
+        to_str += self.identificatie_verstrekker
+        reserve = "0" * 1
+        to_str += reserve
+        assert len(self.betrekkelijke_verstrekking) == 7
+        to_str += self.betrekkelijke_verstrekking
+
+        to_str += ("+" + self.bedrag_verzekeringstegemoetkoming.rjust(11, "0"))
+        reserve = "0" * 28
+        to_str += reserve
+
+        assert len(self.code_gerechtigde) == 10
+        to_str += self.code_gerechtigde
+        reserve = "0" * 75
+        to_str += reserve
+
+        assert len(self.nummer_akkoord_tariefverbintenis) == 48
+        to_str += self.nummer_akkoord_tariefverbintenis
+        reserve = "0" * 60
+        to_str += reserve
+
+
+        assert len(self.datum_mededeling_informatie) == 8
+        to_str += self.datum_mededeling_informatie
+        reserve = "0" * 20
+        to_str += reserve
+
+        control = "35" # constant?
+        to_str += control
+        return to_str
     
 class Message200(BaseModel):
     header_200: Header200
@@ -657,6 +729,7 @@ class Message200(BaseModel):
     record_10: Record10
     record_20: Record20
     record_50s: List[Record50]
+    record_51s: List[Record51]
 
     def from_str(self):
         raise NotImplementedError
