@@ -534,7 +534,7 @@ class Record50(BaseModel):
     bevalling: Optional[str] = "0"
     verwijzing_financieel_rekeningnummer: Optional[str] = "0"
     nacht_weekeinde_feestdag: Optional[str] = "0"
-    dienstcode: Optional[str] = "990" # for test??
+    dienstcode: Optional[str] = "990"
     plaats_van_verstrekking: Optional[str] = "000000000000"
     identificatie_verstrekker: str
     norm_verstrekker: Optional[str] = "1"
@@ -761,6 +761,77 @@ class Record51(BaseModel):
         assert len(self.datum_mededeling_informatie) == 8
         to_str += self.datum_mededeling_informatie
         reserve = "0" * 20
+        to_str += reserve
+
+        control = calculate_control(to_str)
+        to_str += control
+        return to_str
+
+class Record52(BaseModel):
+    record: Optional[str] = "51"
+    num_record: Optional[str] = "000004"
+    reden_manuele_invoering: Optional[str] = "0"
+    nomenclatuur: str
+    datum_verstrekking: str
+    datum_lezing_identiteitsdocument: str
+    identificatie_rechthebbende_1: str
+    identificatie_rechthebbende_2: str
+    
+    type_lezing_identiteitsdocument: Optional[str] = "0"
+    type_drager_identiteitsdocument: Optional[str] = "0"
+    reden_gebruik_vignet: Optional[str] = "0"
+    uur_lezing_identiteitsdocument: Optional[str] = "0000"
+
+    riziv_nummer: Optional[str] = "000000000000"
+    serienummer_drager: Optional[str] = "000000000000000"
+    nummer_bewijsstuk: Optional[str] = "0" * 25
+    uniek_nummer_medische_beeldvorming: Optional[str] = "0" * 12
+    nummer_akkoord: str
+
+    def __str__(self):
+        to_str = ""
+        assert len(self.record) == 2
+        to_str += self.record
+        assert len(self.num_record) == 6
+        to_str += self.num_record
+        assert len(self.reden_manuele_invoering) == 1
+        to_str += self.reden_manuele_invoering
+        assert len(self.nomenclatuur) == 7
+        to_str += self.nomenclatuur
+        assert len(self.datum_verstrekking) == 8
+        to_str += self.datum_verstrekking
+        assert len(self.datum_lezing_identiteitsdocument) == 8
+        to_str += self.datum_lezing_identiteitsdocument
+
+        reserve = "0" * 3
+        to_str += reserve
+
+        assert len(self.identificatie_rechthebbende_1) == 12
+        to_str += self.identificatie_rechthebbende_1
+        assert len(self.identificatie_rechthebbende_2) == 1
+        to_str += self.identificatie_rechthebbende_2
+        assert len(self.type_lezing_identiteitsdocument) == 1
+        to_str += self.type_lezing_identiteitsdocument
+        assert len(self.reden_gebruik_vignet) == 1
+        to_str += self.reden_gebruik_vignet
+        assert len(self.uur_lezing_identiteitsdocument) == 4
+        to_str += self.uur_lezing_identiteitsdocument
+
+        reserve = "0" * 12
+        to_str += reserve
+
+        assert len(self.riziv_nummer) == 12
+        to_str += self.riziv_nummer
+        assert len(self.serienummer_drager) == 13
+        to_str += self.serienummer_drager
+        assert len(self.nummer_bewijsstuk) == 25
+        to_str += self.nummer_bewijsstuk
+        assert len(self.uniek_nummer_medische_beeldvorming) == 12
+        to_str += self.uniek_nummer_medische_beeldvorming
+        assert len(self.nummer_akkoord) == 20
+        to_str += self.nummer_akkoord
+
+        reserve = "0" * 217
         to_str += reserve
 
         control = calculate_control(to_str)
@@ -1120,6 +1191,7 @@ class Message200(BaseModel):
     record_20: Record20
     record_50s: List[Record50]
     record_51s: List[Record51]
+    record_52s: List[Record52]
     record_80: Record80
     record_90: Record90
     footer_95: Footer95
@@ -1133,11 +1205,13 @@ class Message200(BaseModel):
         to_str = f'{str(self.header_200)}{str(self.header_300)}'
         to_str += str(self.record_10)
         to_str += str(self.record_20)
-
+        
         for a in self.record_50s:
             to_str += str(a)
         for b in self.record_51s:
             to_str += str(b)
+        for c in self.record_52s:
+            to_str += str(c)
         to_str += str(self.record_80)
         to_str += str(self.record_90)
         to_str += str(self.footer_95)
