@@ -25,7 +25,7 @@ class Header300Kine(BaseModel):
     type_invoicing: Optional[str] = "01" # 1 bestand, 1 rekening
 
     def to_header_300(self) -> Header300:
-        date_invoice = str(self.date_invoice.year) + str(self.date_invoice.month) + str(self.date_invoice.day)
+        date_invoice = str(self.date_invoice.year) + str(self.date_invoice.month) + str(self.date_invoice.day).rjust(2, "0")
         year_and_month = date_invoice[:6]
         return Header300(
             year_and_month=year_and_month,
@@ -50,13 +50,15 @@ class Record10Kine(BaseModel):
     iban_bank: str
 
     def to_record_10(self) -> Record10:
-        date_creation = str(self.date_creation.year) + str(self.date_creation.month) + str(self.date_creation.day)
+        date_creation = str(self.date_creation.year) + str(self.date_creation.month) + str(self.date_creation.day).rjust(2, "0")
 
         return Record10(
             num_record="000001",
             indexcode="0",
             version_file="9991999" if self.is_test else "0001999",
             inhoud_facturatie="040",
+            zendingsnummer=self.zendingsnummer,
+            reference="",
             nummer_derdebetalende=self.nummer_derdebetalende,
             beroepscode_facturerende_derde=self.beroepscode_facturerende_derde,
             date_creation=date_creation,
@@ -84,10 +86,10 @@ class Record20Kine(BaseModel):
         return Record20(
             num_record="000002",
             nummer_ziekenfonds_aansluiting=self.nummer_ziekenfonds_aansluiting,
-            identificatie_rechthebbende=self.insz_rechthebbende,
+            identificatie_rechthebbende_1=self.insz_rechthebbende,
             identificatie_rechthebbende_2=self.identificatie_rechthebbende_2,
             geslacht_rechthebbende=self.geslacht_rechthebbende,
-            type_factuur="01" if self.hospital_care else "03",
+            type_factuur="1" if self.hospital_care else "3",
             dienst_721_bis="002" if self.hospital_care else "000",
             nummer_facturerende_instelling=self.nummer_facturerende_instelling,
             instelling_van_verblijf=self.instelling_van_verblijf,
@@ -122,8 +124,8 @@ class Record50Kine(BaseModel):
     geconventioneerde_verstrekker: Optional[bool] = True
 
     def to_record_50(self) -> Record50:
-        datum_eerste_verstrekking = str(self.datum_eerste_verstrekking.year) + str(self.datum_eerste_verstrekking.month) + str(self.datum_eerste_verstrekking.day)
-        datum_voorschrift = str(self.datum_voorschrift.year) + str(self.datum_voorschrift.month) + str(self.datum_voorschrift.day)
+        datum_eerste_verstrekking = str(self.datum_eerste_verstrekking.year) + str(self.datum_eerste_verstrekking.month) + str(self.datum_eerste_verstrekking.day).rjust(2, "0")
+        datum_voorschrift = str(self.datum_voorschrift.year) + str(self.datum_voorschrift.month) + str(self.datum_voorschrift.day).rjust(2, "0")
 
         return Record50(
             num_record=self.num_record,
@@ -131,7 +133,7 @@ class Record50Kine(BaseModel):
             datum_eerste_verstrekking=datum_eerste_verstrekking,
             datum_laatste_verstrekking=datum_eerste_verstrekking,
             nummer_ziekenfonds_rechthebbende=self.nummer_ziekenfonds_rechthebbende,
-            identificatie_rechthebbende=self.insz_rechthebbende,
+            identificatie_rechthebbende_1=self.insz_rechthebbende,
             identificatie_rechthebbende_2=self.identificatie_rechthebbende_2,
             geslacht_rechthebbende=self.geslacht_rechthebbende,
             dienstcode="002" if self.hospital_care else "990",
@@ -153,21 +155,20 @@ class Record50Kine(BaseModel):
 class Record52Kine(BaseModel):
     num_record: Optional[str] = "000004"
     nomenclatuur: str
-    datum_verstrekking: str
-    datum_lezing_identiteitsdocument: str
+    datum_verstrekking: datetime.date
     insz_rechthebbende: str
     identificatie_rechthebbende_2: str
     riziv_nummer: str
     nummer_akkoord: str
 
     def to_record_52(self) -> Record52:
-        datum_verstrekking = str(self.datum_verstrekking.year) + str(self.datum_verstrekking.month) + str(self.datum_verstrekking.day)
+        datum_verstrekking = str(self.datum_verstrekking.year) + str(self.datum_verstrekking.month) + str(self.datum_verstrekking.day).rjust(2, "0")
 
         return Record52(
             num_record=self.num_record,
             nomenclatuur=self.nomenclatuur,
             datum_verstrekking=datum_verstrekking,
-            identificatie_rechthebbende=self.insz_rechthebbende,
+            identificatie_rechthebbende_1=self.insz_rechthebbende,
             identificatie_rechthebbende_2=self.identificatie_rechthebbende_2,
             riziv_nummer=self.riziv_nummer,
             nummer_akkoord=self.nummer_akkoord
@@ -195,10 +196,10 @@ class Record80Kine(BaseModel):
         return Record80(
             num_record=self.num_record,
             nummer_ziekenfonds_aansluiting=self.nummer_ziekenfonds_aansluiting,
-            identificatie_rechthebbende=self.insz_rechthebbende,
+            identificatie_rechthebbende_1=self.insz_rechthebbende,
             identificatie_rechthebbende_2=self.identificatie_rechthebbende_2,
             geslacht_rechthebbende=self.geslacht_rechthebbende,
-            type_factuur="01" if self.hospital_care else "03",
+            type_factuur="1" if self.hospital_care else "3",
             dienst_721_bis="002" if self.hospital_care else "000",
             nummer_facturerende_instelling=self.nummer_facturerende_instelling,
             bedrag_financieel_rekeningnummer_b="0",
@@ -226,19 +227,19 @@ class Record90Kine(BaseModel):
     control_message: str
 
     def to_record_90(self) -> Record90:
-        date_creation = str(self.date_creation.year) + str(self.date_creation.month) + str(self.date_creation.day)
+        date_creation = str(self.date_creation.year) + str(self.date_creation.month) + str(self.date_creation.day).rjust(2, "0")
 
         return Record90(
             num_record=self.num_record,
             zendingsnummer=self.zendingsnummer,
-            nummer_derdebetalend=self.nummer_derdebetalende,
+            nummer_derdebetalende=self.nummer_derdebetalende,
             bedrag_financieel_rekeningnummer_b="0",
-            bedrag_financieel_rekeningnummer_1=self.totaal,
+            bedrag_financieel_rekeningnummer_a=self.totaal,
             date_creation=date_creation,
             kbo_nummer=self.kbo_number,
             reference="", # optional
             bic_bank=self.bic_bank,
-            iban_bank=self.iban_bank
+            iban_bank=self.iban_bank,
             control_message=self.control_message
         )
     
@@ -276,7 +277,7 @@ class Footer96Kine(BaseModel):
             controle_nummer_per_mutualiteit=self.controle_nummer_per_mutualiteit
         )
 
-class DetailRecords(BaseModel):
+class DetailRecord(BaseModel):
     nomenclatuur: str
     datum_eerste_verstrekking: datetime.date
     bedrag_verzekeringstegemoetkoming: str
@@ -297,8 +298,8 @@ class DetailRecords(BaseModel):
                      norm_verstrekker: Optional[str] = "1", # meestal 1 https://metadata.aim-ima.be/nl/app/vars/SS00340_Gz
                      ) -> Record50Kine:
         return Record50Kine(
-            num_record=str(i).rjust(6),
-            nomenclatuur=self.nomenclatuur,
+            num_record=str(i).rjust(6, "0"),
+            nomenclatuur=self.nomenclatuur.rjust(7, "0"),
             datum_eerste_verstrekking=self.datum_eerste_verstrekking,
             nummer_ziekenfonds_rechthebbende=nummer_ziekenfonds_rechthebbende,
             insz_rechthebbende=insz_rechthebbende,
@@ -323,8 +324,8 @@ class DetailRecords(BaseModel):
                      nummer_akkoord: str, # MDA akkooord
                      ) -> Record52Kine:
         return Record52Kine(
-            num_record=str(i).rjust(6),
-            nomenclatuur=self.nomenclatuur,
+            num_record=str(i).rjust(6, "0"),
+            nomenclatuur=self.nomenclatuur.rjust(7, "0"),
             datum_verstrekking=self.datum_eerste_verstrekking,
             datum_lezing_identiteitsdocument=self.datum_eerste_verstrekking,
             insz_rechthebbende=insz_rechthebbende,
@@ -363,7 +364,7 @@ class Message200Kine(BaseModel):
     geconventioneerde_verstrekker: bool
     nummer_akkoord: str
 
-    detail_records: List[DetailRecords]
+    detail_records: List[DetailRecord]
 
     def to_message200(self) -> Message200:
         header_200 = Header200Kine(
@@ -382,7 +383,7 @@ class Message200Kine(BaseModel):
         record_10 = Record10Kine(
             is_test=self.is_test,
             zendingsnummer=self.zendingsnummer,
-            nummer_derdebetalend=self.nummer_derdebetalende,
+            nummer_derdebetalende=self.nummer_derdebetalende,
             date_creation=self.date_invoice,
             kbo_nummer=self.kbo_number,
             bic_bank=self.bic_bank,
@@ -391,6 +392,7 @@ class Message200Kine(BaseModel):
         record_20 = Record20Kine(
             nummer_ziekenfonds_aansluiting=self.nummer_ziekenfonds,
             insz_rechthebbende=self.insz_rechthebbende,
+            identificatie_rechthebbende_2=self.identificatie_rechthebbende_2,
             geslacht_rechthebbende=self.geslacht_rechthebbende,
             hospital_care=self.hospital_care,
             nummer_facturerende_instelling=self.nummer_facturerende_instelling,
@@ -417,7 +419,7 @@ class Message200Kine(BaseModel):
                 identificatie_verstrekker=self.nummer_facturerende_instelling,
                 geconventioneerde_verstrekker=self.geconventioneerde_verstrekker,
                 norm_verstrekker="1", # meestal 1 https://metadata.aim-ima.be/nl/app/vars/SS00340_Gz
-                     ).to_record50()
+                     ).to_record_50()
             record_50s.append(record_50)
 
         record_52s = []
@@ -429,7 +431,7 @@ class Message200Kine(BaseModel):
                 identificatie_rechthebbende_2=self.identificatie_rechthebbende_2,
                 riziv_nummer=self.nummer_facturerende_instelling,
                 nummer_akkoord=self.nummer_akkoord
-                     ).to_record52()
+                     ).to_record_52()
             record_52s.append(record_52)
 
 
@@ -437,13 +439,16 @@ class Message200Kine(BaseModel):
         totaal_persoonlijk_aandeel = 0
         totaal_supplement = 0
         for dr in self.detail_records:
-            totaal += int(dr.bedrag_verzekeringstegemoetkoming)
-            totaal_persoonlijk_aandeel += int(dr.persoonlijk_aandeel_patient)
-            totaal_supplement += int(dr.bedrag_supplement)
+            totaal += float(dr.bedrag_verzekeringstegemoetkoming)
+            totaal_persoonlijk_aandeel += float(dr.persoonlijk_aandeel_patient)
+            totaal_supplement += float(dr.bedrag_supplement)
+        totaal = int(totaal*100)
+        totaal_persoonlijk_aandeel = int(totaal*100)
+        totaal_supplement = int(totaal*100)
 
         i += 1
         record_80 = Record80Kine(
-            num_record=str(i).rjust(6),
+            num_record=str(i).rjust(6, "0"),
             nummer_ziekenfonds_aansluiting=self.nummer_ziekenfonds,
             insz_rechthebbende=self.insz_rechthebbende,
             identificatie_rechthebbende_2=self.identificatie_rechthebbende_2,
@@ -458,33 +463,34 @@ class Message200Kine(BaseModel):
             totaal=totaal,
             totaal_persoonlijk_aandeel=totaal_persoonlijk_aandeel,
             totaal_supplement=totaal_supplement,
-            control_invoice=calculate_invoice_control([dr.nomenclatuur for dr in self.detail_records])
+            control_invoice=calculate_invoice_control([dr.nomenclatuur.rjust(7, "0") for dr in self.detail_records])
         ).to_record_80()
 
         i += 1
         record_90 = Record90Kine(
-            num_record=str(i).rjust(6),
+            num_record=str(i).rjust(6, "0"),
             zendingsnummer=self.zendingsnummer,
-            nummer_derdebetalend=self.nummer_derdebetalende,
+            nummer_derdebetalende=self.nummer_derdebetalende,
+            totaal=totaal,
             date_creation=self.date_invoice,
             kbo_nummer=self.kbo_number,
             bic_bank=self.bic_bank,
             iban_bank=self.iban_bank,
-            control_message=calculate_invoice_control([dr.nomenclatuur for dr in self.detail_records])
+            control_message=calculate_invoice_control([dr.nomenclatuur.rjust(7, "0") for dr in self.detail_records])
         ).to_record_90()
 
         footer_95 = Footer95Kine(
             nummer_mutualiteit=self.nummer_ziekenfonds,
             totaal=totaal,
             aantal_records=4+len(self.detail_records),
-            controle_nummer_per_mutualiteit=calculate_invoice_control([dr.nomenclatuur for dr in self.detail_records])
+            controle_nummer_per_mutualiteit=calculate_invoice_control([dr.nomenclatuur.rjust(7, "0") for dr in self.detail_records])
         ).to_footer_95()
 
         footer_96 = Footer96Kine(
             nummer_mutualiteit=self.nummer_ziekenfonds,
             totaal=totaal,
             aantal_records=4+2+len(self.detail_records),
-            controle_nummer_per_mutualiteit=calculate_invoice_control([dr.nomenclatuur for dr in self.detail_records])
+            controle_nummer_per_mutualiteit=calculate_invoice_control([dr.nomenclatuur.rjust(7, "0") for dr in self.detail_records])
         ).to_footer_96()
 
         return Message200(

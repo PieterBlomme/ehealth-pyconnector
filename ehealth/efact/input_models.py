@@ -5,7 +5,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def calculate_control(text) -> str:
-    assert len(text) == 348 # always?? to check
+    assert len(text) == 348, len(text) # always?? to check
     control = 0
 
     CHARS = [
@@ -470,11 +470,7 @@ class Record20(BaseModel):
 
         assert len(self.vorig_gefactureerd_jaar_en_maand) == 6
         to_str += self.vorig_gefactureerd_jaar_en_maand
-        to_str += self.referentiegegevens_netwerk_1.ljust(6, "0")
-        to_str += self.referentiegegevens_netwerk_2.ljust(11, "0")
-        to_str += self.referentiegegevens_netwerk_3.ljust(1, "0")
-        to_str += self.referentiegegevens_netwerk_4.ljust(4, "0")
-        to_str += self.referentiegegevens_netwerk_5.ljust(26, "0")
+        to_str += self.referentiegegevens_netwerk_1.ljust(48, "0") # TODO incorrect!!
         reserve = "0" * 1
         to_str += reserve
 
@@ -544,7 +540,7 @@ class Record50(BaseModel):
     datum_voorschrift: str
     aantal: int
     afwijking_maximaal_aantal_of_identieke_prestatie: Optional[str] = "00"
-    identificatie_voorschrijver: str
+    identificatie_voorschrijver: Optional[str] = "000000000000"
     norm_voorschrijver: Optional[str] = "0"
     persoonlijk_aandeel_patient: str
     referentie_instelling: str
@@ -773,7 +769,7 @@ class Record52(BaseModel):
     reden_manuele_invoering: Optional[str] = "0"
     nomenclatuur: str
     datum_verstrekking: str
-    datum_lezing_identiteitsdocument: str
+    datum_lezing_identiteitsdocument: Optional[str] = "00000000"
     identificatie_rechthebbende_1: str
     identificatie_rechthebbende_2: str
     
@@ -812,6 +808,8 @@ class Record52(BaseModel):
         to_str += self.identificatie_rechthebbende_2
         assert len(self.type_lezing_identiteitsdocument) == 1
         to_str += self.type_lezing_identiteitsdocument
+        assert len(self.type_drager_identiteitsdocument) == 1
+        to_str += self.type_drager_identiteitsdocument
         assert len(self.reden_gebruik_vignet) == 1
         to_str += self.reden_gebruik_vignet
         assert len(self.uur_lezing_identiteitsdocument) == 4
@@ -822,7 +820,7 @@ class Record52(BaseModel):
 
         assert len(self.riziv_nummer) == 12
         to_str += self.riziv_nummer
-        assert len(self.serienummer_drager) == 13
+        assert len(self.serienummer_drager) == 15
         to_str += self.serienummer_drager
         assert len(self.nummer_bewijsstuk) == 25
         to_str += self.nummer_bewijsstuk
@@ -831,7 +829,7 @@ class Record52(BaseModel):
         assert len(self.nummer_akkoord) == 20
         to_str += self.nummer_akkoord
 
-        reserve = "0" * 217
+        reserve = "0" * 197 # doc incorrect
         to_str += reserve
 
         control = calculate_control(to_str)
@@ -1190,8 +1188,8 @@ class Message200(BaseModel):
     record_10: Record10
     record_20: Record20
     record_50s: List[Record50]
-    record_51s: List[Record51]
-    record_52s: List[Record52]
+    record_51s: Optional[List[Record51]] = []
+    record_52s: Optional[List[Record52]] = []
     record_80: Record80
     record_90: Record90
     footer_95: Footer95

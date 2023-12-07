@@ -10,6 +10,11 @@ from ehealth.efact.input_models import (
     Record51, Record80, Record90, Footer95, Footer96,
     calculate_invoice_control
 )
+from ehealth.efact.input_models_kine import Message200Kine, DetailRecord
+from ehealth.mda import MDAService
+from ehealth.mda.attribute_query import Facet, Dimension
+
+from .test_mda import build_mda_input
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +22,8 @@ KEYSTORE_PASSPHRASE = os.environ.get("KEYSTORE_PASSPHRASE")
 KEYSTORE_SSIN = os.environ.get("KEYSTORE_SSIN")
 KEYSTORE_PATH = "valid.acc-p12"
 DATA_FOLDER = Path(__file__).parent.joinpath("data")
+NOT_BEFORE = datetime.datetime.now() - datetime.timedelta(days=1)
+NOT_ON_OR_AFTER = datetime.datetime.now()
 
 @pytest.fixture
 def efact_service():
@@ -25,6 +32,14 @@ def efact_service():
         mycarenet_license_password=MYCARENET_PWD,
     )
 
+@pytest.fixture
+def mda_service():
+    return MDAService(
+        mycarenet_license_username=MYCARENET_USER,
+        mycarenet_license_password=MYCARENET_PWD,
+    )
+
+@pytest.mark.skip
 def test_dummy(sts_service, token, efact_service):
     input_model = Message200(
             header_200=Header200(
@@ -141,4 +156,52 @@ def test_dummy(sts_service, token, efact_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         efact_service.send_efact(
             token, input_model
+        )
+
+
+def test_efact_refusal_1(sts_service, token, efact_service, mda_service):
+    # lets do manual MDA completion for now
+    ssin = "062620007059" # TODO needs an update
+    gender = "female"
+    nummer_mutualiteit = "319"
+    akkoord_derdebetalers = "5084FC6SG0726MZ444V2519I0055I481"
+    cg1 = "110"
+    cg2 = "110"
+    nummer_akkoord = "10020000000002500324" # MDA?
+
+    detail_record = DetailRecord(
+        nomenclatuur="567011",
+        datum_eerste_verstrekking=datetime.date.today() - datetime.timedelta(days=2),
+        bedrag_verzekeringstegemoetkoming="22.35",
+        datum_voorschrift=datetime.date.today() - datetime.timedelta(days=5),
+        persoonlijk_aandeel_patient="6.25",
+        bedrag_supplement="0",
+    )
+
+    input_model_kine = Message200Kine(
+        reference="20231207000001",
+        num_invoice="001",
+        name_contact="BLOMME",
+        first_name_contact="PIETER",
+        tel_contact="0487179464",
+        hospital_care=False,
+        zendingsnummer="500",
+        nummer_derdebetalende="050941034517",
+        bic_bank="GKCCBEBB",
+        iban_bank="BE19063539637812",
+        nummer_individuele_factuur_1="00001",
+        geconventioneerde_verstrekker=True,
+        insz_rechthebbende=ssin,
+        geslacht_rechthebbende="1" if (gender == "male") else "2",
+        nummer_ziekenfonds=nummer_mutualiteit,
+        identificatie_rechthebbende_2="6" if (gender == "male") else "2", # no idea ...
+        nummer_facturerende_instelling="050941034517", # duplicate
+        cg1_cg2=f"{cg1}{cg2}".rjust(10, "0"),
+        referentiegegevens_netwerk_1=akkoord_derdebetalers,
+        nummer_akkoord=nummer_akkoord,
+        detail_records=[detail_record]
+    )
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        efact_service.send_efact(
+            token, input_model_kine.to_message200()
         )
