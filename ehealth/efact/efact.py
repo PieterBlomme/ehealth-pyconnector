@@ -8,7 +8,7 @@ from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from pydantic import BaseModel
-from .input_models import Message200
+from .input_models import Message200, Header200, Header300
 import tempfile
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,7 @@ class EFactService:
         self.config_validator.setProperty("mycarenet.licence.username", mycarenet_license_username)
         self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
         self.config_validator.setProperty("endpoint.etk", etk_endpoint)
+        self.config_validator.setProperty("endpoint.genericasync.invoicing.v1", "https://pilot.mycarenet.be:9443/mycarenet-ws/async/generic/hcpfac")
 
     def set_configuration_from_token(self, token: str) -> None:
         # TODO copy paste from MDA
@@ -116,3 +117,47 @@ class EFactService:
         logger.info(raw_response)
         logger.info("Call of handler for the post operation")
         self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getResponseObjectBuilder().handlePostResponse(responsePost)
+
+    def get_messages(self):
+        logger.info("Creation of the get")
+        msgQuery = self.EHEALTH_JVM.newMsgQuery()
+        msgQuery.setInclude(True)
+        msgQuery.setMax(200)
+        msgQuery.getMessageNames().add("HCFAC")
+
+        tackQuery = self.EHEALTH_JVM.newQuery()
+        tackQuery.setInclude(True)
+        tackQuery.setMax(100)
+        logger.info("Send of the get request")
+
+        PROJECT_NAME = "invoicing"
+        packageInfo = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.util.McnConfigUtil.retrievePackageInfo("genericasync." + PROJECT_NAME)
+        commonBuilder = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.RequestBuilderFactory.getCommonBuilder(PROJECT_NAME)
+        service = self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.session.GenAsyncSessionServiceFactory.getGenAsyncService(PROJECT_NAME)
+        origin = self.EHEALTH_JVM.getCommontInputMapper().map(commonBuilder.createOrigin(packageInfo))
+        responseGetHeader = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.util.WsAddressingUtil.createHeader(None, "urn:be:cin:nip:async:generic:get:query")
+        responseGet = service.getRequest(
+            self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getRequestObjectBuilder(PROJECT_NAME).buildGetRequest(origin, msgQuery, tackQuery), 
+            responseGetHeader
+            )
+
+        #  validate the get responses ( including check on xades if present)
+        self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getResponseObjectBuilder().handleGetResponse(responseGet)
+        logger.info("getMsgResponses")
+        for msgResponse in responseGet.getReturn().getMsgResponses():
+            mappedBlob = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.mapper.DomainBlobMapper.mapToBlob(msgResponse.getDetail())
+            unwrappedMessageByteArray = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.BlobBuilderFactory.getBlobBuilder(PROJECT_NAME).checkAndRetrieveContent(mappedBlob)
+            decoded = unwrappedMessageByteArray.decode("utf-8")
+            logger.info(msgResponse)
+            header_200 = Header200.from_str(decoded[:67])
+            header_300 = Header300.from_str(decoded[67:227])
+            logger.info(header_200.dict())
+            logger.info(header_300.dict())
+        logger.info("getTAckResponses")
+        for tackResponse in responseGet.getReturn().getTAckResponses():
+            tackResponseBytes = tackResponse.getTAck().getValue()
+            tackResponse = self.GATEWAY.jvm.java.lang.String(tackResponseBytes, "UTF-8")
+            logger.info(tackResponse)
+
+        # confirm messages
+        # self.EHEALTH_JVM.confirmTheseMessages(origin, service, responseGet)

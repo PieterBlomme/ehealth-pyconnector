@@ -13,8 +13,21 @@ import be.ehealth.technicalconnector.config.ConfigValidator;
 import be.ehealth.businessconnector.genericasync.mappers.CommonInputMapper;
 import org.mapstruct.factory.Mappers;
 import be.ehealth.businessconnector.test.testcommons.utils.FileTestUtils;
+import be.cin.nip.async.generic.*;
+import java.net.URI;
+import be.ehealth.technicalconnector.handler.domain.WsAddressingHeader;
+import be.ehealth.businessconnector.genericasync.exception.GenAsyncBusinessConnectorException;
+import be.ehealth.technicalconnector.exception.TechnicalConnectorException;
+import be.ehealth.technicalconnector.exception.SessionManagementException;
+import java.net.URISyntaxException;
+import be.ehealth.businessconnector.genericasync.session.GenAsyncService;
+import be.cin.mycarenet.esb.common.v2.OrigineType;
+import org.slf4j.LoggerFactory;
+import be.ehealth.technicalconnector.idgenerator.IdGeneratorFactory;
+import org.slf4j.Logger;
 
 public class JavaGateway {
+  private static final Logger LOG = LoggerFactory.getLogger(JavaGateway.class);
 
   public static void main(String[] args) throws Exception {
     JavaGateway app = new JavaGateway();
@@ -55,5 +68,42 @@ public class JavaGateway {
     return Mappers.getMapper(
                 CommonInputMapper.class
             );
+  }
+
+  public MsgQuery newMsgQuery(){
+    return new MsgQuery();
+  }
+
+  public Query newQuery(){
+    return new Query();
+  }
+
+  public ConfirmResponse confirmTheseMessages(OrigineType origin, GenAsyncService service, GetResponse responseGet) throws URISyntaxException, TechnicalConnectorException, GenAsyncBusinessConnectorException, SessionManagementException {
+      List<byte[]> msgHashValues = new ArrayList<byte[]>();
+      for (MsgResponse msgResp : responseGet.getReturn().getMsgResponses()) {
+          final byte[] hashValue = msgResp.getDetail().getHashValue();
+          LOG.debug("adding confirm for msg hash >" + hashValue + "<");
+          msgHashValues.add(hashValue);
+      }
+
+      List<byte[]> tackHashValues = new ArrayList<byte[]>();
+      for (TAckResponse tackResponse : responseGet.getReturn().getTAckResponses()) {
+          final byte[] hashValue = tackResponse.getTAck().getValue();
+          LOG.debug("adding confirm for tack hash >" + hashValue + "<");
+          tackHashValues.add(hashValue);
+      }
+
+      WsAddressingHeader responseConfirmHeader = new WsAddressingHeader(new URI("urn:be:cin:nip:async:generic:confirm:hash"));
+      responseConfirmHeader.setTo(new URI(""));
+      responseConfirmHeader.setFaultTo("http://www.w3.org/2005/08/addressing/anonymous");
+      responseConfirmHeader.setReplyTo("http://www.w3.org/2005/08/addressing/anonymous");
+      responseConfirmHeader.setMessageID(new URI(IdGeneratorFactory.getIdGenerator("uuid").generateId()));
+
+      Confirm request = new Confirm();
+      request.setOrigin(origin);
+      request.getMsgHashValues().addAll(msgHashValues);
+      request.getTAckContents().addAll(tackHashValues);
+      ConfirmResponse confirmResponse = service.confirmRequest(request, responseConfirmHeader);
+      return confirmResponse;
   }
 }

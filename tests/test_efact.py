@@ -205,3 +205,4 @@ def test_efact_refusal_1(sts_service, token, efact_service, mda_service):
         efact_service.send_efact(
             token, input_model_kine.to_message200()
         )
+        efact_service.get_messages()

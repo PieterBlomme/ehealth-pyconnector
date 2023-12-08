@@ -89,6 +89,26 @@ class Header200(BaseModel):
         to_str += reserve
         return to_str
 
+    @classmethod
+    def from_str(cls, msg: str) -> "Header200":
+        assert len(msg) == 67
+        return Header200(
+            name = msg[:6],
+            error_name = msg[6:8],
+            version = msg[8:10],
+            error_version = msg[10:12],
+            type = msg[12:14],
+            error_type = msg[14:16],
+            status = msg[16:18],
+            error_status = msg[18:20],
+            reference = msg[20:34],
+            error_reference = msg[34:36],
+            reference_io = msg[36:50],
+            error_reference_io = msg[50:52],
+        )
+
+
+
 class Header300(BaseModel):
     year_and_month: str
     error_year_and_month: Optional[str] = "00"
@@ -111,6 +131,32 @@ class Header300(BaseModel):
     type_invoicing: str
     error_type_invoicing: Optional[str] = "00"
 
+    @classmethod
+    def from_str(cls, msg: str) -> "Header300":
+        assert len(msg) == 227-67
+        return Header300(
+            year_and_month = msg[:6],
+            error_year_and_month = msg[6:8],
+            num_invoice = msg[8:11],
+            error_num_invoice = msg[11:13],
+            date_invoice = msg[13:21],
+            error_date_invoice = msg[21:23],
+            reference_invoice = msg[23:36],
+            error_reference_invoice = msg[36:38],
+            version_instructions = msg[38:45],
+            error_version_instructions = msg[45:47],
+            name_contact = msg[47:92],
+            error_name_contact = msg[92:94],
+            first_name_contact = msg[94:118],
+            error_first_name_contact = msg[118:120],
+            tel_contact = msg[120:130],
+            error_tel_contact = msg[130:132],
+            type_invoice = msg[132:134],
+            error_type_invoice = msg[134:136],
+            type_invoicing = msg[136:138],
+            error_type_invoicing = msg[138:140],
+        )
+    
     def __str__(self):
         to_str = ""
         assert len(self.year_and_month) == 6
