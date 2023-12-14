@@ -292,8 +292,11 @@ class EAttestV3Service:
         
         raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(attestBuilderRequest)
 
-        sendAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().sendAttestation(attestBuilderRequest)
-
+        try:
+            sendAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().sendAttestation(attestBuilderRequest)
+        except Exception as e:
+            logger.info(template)
+            raise
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(sendAttestationResponse)
 
         attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilder)
@@ -306,7 +309,7 @@ class EAttestV3Service:
         return EAttestV3(
             response=response_pydantic,
             transaction_request=template,
-            transaction_response=response_string,
+            transaction_response=response_string.replace('ns:', ''),
             soap_request=raw_request,
             soap_response=raw_response
         )

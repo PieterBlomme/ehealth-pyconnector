@@ -32,7 +32,7 @@ def test_4_1_1(sts_service, token, eattest_service):
                     givenname="John",
                     surname="Doe",
                     gender="male",
-                    ssin="00092210605"
+                    ssin="71020203354"
                 ),
                 transaction=Transaction(
                     bank_account="0635769870",
@@ -67,11 +67,10 @@ def test_4_1_2(sts_service, token, eattest_service):
                 ),
                 transaction=Transaction(
                     bank_account="0635769870",
-                    decisionreference="10020000000003100613",
                     cgds=[
                         CGDItem(
                             claim="567011",
-                            decisionreference="10020000000003100614",
+                            decisionreference="50914202200000015966",
                             encounterdatetime=datetime.date.today().isoformat(),
                             amount=38.86,
                         ),
@@ -101,7 +100,7 @@ def test_4_1_3(sts_service, token, eattest_service):
                     cgds=[
                         CGDItem(
                             claim="560652",
-                            decisionreference="10016856093831735305",
+                            decisionreference="10020000000002569234",
                             encounterdatetime=datetime.date.today().isoformat(),
                             amount=38.86,
                         ),
@@ -112,8 +111,8 @@ def test_4_1_3(sts_service, token, eattest_service):
     
     acknowledge = response.response.acknowledge
     assert acknowledge.error is not None
-    assert acknowledge.error.cd.value == 268
     logger.info(acknowledge.error.cd.value)
+    assert acknowledge.error.cd.value == 268
 
 @pytest.mark.skip
 def test_4_1_4(sts_service, token, eattest_service):
@@ -143,7 +142,7 @@ def test_4_1_5(sts_service, token, eattest_service):
                         CGDItem(
                             claim="567011",
                             decisionreference="10016856095552803978",
-                            encounterdatetime=(datetime.date.today() - datetime.timedelta(days=-1)).isoformat(),
+                            encounterdatetime=(datetime.date.today() - datetime.timedelta(days=1)).isoformat(),
                             amount=38.86,
                         ),
                     ]
@@ -204,13 +203,13 @@ def test_4_2_1(sts_service, token, eattest_service):
                     cgds=[
                         CGDItem(
                             claim="567011",
-                            decisionreference="10016856093831735305",
+                            decisionreference="10020000000002569234",
                             encounterdatetime=datetime.date.today().isoformat(),
                             amount=38.86,
                         ),
                         CGDItem(
                             claim="567033",
-                            decisionreference="10016856093831735305",
+                            decisionreference="10020000000002569234",
                             encounterdatetime=datetime.date.today().isoformat(),
                             amount=38.86,
                         ),
@@ -220,5 +219,72 @@ def test_4_2_1(sts_service, token, eattest_service):
         )
     
     acknowledge = response.response.acknowledge
-    logger.info(acknowledge.error)
+    logger.info(response.transaction_request)
+    logger.info(response.transaction_response)
+    assert acknowledge.error is None
+
+def test_4_2_2(sts_service, token, eattest_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        response = eattest_service.send_attestation(
+            token, 
+            input_model=EAttestInputModel(
+                patient=Patient(
+                    givenname="John",
+                    surname="Doe",
+                    gender="male",
+                    ssin="32061701889"
+                ),
+                transaction=Transaction(
+                    bank_account="0635769870",
+                    cgds=[
+                        CGDItem(
+                            claim="563393",
+                            decisionreference="10020000000002569234",
+                            encounterdatetime=datetime.date.today().isoformat(),
+                            amount=38.86,
+                        ),
+                        CGDItem(
+                            claim="639192",
+                            decisionreference="10020000000002569234",
+                            encounterdatetime=datetime.date.today().isoformat(),
+                            amount=38.86,
+                        ),
+                    ]
+                )
+            )
+        )
+    
+    acknowledge = response.response.acknowledge
+    logger.info(response.transaction_request)
+    logger.info(response.transaction_response)
+    assert acknowledge.error is None
+
+def test_4_2_3(sts_service, token, eattest_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        response = eattest_service.send_attestation(
+            token, 
+            input_model=EAttestInputModel(
+                patient=Patient(
+                    givenname="John",
+                    surname="Doe",
+                    gender="male",
+                    ssin="38060819220"
+                ),
+                transaction=Transaction(
+                    bank_account="0635769870",
+                    cgds=[
+                        CGDItem(
+                            claim="639472",
+                            decisionreference="10020000000002569638",
+                            encounterdatetime=datetime.date.today().isoformat(),
+                            amount=38.86,
+                        ),
+                    ]
+                )
+            )
+        )
+    
+    acknowledge = response.response.acknowledge
+    logger.info(response.transaction_request)
+    logger.info(response.transaction_response)
     assert acknowledge.error is None
