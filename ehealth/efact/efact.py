@@ -1,5 +1,5 @@
 from py4j.java_gateway import JavaGateway
-from typing import Any
+from typing import Any, Optional
 import datetime
 from random import randint
 import logging
@@ -20,6 +20,7 @@ class EFactService:
             mycarenet_license_password: str,
             etk_endpoint: str = "$uddi{uddi:ehealth-fgov-be:business:etkdepot:v1}",
             environment: str = "acc",
+            confirm_messages: Optional[bool] = False
     ):
         self.GATEWAY = JavaGateway()
         self.EHEALTH_JVM = self.GATEWAY.entry_point
@@ -31,6 +32,7 @@ class EFactService:
             self.is_test = True
         else:
             self.is_test = False
+        self.confirm_messages = confirm_messages
 
         self.config_validator.setProperty("mycarenet.licence.username", mycarenet_license_username)
         self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
@@ -160,4 +162,5 @@ class EFactService:
             logger.info(tackResponse)
 
         # confirm messages
-        # self.EHEALTH_JVM.confirmTheseMessages(origin, service, responseGet)
+        if self.confirm_messages:
+            self.EHEALTH_JVM.confirmTheseMessages(origin, service, responseGet)
