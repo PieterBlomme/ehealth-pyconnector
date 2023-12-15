@@ -5,7 +5,7 @@ import pytest
 import logging
 from pathlib import Path
 from ehealth.eattestv3.eattest import EAttestV3Service
-from ehealth.eattestv3.input_models import EAttestInputModel, Patient, Transaction, CGDItem, Practitioner
+from ehealth.eattestv3.input_models import EAttestInputModel, Patient, Transaction, CGDItem, Requestor
 from .conftest import MYCARENET_PWD, MYCARENET_USER
 
 logger = logging.getLogger(__name__)
@@ -42,10 +42,11 @@ def test_4_1_1(sts_service, token, eattest_service):
                             decisionreference="10020000000003100613",
                             encounterdatetime=datetime.date.today().isoformat(),
                             amount=38.86,
-                            requestor=Practitioner(
+                            requestor=Requestor(
                                 givenname="Marie",
                                 surname="Nolet de Brauwere van Steeland",
-                                nihii="19733263004"
+                                nihii="19733263004",
+                                date_prescription=datetime.date.fromisoformat('2023-12-01')
                             ),
                         ),
                     ]
@@ -77,10 +78,11 @@ def test_4_1_2(sts_service, token, eattest_service):
                             decisionreference="50914202200000015966",
                             encounterdatetime=datetime.date.today().isoformat(),
                             amount=38.86,
-                            requestor=Practitioner(
+                            requestor=Requestor(
                                 givenname="Marie",
                                 surname="Nolet de Brauwere van Steeland",
-                                nihii="19733263004"
+                                nihii="19733263004",
+                                date_prescription=datetime.date.fromisoformat('2023-12-01')
                             ),
                         ),
                     ]
@@ -112,10 +114,11 @@ def test_4_1_3(sts_service, token, eattest_service):
                             decisionreference="10020000000002569234",
                             encounterdatetime=datetime.date.today().isoformat(),
                             amount=38.86,
-                            requestor=Practitioner(
+                            requestor=Requestor(
                                 givenname="Marie",
                                 surname="Nolet de Brauwere van Steeland",
-                                nihii="19733263004"
+                                nihii="19733263004",
+                                date_prescription=datetime.date.fromisoformat('2023-12-01')
                             ),
                         ),
                     ]
@@ -152,10 +155,11 @@ def test_4_1_5(sts_service, token, eattest_service):
                             decisionreference="10016856095552803978",
                             encounterdatetime=datetime.date.today().isoformat(),
                             amount=38.86,
-                            requestor=Practitioner(
+                            requestor=Requestor(
                                 givenname="Marie",
                                 surname="Nolet de Brauwere van Steeland",
-                                nihii="19733263004"
+                                nihii="19733263004",
+                                date_prescription=datetime.date.fromisoformat('2023-12-01')
                             ),
                         ),
                         CGDItem(
@@ -163,10 +167,11 @@ def test_4_1_5(sts_service, token, eattest_service):
                             decisionreference="10016856095552803978",
                             encounterdatetime=(datetime.date.today() - datetime.timedelta(days=1)).isoformat(),
                             amount=38.86,
-                            requestor=Practitioner(
+                            requestor=Requestor(
                                 givenname="Marie",
                                 surname="Nolet de Brauwere van Steeland",
-                                nihii="19733263004"
+                                nihii="19733263004",
+                                date_prescription=datetime.date.fromisoformat('2023-12-01')
                             ),
                         ),
                     ]
@@ -200,10 +205,11 @@ def test_4_1_6(sts_service, token, eattest_service):
                             encounterdatetime=datetime.date.today().isoformat(),
                             amount=38.86,
                             bank_account="0635769870",
-                            requestor=Practitioner(
+                            requestor=Requestor(
                                 givenname="Marie",
                                 surname="Nolet de Brauwere van Steeland",
-                                nihii="19733263004"
+                                nihii="19733263004",
+                                date_prescription=datetime.date.fromisoformat('2023-12-01')
                             ),
                         ),
                     ]
@@ -222,34 +228,36 @@ def test_4_2_1(sts_service, token, eattest_service):
             token, 
             input_model=EAttestInputModel(
                 patient=Patient(
-                    givenname="John",
-                    surname="Doe",
+                    givenname="Youssef",
+                    surname="Mghoghi",
                     gender="male",
-                    ssin="58112129084"
+                    ssin="68042000773"
                 ),
                 transaction=Transaction(
                     bank_account="0635769870",
                     cgds=[
                         CGDItem(
                             claim="567011",
-                            decisionreference="10020000000002569234",
+                            decisionreference="90094042023349000066",
                             encounterdatetime=datetime.date.today().isoformat(),
-                            amount=38.86,
-                            requestor=Practitioner(
+                            amount=28.6,
+                            requestor=Requestor(
                                 givenname="Marie",
                                 surname="Nolet de Brauwere van Steeland",
-                                nihii="19733263004"
+                                nihii="19733263004",
+                                date_prescription=datetime.date.fromisoformat('2023-12-01')
                             ),
                         ),
                         CGDItem(
                             claim="567033",
-                            decisionreference="10020000000002569234",
+                            decisionreference="90094042023349000066",
                             encounterdatetime=datetime.date.today().isoformat(),
-                            amount=38.86,
-                            requestor=Practitioner(
+                            amount=7.,
+                            requestor=Requestor(
                                 givenname="Marie",
                                 surname="Nolet de Brauwere van Steeland",
-                                nihii="19733263004"
+                                nihii="19733263004",
+                                date_prescription=datetime.date.fromisoformat('2023-12-01')
                             ),
                         ),
                     ]
@@ -309,7 +317,7 @@ def test_4_2_3(sts_service, token, eattest_service):
                     gender="male",
                     ssin="38060819220"
                 ),
-                requestor=Practitioner(
+                requestor=Requestor(
                     givenname="John",
                     surname="Doe",
                     nihii="13679869620"

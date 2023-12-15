@@ -8,6 +8,9 @@ class Practitioner(BaseModel):
     surname: str
     ssin: Optional[str] = None
 
+class Requestor(Practitioner):
+    date_prescription: datetime.date
+
 class Patient(BaseModel):
     givenname: str
     surname: str
@@ -22,7 +25,7 @@ class CGDItem(BaseModel):
     decisionreference: str
     encounterdatetime: datetime.date
     amount: float
-    requestor: Practitioner
+    requestor: Requestor
 
 class Transaction(BaseModel):
     bank_account: str

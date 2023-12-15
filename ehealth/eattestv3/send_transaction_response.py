@@ -126,7 +126,7 @@ class Id2:
             "required": True,
         }
     )
-    value: Optional[Decimal] = field(
+    value: Optional[str] = field(
         default=None,
         metadata={
             "required": True,

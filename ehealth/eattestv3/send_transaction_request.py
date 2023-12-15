@@ -85,6 +85,14 @@ class Id1:
             "required": True,
         }
     )
+    sl: Optional[str] = field(
+        default=None,
+        metadata={
+            "name": "SL",
+            "type": "Attribute",
+            "required": False,
+        }
+    )
     sv: Optional[str] = field(
         default="1.0",
         metadata={

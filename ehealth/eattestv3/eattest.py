@@ -206,8 +206,11 @@ class EAttestV3Service:
                                     ],
                                     cd=Cd(s="CD-HCPARTY", sv="1.16", value="persphysician"), # TODO
                                     firstname=cgd.requestor.givenname,
-                                    familyname=cgd.requestor.surname
-                                )
+                                    familyname=cgd.requestor.surname,
+                                ),
+                            ),
+                            Content(
+                                date=XmlDate.from_date(cgd.requestor.date_prescription)
                             )
                         ],
                     )
