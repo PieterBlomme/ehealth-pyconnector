@@ -98,6 +98,7 @@ class EAttestV3Service:
     def verify_result(self, response: Any):
         signVerifResult = response.getSignatureVerificationResult()
         for entry in signVerifResult.getErrors():
+            logger.info(entry)
             self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
                 entry.getValue().isValid())
     
@@ -190,6 +191,34 @@ class EAttestV3Service:
                         )]
                     ),
                 ]
+            if cgd.location:
+                items.append(
+                    Item(
+                        id=Id1(s="ID-KMEHR", sv="1.0", value=2),
+                        cd=Cd(s="CD-ITEM", sv="1.11", value="encounterlocation"),
+                        content=[
+                            Content(
+                                hcparty=Hcparty(
+                                    id=[
+                                        Id1(s="ID-HCPARTY", value=cgd.location.nihii),
+                                        
+                                    ],
+                                    cd=Cd(s="CD-HCPARTY", sv="1.16", value=cgd.location.code_hc), # TODO
+                                ),
+                            )
+                        ],
+                    )
+                )
+
+            if cgd.supplement:
+                items.append(
+                    Item(
+                        id=Id1(s="ID-KMEHR", sv="1.0", value=2),
+                        cd=Cd(s="CD-ITEM", sv="1.11", value="supplement"),
+                        cost=Cost(decimal=cgd.supplement)
+                    ),
+                )
+
             if cgd.requestor:
                 items.append(
                     Item(
@@ -197,7 +226,7 @@ class EAttestV3Service:
                         cd=Cd(s="CD-ITEM", sv="1.11", value="requestor"),
                         content=[
                             Content(
-                                cd=Cd(s="LOCAL", sl="NIHDI-REQUESTOR-NORM", sv="1.0", value="0")
+                                cd=Cd(s="LOCAL", sl="NIHDI-REQUESTOR-NORM", sv="1.0", value="1") # 0 of 1, 1 of 9 voor verstrekker?
                             ),
                             Content(
                                 hcparty=Hcparty(

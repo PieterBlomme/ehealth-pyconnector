@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, Union, List
+from typing import Optional, List
 import datetime
 
 class Practitioner(BaseModel):
@@ -20,12 +20,18 @@ class Patient(BaseModel):
     insurance_io: Optional[str]
     insurance_number: Optional[str]
 
+class Location(BaseModel):
+    nihii: str
+    code_hc: str
+
 class CGDItem(BaseModel):
     claim: str
     decisionreference: str
     encounterdatetime: datetime.date
     amount: float
     requestor: Requestor
+    location: Optional[Location] = None
+    supplement: Optional[float] = None
 
 class Transaction(BaseModel):
     bank_account: str

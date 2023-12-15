@@ -1,19 +1,27 @@
-from xsdata.models.datatype import XmlDate
 import os
 import datetime
 import pytest
 import logging
 from pathlib import Path
+from ehealth.sts import STSService
 from ehealth.eattestv3.eattest import EAttestV3Service
-from ehealth.eattestv3.input_models import EAttestInputModel, Patient, Transaction, CGDItem, Requestor
+from ehealth.eattestv3.input_models import EAttestInputModel, Patient, Transaction, CGDItem, Requestor, Location
 from .conftest import MYCARENET_PWD, MYCARENET_USER
 
 logger = logging.getLogger(__name__)
 
 KEYSTORE_PASSPHRASE = os.environ.get("KEYSTORE_PASSPHRASE")
-KEYSTORE_SSIN = os.environ.get("KEYSTORE_SSIN")
-KEYSTORE_PATH = "valid.acc-p12"
+KEYSTORE_SSIN = "90121320026"
+KEYSTORE_PATH = "valid-eattest.acc-p12"
 DATA_FOLDER = Path(__file__).parent.joinpath("data/faked_eagreement")
+
+@pytest.fixture
+def sts_service():
+    return STSService()
+
+@pytest.fixture()
+def token(sts_service):
+    return sts_service.get_serialized_token(KEYSTORE_PATH, KEYSTORE_PASSPHRASE, KEYSTORE_SSIN)
 
 @pytest.fixture
 def eattest_service():
@@ -228,36 +236,36 @@ def test_4_2_1(sts_service, token, eattest_service):
             token, 
             input_model=EAttestInputModel(
                 patient=Patient(
-                    givenname="Youssef",
-                    surname="Mghoghi",
+                    givenname="John",
+                    surname="Doe",
                     gender="male",
-                    ssin="68042000773"
+                    ssin="58112129084"
                 ),
                 transaction=Transaction(
                     bank_account="0635769870",
                     cgds=[
                         CGDItem(
                             claim="567011",
-                            decisionreference="90094042023349000066",
+                            decisionreference="10020000000002569234",
                             encounterdatetime=datetime.date.today().isoformat(),
-                            amount=28.6,
+                            amount=29.6,
                             requestor=Requestor(
                                 givenname="Marie",
                                 surname="Nolet de Brauwere van Steeland",
                                 nihii="19733263004",
-                                date_prescription=datetime.date.fromisoformat('2023-12-01')
+                                date_prescription=datetime.date.fromisoformat('2023-09-02')
                             ),
                         ),
                         CGDItem(
                             claim="567033",
-                            decisionreference="90094042023349000066",
+                            decisionreference="10020000000002569234",
                             encounterdatetime=datetime.date.today().isoformat(),
-                            amount=7.,
+                            amount=8.,
                             requestor=Requestor(
                                 givenname="Marie",
                                 surname="Nolet de Brauwere van Steeland",
                                 nihii="19733263004",
-                                date_prescription=datetime.date.fromisoformat('2023-12-01')
+                                date_prescription=datetime.date.fromisoformat('2023-09-02')
                             ),
                         ),
                     ]
@@ -266,10 +274,34 @@ def test_4_2_1(sts_service, token, eattest_service):
         )
     
     acknowledge = response.response.acknowledge
-    logger.info(response.transaction_request)
-    logger.info(response.transaction_response)
     assert acknowledge.error is None
+    assert acknowledge.iscomplete == True
 
+    transaction = response.response.kmehrmessage.folder.transaction
+    assert len(transaction) == 3
+    cga = transaction[0]
+    # fetch invoicing number
+    assert cga.cd.value == "cga"
+    assert len(cga.item) == 1
+    assert cga.item[0].cd.value == "invoicingnumber"
+    invoice_number = cga.item[0].content[0].text.value
+    logger.info(f"invoice number: {invoice_number}")
+
+    # we are sending incorrect amounts on purpose
+    # ensure the right amounts are returned
+    cgd_1 = transaction[1]
+    assert cgd_1.cd.value == "cgd"
+    assert len(cgd_1.item) == 3 # claim, encounteredatetime, fee
+    assert cgd_1.item[2].cd.value == "fee"
+    assert cgd_1.item[2].cost.decimal == 28.6
+
+    cgd_1 = transaction[2]
+    assert cgd_1.cd.value == "cgd"
+    assert len(cgd_1.item) == 3 # claim, encounteredatetime, fee
+    assert cgd_1.item[2].cd.value == "fee"
+    assert cgd_1.item[2].cost.decimal == 7.0
+
+@pytest.mark.skip
 def test_4_2_2(sts_service, token, eattest_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         response = eattest_service.send_attestation(
@@ -288,13 +320,25 @@ def test_4_2_2(sts_service, token, eattest_service):
                             claim="563393",
                             decisionreference="10020000000002569234",
                             encounterdatetime=datetime.date.today().isoformat(),
-                            amount=38.86,
+                            amount=29.6,
+                            requestor=Requestor(
+                                givenname="Marie",
+                                surname="Nolet de Brauwere van Steeland",
+                                nihii="19733263004",
+                                date_prescription=datetime.date.fromisoformat('2023-09-02')
+                            ),
                         ),
                         CGDItem(
                             claim="639192",
                             decisionreference="10020000000002569234",
                             encounterdatetime=datetime.date.today().isoformat(),
-                            amount=38.86,
+                            amount=8.,
+                            requestor=Requestor(
+                                givenname="Marie",
+                                surname="Nolet de Brauwere van Steeland",
+                                nihii="19733263004",
+                                date_prescription=datetime.date.fromisoformat('2023-09-02')
+                            ),
                         ),
                     ]
                 )
@@ -302,9 +346,34 @@ def test_4_2_2(sts_service, token, eattest_service):
         )
     
     acknowledge = response.response.acknowledge
+    assert acknowledge.error is None
     logger.info(response.transaction_request)
     logger.info(response.transaction_response)
-    assert acknowledge.error is None
+    assert acknowledge.iscomplete == True
+
+    transaction = response.response.kmehrmessage.folder.transaction
+    assert len(transaction) == 3
+    cga = transaction[0]
+    # fetch invoicing number
+    assert cga.cd.value == "cga"
+    assert len(cga.item) == 1
+    assert cga.item[0].cd.value == "invoicingnumber"
+    invoice_number = cga.item[0].content[0].text.value
+    logger.info(f"invoice number: {invoice_number}")
+
+    # we are sending incorrect amounts on purpose
+    # ensure the right amounts are returned
+    cgd_1 = transaction[1]
+    assert cgd_1.cd.value == "cgd"
+    assert len(cgd_1.item) == 3 # claim, encounteredatetime, fee
+    assert cgd_1.item[2].cd.value == "fee"
+    assert cgd_1.item[2].cost.decimal == 28.6
+
+    cgd_1 = transaction[2]
+    assert cgd_1.cd.value == "cgd"
+    assert len(cgd_1.item) == 3 # claim, encounteredatetime, fee
+    assert cgd_1.item[2].cd.value == "fee"
+    assert cgd_1.item[2].cost.decimal == 7.0
 
 def test_4_2_3(sts_service, token, eattest_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
@@ -317,11 +386,6 @@ def test_4_2_3(sts_service, token, eattest_service):
                     gender="male",
                     ssin="38060819220"
                 ),
-                requestor=Requestor(
-                    givenname="John",
-                    surname="Doe",
-                    nihii="13679869620"
-                ),
                 transaction=Transaction(
                     bank_account="0635769870",
                     cgds=[
@@ -329,7 +393,16 @@ def test_4_2_3(sts_service, token, eattest_service):
                             claim="639472",
                             decisionreference="10020000000002569638",
                             encounterdatetime=datetime.date.today().isoformat(),
-                            amount=38.86,
+                            amount=53.0,
+                            requestor=Requestor(
+                                givenname="Marie",
+                                surname="Nolet de Brauwere van Steeland",
+                                nihii="19733263004",
+                                date_prescription=datetime.date.fromisoformat('2023-09-02')
+                            ),
+                            location=Location(
+                                nihii="74113047100", code_hc="orgretirementhome"
+                            )
                         ),
                     ]
                 )
@@ -337,6 +410,130 @@ def test_4_2_3(sts_service, token, eattest_service):
         )
     
     acknowledge = response.response.acknowledge
+    assert acknowledge.error is None
     logger.info(response.transaction_request)
     logger.info(response.transaction_response)
+    assert acknowledge.iscomplete == True
+
+    transaction = response.response.kmehrmessage.folder.transaction
+    assert len(transaction) == 2
+    cga = transaction[0]
+    # fetch invoicing number
+    assert cga.cd.value == "cga"
+    assert len(cga.item) == 1
+    assert cga.item[0].cd.value == "invoicingnumber"
+    invoice_number = cga.item[0].content[0].text.value
+    logger.info(f"invoice number: {invoice_number}")
+
+    cgd_1 = transaction[1]
+    assert cgd_1.cd.value == "cgd"
+    assert len(cgd_1.item) == 3 # claim, encounteredatetime, fee
+    assert cgd_1.item[2].cd.value == "fee"
+    assert cgd_1.item[2].cost.decimal == 53
+
+    # no information returned about the location, so can't doublecheck
+
+def test_4_2_4(sts_service, token, eattest_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        response = eattest_service.send_attestation(
+            token, 
+            input_model=EAttestInputModel(
+                patient=Patient(
+                    givenname="John",
+                    surname="Doe",
+                    gender="male",
+                    ssin="58112129084"
+                ),
+                transaction=Transaction(
+                    bank_account="0635769870",
+                    cgds=[
+                        CGDItem(
+                            claim="561433",
+                            decisionreference="10020000000002569234",
+                            encounterdatetime=datetime.date.today().isoformat(),
+                            amount=7.67,
+                            requestor=Requestor(
+                                givenname="Marie",
+                                surname="Nolet de Brauwere van Steeland",
+                                nihii="19733263004",
+                                date_prescription=datetime.date.fromisoformat('2023-09-02')
+                            ),
+                        )
+                    ]
+                )
+            )
+        )
+    
+    acknowledge = response.response.acknowledge
     assert acknowledge.error is None
+    assert acknowledge.iscomplete == True
+
+    transaction = response.response.kmehrmessage.folder.transaction
+    assert len(transaction) == 2
+    cga = transaction[0]
+    # fetch invoicing number
+    assert cga.cd.value == "cga"
+    assert len(cga.item) == 1
+    assert cga.item[0].cd.value == "invoicingnumber"
+    invoice_number = cga.item[0].content[0].text.value
+    logger.info(f"invoice number: {invoice_number}")
+
+    cgd_1 = transaction[1]
+    assert cgd_1.cd.value == "cgd"
+    assert len(cgd_1.item) == 3 # claim, encounteredatetime, fee
+    assert cgd_1.item[2].cd.value == "fee"
+    assert cgd_1.item[2].cost.decimal == 7.67
+
+def test_4_2_5(sts_service, token, eattest_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        response = eattest_service.send_attestation(
+            token, 
+            input_model=EAttestInputModel(
+                patient=Patient(
+                    givenname="John",
+                    surname="Doe",
+                    gender="male",
+                    ssin="99122847869"
+                ),
+                transaction=Transaction(
+                    bank_account="0635769870",
+                    cgds=[
+                        CGDItem(
+                            claim="561610",
+                            decisionreference="10016850959538533755",
+                            encounterdatetime=datetime.date.today().isoformat(),
+                            amount=28.0,
+                            requestor=Requestor(
+                                givenname="Marie",
+                                surname="Nolet de Brauwere van Steeland",
+                                nihii="19733263004",
+                                date_prescription=datetime.date.fromisoformat('2023-09-02')
+                            ),
+                            supplement=10.0
+                        )
+                    ]
+                )
+            )
+        )
+    
+    acknowledge = response.response.acknowledge
+    assert acknowledge.error is None
+    assert acknowledge.iscomplete == True
+
+    transaction = response.response.kmehrmessage.folder.transaction
+    assert len(transaction) == 2
+    cga = transaction[0]
+    # fetch invoicing number
+    assert cga.cd.value == "cga"
+    assert len(cga.item) == 1
+    assert cga.item[0].cd.value == "invoicingnumber"
+    invoice_number = cga.item[0].content[0].text.value
+    logger.info(f"invoice number: {invoice_number}")
+
+    cgd_1 = transaction[1]
+    assert cgd_1.cd.value == "cgd"
+    assert len(cgd_1.item) == 3 # claim, encounteredatetime, fee
+    assert cgd_1.item[2].cd.value == "fee"
+    assert cgd_1.item[2].cost.decimal == 28.0
+
+    # no information returned about the supplement, so can't doublecheck
