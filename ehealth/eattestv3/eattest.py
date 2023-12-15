@@ -151,16 +151,7 @@ class EAttestV3Service:
         transactions = [cga]
 
         for cgd in transaction.cgds:
-            transaction_seq += 1
-            cgd = Transaction(
-                id=Id1(s="ID-KMEHR", sv="1.0", value=transaction_seq),
-                cd=Cd(sv="1.4", s="CD-TRANSACTION-MYCARENET", value="cgd"),
-                author=Author1(hcparty=self.render_sender(practitioner)),
-                date=XmlDate.from_date(now),
-                time=XmlTime.from_time(now),
-                iscomplete=True,
-                isvalidated=True,
-                item=[
+            items = [
                     Item(
                         id=Id1(s="ID-KMEHR", sv="1.0", value=1),
                         cd=Cd(s="CD-ITEM", sv="1.11", value="claim"),
@@ -198,7 +189,41 @@ class EAttestV3Service:
                             id=Id1(s="LOCAL", sl="OAreferencesystemname", sv="1.0", value=cgd.decisionreference)
                         )]
                     ),
-                ])
+                ]
+            if cgd.requestor:
+                items.append(
+                    Item(
+                        id=Id1(s="ID-KMEHR", sv="1.0", value=2),
+                        cd=Cd(s="CD-ITEM", sv="1.11", value="requestor"),
+                        content=[
+                            Content(
+                                cd=Cd(s="LOCAL", sl="NIHDI-REQUESTOR-NORM", sv="1.0", value="0")
+                            ),
+                            Content(
+                                hcparty=Hcparty(
+                                    id=[
+                                        Id1(s="ID-HCPARTY", value=cgd.requestor.nihii),
+                                    ],
+                                    cd=Cd(s="CD-HCPARTY", sv="1.16", value="persphysician"), # TODO
+                                    firstname=cgd.requestor.givenname,
+                                    familyname=cgd.requestor.surname
+                                )
+                            )
+                        ],
+                    )
+                )
+            transaction_seq += 1
+            cgd = Transaction(
+                id=Id1(s="ID-KMEHR", sv="1.0", value=transaction_seq),
+                cd=Cd(sv="1.4", s="CD-TRANSACTION-MYCARENET", value="cgd"),
+                author=Author1(hcparty=self.render_sender(practitioner)),
+                date=XmlDate.from_date(now),
+                time=XmlTime.from_time(now),
+                iscomplete=True,
+                isvalidated=True,
+                item=items
+            )
+
             transactions.append(cgd)
         return transactions
     

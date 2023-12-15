@@ -6,7 +6,7 @@ class Practitioner(BaseModel):
     nihii: str
     givenname: str
     surname: str
-    ssin: str
+    ssin: Optional[str] = None
 
 class Patient(BaseModel):
     givenname: str
@@ -22,6 +22,7 @@ class CGDItem(BaseModel):
     decisionreference: str
     encounterdatetime: datetime.date
     amount: float
+    requestor: Practitioner
 
 class Transaction(BaseModel):
     bank_account: str
