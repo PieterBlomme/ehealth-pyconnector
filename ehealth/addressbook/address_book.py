@@ -111,6 +111,8 @@ class AddressBookService(AbstractAddressBookService):
             response = service.searchProfessionals(request)
             response_string = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(response)
             parser = XmlParser()
+            with open("test.xml", "w") as f:
+                f.write(response_string)
             result = parser.parse(StringIO(response_string), SearchProfessionalsResponse)
             if not results:
                 results = result
