@@ -76,3 +76,8 @@ def test_address_book_search_many(sts_service, token, ab_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         search_response = ab_service.search(last_name_search="vande")
         assert len(search_response.health_care_professional) == 57
+        
+def test_address_book_search__janss_causes_issues(sts_service, token, ab_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        search_response = ab_service.search(last_name_search="janss")
+        assert len(search_response.health_care_professional) == 0
