@@ -125,7 +125,7 @@ class EAttestV3Service:
     def render_transaction(self, transaction: TransactionIn, practitioner: Practitioner, now: datetime.datetime):
         transaction_seq = 1
 
-        amount = sum([cgd.amount for cgd in transaction.cgds])
+        amount = round(sum([cgd.amount for cgd in transaction.cgds]), 2)
         cga = Transaction(
             id=Id1(s="ID-KMEHR", sv="1.0", value=transaction_seq),
             cd=Cd(sv="1.4", s="CD-TRANSACTION-MYCARENET", value="cga"),
