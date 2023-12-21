@@ -144,7 +144,7 @@ class EAttestV3Service:
                     id=Id1(s="ID-KMEHR", sv="1.0", value=2),
                     cd=Cd(s="CD-ITEM-MYCARENET", sv="1.4", value="paymentreceivingparty"),
                     content=[Content(
-                        id=Id1(s="ID-CBE", sv="1.0", value=transaction.bank_account)
+                        id=Id1(s="ID-CBE", sv="1.0", value=transaction.kbo_number)
                     )]
                 )
             ])

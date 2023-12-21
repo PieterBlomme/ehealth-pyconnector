@@ -42,7 +42,7 @@ def test_4_1_1(sts_service, token, eattest_service):
                     ssin="71020203354"
                 ),
                 transaction=Transaction(
-                    bank_account="0635769870",
+                    kbo_number="0635769870",
                     decisionreference="10020000000003100613",
                     cgds=[
                         CGDItem(
@@ -79,7 +79,7 @@ def test_4_1_2(sts_service, token, eattest_service):
                     ssin="58112129084"
                 ),
                 transaction=Transaction(
-                    bank_account="0635769870",
+                    kbo_number="0635769870",
                     cgds=[
                         CGDItem(
                             claim="567011",
@@ -115,7 +115,7 @@ def test_4_1_3(sts_service, token, eattest_service):
                     ssin="58112129084"
                 ),
                 transaction=Transaction(
-                    bank_account="0635769870",
+                    kbo_number="0635769870",
                     cgds=[
                         CGDItem(
                             claim="560652",
@@ -156,7 +156,7 @@ def test_4_1_5(sts_service, token, eattest_service):
                     ssin="54032409450"
                 ),
                 transaction=Transaction(
-                    bank_account="0635769870",
+                    kbo_number="0635769870",
                     cgds=[
                         CGDItem(
                             claim="567011",
@@ -205,14 +205,14 @@ def test_4_1_6(sts_service, token, eattest_service):
                 ),
                 transaction=Transaction(
                     amount=38.86,
-                    bank_account="0635769870",
+                    kbo_number="0635769870",
                     cgds=[
                         CGDItem(
                             claim="567011",
                             decisionreference="10016856095552803978",
                             encounterdatetime=datetime.date.today().isoformat(),
                             amount=38.86,
-                            bank_account="0635769870",
+                            kbo_number="0635769870",
                             requestor=Requestor(
                                 givenname="Marie",
                                 surname="Nolet de Brauwere van Steeland",
@@ -242,7 +242,7 @@ def test_4_2_1(sts_service, token, eattest_service):
                     ssin="58112129084"
                 ),
                 transaction=Transaction(
-                    bank_account="0635769870",
+                    kbo_number="0635769870",
                     cgds=[
                         CGDItem(
                             claim="567011",
@@ -314,7 +314,7 @@ def test_4_2_2(sts_service, token, eattest_service):
                     ssin="32061701889"
                 ),
                 transaction=Transaction(
-                    bank_account="0635769870",
+                    kbo_number="0635769870",
                     cgds=[
                         CGDItem(
                             claim="563393",
@@ -387,7 +387,7 @@ def test_4_2_3(sts_service, token, eattest_service):
                     ssin="38060819220"
                 ),
                 transaction=Transaction(
-                    bank_account="0635769870",
+                    kbo_number="0635769870",
                     cgds=[
                         CGDItem(
                             claim="639472",
@@ -445,7 +445,7 @@ def test_4_2_4(sts_service, token, eattest_service):
                     ssin="58112129084"
                 ),
                 transaction=Transaction(
-                    bank_account="0635769870",
+                    kbo_number="0635769870",
                     cgds=[
                         CGDItem(
                             claim="561433",
@@ -496,7 +496,7 @@ def test_4_2_5(sts_service, token, eattest_service):
                     ssin="99122847869"
                 ),
                 transaction=Transaction(
-                    bank_account="0635769870",
+                    kbo_number="0635769870",
                     cgds=[
                         CGDItem(
                             claim="561610",
