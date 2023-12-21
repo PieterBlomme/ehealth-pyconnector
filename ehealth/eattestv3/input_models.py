@@ -34,7 +34,7 @@ class CGDItem(BaseModel):
     supplement: Optional[float] = None
 
 class Transaction(BaseModel):
-    bank_account: str
+    kbo_number: str
     relatedservice: Optional[str]
     cgds: List[CGDItem]
 
