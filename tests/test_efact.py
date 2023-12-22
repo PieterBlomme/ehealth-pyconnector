@@ -13,15 +13,25 @@ from ehealth.efact.input_models import (
 from ehealth.efact.input_models_kine import Message200Kine, DetailRecord
 from ehealth.mda import MDAService
 from ehealth.mda.attribute_query import Facet, Dimension
+from ehealth.sts import STSService
 
 from .test_mda import build_mda_input
 
 logger = logging.getLogger(__name__)
 
 KEYSTORE_PASSPHRASE = os.environ.get("KEYSTORE_PASSPHRASE")
-KEYSTORE_SSIN = os.environ.get("KEYSTORE_SSIN")
-KEYSTORE_PATH = "valid.acc-p12"
-DATA_FOLDER = Path(__file__).parent.joinpath("data")
+KEYSTORE_SSIN = "90121320026"
+KEYSTORE_PATH = "valid-eattest.acc-p12"
+DATA_FOLDER = Path(__file__).parent.joinpath("data/faked_eagreement")
+
+@pytest.fixture
+def sts_service():
+    return STSService()
+
+@pytest.fixture()
+def token(sts_service):
+    return sts_service.get_serialized_token(KEYSTORE_PATH, KEYSTORE_PASSPHRASE, KEYSTORE_SSIN)
+
 NOT_BEFORE = datetime.datetime.now() - datetime.timedelta(days=1)
 NOT_ON_OR_AFTER = datetime.datetime.now()
 
