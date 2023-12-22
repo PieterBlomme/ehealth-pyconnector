@@ -7,11 +7,14 @@ from io import StringIO
 from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
-from pydantic import BaseModel
+from py4j.protocol import Py4JJavaError
 from .input_models import Message200, Header200, Header300
 import tempfile
 
 logger = logging.getLogger(__name__)
+
+class TooManyRequestsException(Exception):
+    pass
 
 class EFactService:
     def __init__(
@@ -37,7 +40,6 @@ class EFactService:
         self.config_validator.setProperty("mycarenet.licence.username", mycarenet_license_username)
         self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
         self.config_validator.setProperty("endpoint.etk", etk_endpoint)
-        self.config_validator.setProperty("endpoint.genericasync.invoicing.v1", "https://pilot.mycarenet.be:9443/mycarenet-ws/async/generic/hcpfac")
 
     def set_configuration_from_token(self, token: str) -> None:
         # TODO copy paste from MDA
@@ -125,10 +127,10 @@ class EFactService:
         msgQuery = self.EHEALTH_JVM.newMsgQuery()
         msgQuery.setInclude(True)
         msgQuery.setMax(200)
-        msgQuery.getMessageNames().add("HCFAC")
+        msgQuery.getMessageNames().add("HCPFAC")
 
         tackQuery = self.EHEALTH_JVM.newQuery()
-        tackQuery.setInclude(True)
+        tackQuery.setInclude(False)
         tackQuery.setMax(100)
         logger.info("Send of the get request")
 
@@ -138,15 +140,21 @@ class EFactService:
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.session.GenAsyncSessionServiceFactory.getGenAsyncService(PROJECT_NAME)
         origin = self.EHEALTH_JVM.getCommontInputMapper().map(commonBuilder.createOrigin(packageInfo))
         responseGetHeader = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.util.WsAddressingUtil.createHeader(None, "urn:be:cin:nip:async:generic:get:query")
-        responseGet = service.getRequest(
-            self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getRequestObjectBuilder(PROJECT_NAME).buildGetRequest(origin, msgQuery, tackQuery), 
-            responseGetHeader
-            )
-
+        
+        try:
+            responseGet = service.getRequest(
+                self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getRequestObjectBuilder(PROJECT_NAME).buildGetRequest(origin, msgQuery, tackQuery), 
+                responseGetHeader
+                )
+        except Py4JJavaError as e:
+            if "Not enough time" in e.java_exception.getMessage():
+                raise TooManyRequestsException
+            
         #  validate the get responses ( including check on xades if present)
         self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getResponseObjectBuilder().handleGetResponse(responseGet)
         logger.info("getMsgResponses")
         for msgResponse in responseGet.getReturn().getMsgResponses():
+            logger.info(f"msgResponse: {msgResponse}")
             mappedBlob = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.mapper.DomainBlobMapper.mapToBlob(msgResponse.getDetail())
             unwrappedMessageByteArray = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.BlobBuilderFactory.getBlobBuilder(PROJECT_NAME).checkAndRetrieveContent(mappedBlob)
             decoded = unwrappedMessageByteArray.decode("utf-8")
