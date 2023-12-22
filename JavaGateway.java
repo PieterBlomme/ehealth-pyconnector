@@ -12,6 +12,11 @@ import be.ehealth.technicalconnector.session.SessionManager;
 import be.ehealth.technicalconnector.config.ConfigValidator;
 import be.ehealth.businessconnector.genericasync.mappers.CommonInputMapper;
 import org.mapstruct.factory.Mappers;
+import be.ehealth.business.mycarenetdomaincommons.domain.Attribute;
+import be.ehealth.technicalconnector.utils.ConnectorIOUtils;
+import java.nio.charset.StandardCharsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import be.ehealth.businessconnector.test.testcommons.utils.FileTestUtils;
 import be.cin.nip.async.generic.*;
 import java.net.URI;
@@ -106,4 +111,19 @@ public class JavaGateway {
       ConfirmResponse confirmResponse = service.confirmRequest(request, responseConfirmHeader);
       return confirmResponse;
   }
+  public List commonInputAttributes() {
+    return Arrays.asList(Attribute.builder()
+                .key("urn:be:cin:nippin:purpose")
+                .value("some purpose")
+                .build(),
+        Attribute.builder()
+                .key("urn:be:cin:nippin:attemptNbr")
+                .value(1)
+                .build());
+  }
+
+  public byte[] getBytesFromFile(String path) throws Exception{
+          return ConnectorIOUtils.getResourceAsString(path).getBytes(StandardCharsets.UTF_8);
+  }
+
 }
