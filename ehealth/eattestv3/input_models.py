@@ -10,6 +10,7 @@ class Practitioner(BaseModel):
 
 class Requestor(Practitioner):
     date_prescription: datetime.date
+    norm: Optional[int] = 1
 
 class Patient(BaseModel):
     givenname: str
@@ -26,6 +27,7 @@ class Location(BaseModel):
 
 class CGDItem(BaseModel):
     claim: str
+    claim_norm: Optional[int] = 0
     decisionreference: str
     encounterdatetime: datetime.date
     amount: float

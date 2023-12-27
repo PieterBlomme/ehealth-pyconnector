@@ -161,7 +161,7 @@ class EAttestV3Service:
                                 cd=Cd(s="CD-NIHDI", sv="1.0", value=cgd.claim)
                             ),
                             Content(
-                                cd=Cd(s="LOCAL", sl="NIHDI-CLAIM-NORM", sv="1.0", value="0")
+                                cd=Cd(s="LOCAL", sl="NIHDI-CLAIM-NORM", sv="1.0", value=cgd.claim_norm)
                             ),
                             # Content(
                             #     cd=Cd(s="CD-NIHDI-RELATEDSERVICE", sv="1.0", value=transaction.relatedservice)
@@ -226,7 +226,7 @@ class EAttestV3Service:
                         cd=Cd(s="CD-ITEM", sv="1.11", value="requestor"),
                         content=[
                             Content(
-                                cd=Cd(s="LOCAL", sl="NIHDI-REQUESTOR-NORM", sv="1.0", value="1") # 0 of 1, 1 of 9 voor verstrekker?
+                                cd=Cd(s="LOCAL", sl="NIHDI-REQUESTOR-NORM", sv="1.0", value=cgd.requestor.norm)
                             ),
                             Content(
                                 hcparty=Hcparty(
