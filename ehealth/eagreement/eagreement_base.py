@@ -261,7 +261,7 @@ class AbstractEAgreementService:
                                         content_type=ContentType(prescription.data_mimetype),
                                         data=Data(prescription.data_base64) # "QW5uZXhlIGlubGluZSwgYmFzZTY0ZWQ="
                                     )
-                                ),
+                                ) if prescription.data_base64 else None,
                                 status=Status("active"),
                                 intent=Intent("order"),
                                 category=Category(
@@ -282,7 +282,7 @@ class AbstractEAgreementService:
                                     reference=Reference("Patient/Patient1")
                                 ),
                                 requester=Requester(Reference("PractitionerRole/PractitionerRole2")),
-                                supporting_info=SupportingInfo(reference=Reference(f"#annexSR{seq}"))
+                                supporting_info=SupportingInfo(reference=Reference(f"#annexSR{seq}")) if prescription.data_base64 else None
                             ),
                         )
                     )
