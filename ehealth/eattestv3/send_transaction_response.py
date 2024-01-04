@@ -297,6 +297,26 @@ class Hcparty:
         }
     )
 
+@dataclass
+class Insurancymembership:
+    class Meta:
+        name = "insurancymembership"
+        namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
+
+    id: Optional[Id1] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+    membership: Optional[str] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
 
 @dataclass
 class Sex:
@@ -430,7 +450,13 @@ class Patient:
             "required": True,
         }
     )
-
+    insurancymembership: Optional[Insurancymembership] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
 
 @dataclass
 class Recipient:

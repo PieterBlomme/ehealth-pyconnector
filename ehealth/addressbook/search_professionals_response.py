@@ -67,7 +67,14 @@ class StatusCode:
         }
     )
 
-
+    status_code: Optional["StatusCode"] = field(
+        default=None,
+        metadata={
+            "name": "StatusCode",
+            "type": "Element",
+        }
+    )
+    
 @dataclass
 class Profession:
     class Meta:
@@ -112,7 +119,15 @@ class Status:
         }
     )
 
-
+    status_message: Optional[str] = field(
+        default=None,
+        metadata={
+            "name": "StatusMessage",
+            "type": "Element",
+            "required": True,
+        }
+    )
+    
 @dataclass
 class HealthCareProfessional:
     class Meta:
