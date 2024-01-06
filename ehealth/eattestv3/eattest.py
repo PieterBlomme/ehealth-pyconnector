@@ -138,7 +138,7 @@ class EAttestV3Service:
                 Item(
                     id=Id1(s="ID-KMEHR", sv="1.0", value=1),
                     cd=Cd(s="CD-ITEM-MYCARENET", sv="1.4", value="patientpaid"),
-                    cost=Cost(decimal=amount)
+                    cost=Cost(decimal="{:.2f}".format(amount))
                 ),
                 Item(
                     id=Id1(s="ID-KMEHR", sv="1.0", value=2),
@@ -181,7 +181,7 @@ class EAttestV3Service:
                     Item(
                         id=Id1(s="ID-KMEHR", sv="1.0", value=3),
                         cd=Cd(s="CD-ITEM-MYCARENET", sv="1.6", value="patientpaid"),
-                        cost=Cost(decimal=cgd.amount)
+                        cost=Cost(decimal="{:.2f}".format(cgd.amount))
                     ),
                     Item(
                         id=Id1(s="ID-KMEHR", sv="1.0", value=4),
@@ -215,7 +215,7 @@ class EAttestV3Service:
                     Item(
                         id=Id1(s="ID-KMEHR", sv="1.0", value=2),
                         cd=Cd(s="CD-ITEM", sv="1.11", value="supplement"),
-                        cost=Cost(decimal=cgd.supplement)
+                        cost=Cost(decimal="{:.2f}".format(cgd.supplement))
                     ),
                 )
 
