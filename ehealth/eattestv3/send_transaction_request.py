@@ -297,7 +297,7 @@ class Cost:
         name = "cost"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    decimal: Optional[float] = field(
+    decimal: Optional[str] = field(
         default=None,
         metadata={
             "type": "Element",
