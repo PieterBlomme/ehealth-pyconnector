@@ -181,7 +181,7 @@ class EAttestV3Service:
                     Item(
                         id=Id1(s="ID-KMEHR", sv="1.0", value=3),
                         cd=Cd(s="CD-ITEM-MYCARENET", sv="1.6", value="patientpaid"),
-                        cost=Cost(decimal=cgd.amount)
+                        cost=Cost(decimal="{:.2f}".format(cgd.amount))
                     ),
                     Item(
                         id=Id1(s="ID-KMEHR", sv="1.0", value=4),
