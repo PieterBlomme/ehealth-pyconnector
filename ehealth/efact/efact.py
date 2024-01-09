@@ -8,10 +8,16 @@ from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from py4j.protocol import Py4JJavaError
-from .input_models import Message200, Header200, Header300
+from .input_models import Message200, Header200, Header300, Message200KineNoPractitioner, Message200Kine
 import tempfile
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
+
+class Practitioner(BaseModel):
+    nihii: str
+    givenname: str
+    surname: str
 
 class TooManyRequestsException(Exception):
     pass
@@ -41,7 +47,7 @@ class EFactService:
         self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
         self.config_validator.setProperty("endpoint.etk", etk_endpoint)
 
-    def set_configuration_from_token(self, token: str) -> None:
+    def set_configuration_from_token(self, token: str) -> Practitioner:
         # TODO copy paste from MDA
         parser = XmlParser()
         token_pydantic = parser.parse(StringIO(token), Assertion)
@@ -70,6 +76,11 @@ class EFactService:
         self.config_validator.setProperty("mycarenet.default.careprovider.nihii.quality", quality)
         self.config_validator.setProperty("mycarenet.default.careprovider.physicalperson.ssin", ssin)
         self.config_validator.setProperty("mycarenet.default.careprovider.physicalperson.name", f"{givenname} {surname}")
+        return Practitioner(
+                nihii=nihii,
+                givenname=givenname,
+                surname=surname,
+            )
     
     def verify_result(self, response: Any):
         signVerifResult = response.getSignatureVerificationResult()
@@ -77,8 +88,18 @@ class EFactService:
             self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
                 entry.getValue().isValid())
 
-    def send_efact(self, token: str, input_model: Message200):
-        template = str(input_model)
+    def send_efact(self, token: str, input_model: Message200KineNoPractitioner):
+        practitioner = self.set_configuration_from_token(token)
+
+        message_200 = Message200Kine(
+            name_contact=practitioner.surname,
+            first_name_contact=practitioner.givenname,
+            nummer_derdebetalende=practitioner.nihii,
+            nummer_facturerende_instelling=practitioner.nihii,
+            **input_model.dict()
+        )
+
+        template = str(message_200.to_message200())
         with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
             # obviously this is lazy ...
             tmp.write(template)
@@ -86,7 +107,7 @@ class EFactService:
         fp = tmp.name
         mutuality = "500"
 
-        self.set_configuration_from_token(token)
+
 
         ConnectorIOUtils = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorIOUtils
         PROJECT_NAME = "invoicing"
