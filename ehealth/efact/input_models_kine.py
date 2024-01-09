@@ -505,3 +505,31 @@ class Message200Kine(BaseModel):
             footer_95=footer_95,
             footer_96=footer_96
         )
+
+class Message200KineNoPractitioner(BaseModel):
+    """
+    Now what do we need in general to complete these records
+    """
+    reference: str
+    num_invoice: str
+    date_invoice: Optional[datetime.date] = datetime.date.today()
+    is_test: Optional[bool] = True
+    tel_contact: str
+    hospital_care: Optional[bool] = False
+    zendingsnummer: Optional[str] = "500" # no idea how this works
+    beroepscode_facturerende_derde: str = "000" # TODO verplicht vanaf april! zie https://www.riziv.fgov.be/SiteCollectionDocuments/bevoegdheidscodes_kinesitherapeuten.pdf
+    kbo_number: Optional[str] = "0000000000"
+    bic_bank: str
+    iban_bank: str
+    nummer_ziekenfonds: str
+    insz_rechthebbende: str
+    identificatie_rechthebbende_2: str # hoe wordt dit opgevuld
+    geslacht_rechthebbende: str # 1 of 2
+    instelling_van_verblijf: Optional[str] = "000000000000" # indien hospitalisatie ...
+    nummer_individuele_factuur_1: str # eigen volgnummer
+    cg1_cg2: str # op te halen uit MDA denk ik?
+    referentiegegevens_netwerk_1: Optional[str] = "" # nummer verbintenis, zie MDA niet zeker of ik enkel _1 nodig heb
+    geconventioneerde_verstrekker: bool
+    nummer_akkoord: str
+
+    detail_records: List[DetailRecord]
