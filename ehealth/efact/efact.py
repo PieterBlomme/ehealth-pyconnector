@@ -9,7 +9,7 @@ from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from py4j.protocol import Py4JJavaError
 from .input_models import Message200, Header200, Header300
-from .input_models_kine Message200KineNoPractitioner, Message200Kine
+from .input_models_kine import Message200KineNoPractitioner, Message200Kine
 import tempfile
 from pydantic import BaseModel
 
