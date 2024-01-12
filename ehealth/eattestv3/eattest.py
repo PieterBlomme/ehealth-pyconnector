@@ -214,7 +214,7 @@ class EAttestV3Service:
                 items.append(
                     Item(
                         id=Id1(s="ID-KMEHR", sv="1.0", value=2),
-                        cd=Cd(s="CD-ITEM", sv="1.11", value="supplement"),
+                        cd=Cd(s="CD-ITEM-MYCARENET", sv="1.11", value="supplement"),
                         cost=Cost(decimal="{:.2f}".format(cgd.supplement))
                     ),
                 )
