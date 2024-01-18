@@ -126,15 +126,8 @@ class EAttestV3Service:
         transaction_seq = 1
 
         amount = round(sum([cgd.amount for cgd in transaction.cgds]), 2)
-        cga = Transaction(
-            id=Id1(s="ID-KMEHR", sv="1.0", value=transaction_seq),
-            cd=Cd(sv="1.4", s="CD-TRANSACTION-MYCARENET", value="cga"),
-            author=Author1(hcparty=self.render_sender(practitioner)),
-            date=XmlDate.from_date(now),
-            time=XmlTime.from_time(now),
-            iscomplete=True,
-            isvalidated=True,
-            item=[
+
+        items = [
                 Item(
                     id=Id1(s="ID-KMEHR", sv="1.0", value=1),
                     cd=Cd(s="CD-ITEM-MYCARENET", sv="1.4", value="patientpaid"),
@@ -147,8 +140,30 @@ class EAttestV3Service:
                         id=Id1(s="ID-CBE", sv="1.0", value=transaction.kbo_number)
                     )]
                 )
-            ])
+            ]
         
+        # handle cga supplement
+        supplements = [cgd.supplement for cgd in transaction.cgds if cgd.supplement]
+        if len(supplements) > 0:
+                items.append(
+                    Item(
+                        id=Id1(s="ID-KMEHR", sv="1.0", value=2),
+                        cd=Cd(s="CD-ITEM-MYCARENET", sv="1.11", value="supplement"),
+                        cost=Cost(decimal="{:.2f}".format(sum(supplements)))
+                    ),
+                )        
+
+        cga = Transaction(
+            id=Id1(s="ID-KMEHR", sv="1.0", value=transaction_seq),
+            cd=Cd(sv="1.4", s="CD-TRANSACTION-MYCARENET", value="cga"),
+            author=Author1(hcparty=self.render_sender(practitioner)),
+            date=XmlDate.from_date(now),
+            time=XmlTime.from_time(now),
+            iscomplete=True,
+            isvalidated=True,
+            item=items
+            )
+
         transactions = [cga]
 
         for cgd in transaction.cgds:
