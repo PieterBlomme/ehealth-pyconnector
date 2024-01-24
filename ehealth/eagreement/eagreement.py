@@ -21,7 +21,6 @@ class EAgreementService(AbstractEAgreementService):
             mycarenet_license_password: str,
             etk_endpoint: str = "$uddi{uddi:ehealth-fgov-be:business:etkdepot:v1}",
             environment: str = "acc",
-            confirm_messages: Optional[bool] = False
     ):
         super().__init__(environment=environment)
     
@@ -31,9 +30,6 @@ class EAgreementService(AbstractEAgreementService):
         self.config_validator.setProperty("endpoint.etk", etk_endpoint)
         self.config_validator.setProperty("endpoint.agreement", "$uddi{uddi:ehealth-fgov-be:business:mycareneteagreement:v1}")
         self.config_validator.setProperty("endpoint.genericasync.eagreement.v1", "https://pilot.mycarenet.be:9443/mcn/bed/ehealth/GenAsync/eagreement")
-
-        # whether to confirm messages or not
-        self.confirm_messages = confirm_messages
 
     def get_service(self):
         return self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.session.AgreementSessionServiceFactory.getAgreementService()
@@ -238,6 +234,7 @@ class EAgreementService(AbstractEAgreementService):
         async_responses = []
         for i in range(serviceResponse.getMsgResponses().size()):
             processedMsgResponse = serviceResponse.getMsgResponses().get(i) # TODO what if multiple
+            logger.info(processedMsgResponse.getMsgResponse().getDetail().getReference())
             response_string = self.GATEWAY.jvm.java.lang.String(processedMsgResponse.getBusinessResponse(), "UTF-8")
             response_pydantic = self.convert_response_to_pydantic(processedMsgResponse, AsyncBundle)
             async_response = AsyncResponse(
@@ -248,7 +245,14 @@ class EAgreementService(AbstractEAgreementService):
                 soap_response=raw_response
             )
             async_responses.append(async_response)
-
-        if self.confirm_messages:
-            service.confirmAllMessages(serviceResponse)
+            
         return async_responses
+
+    def confirm_message(
+            self,
+            token: str,
+            reference: str,
+    ):
+        self.set_configuration_from_token(token)
+        response = self.EHEALTH_JVM.confirmEAgreementMessage(reference)
+        logger.info(response)

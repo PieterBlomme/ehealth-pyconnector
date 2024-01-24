@@ -13,10 +13,16 @@ import be.ehealth.technicalconnector.config.ConfigValidator;
 import be.ehealth.businessconnector.genericasync.mappers.CommonInputMapper;
 import org.mapstruct.factory.Mappers;
 import be.ehealth.business.mycarenetdomaincommons.domain.Attribute;
+import be.ehealth.businessconnector.genericasync.session.GenAsyncSessionServiceFactory;
 import be.ehealth.technicalconnector.utils.ConnectorIOUtils;
 import java.nio.charset.StandardCharsets;
 import static java.nio.charset.StandardCharsets.UTF_8;
-
+import be.ehealth.technicalconnector.exception.ConnectorException;
+import be.ehealth.business.mycarenetdomaincommons.domain.McnPackageInfo;
+import be.ehealth.business.mycarenetdomaincommons.util.McnConfigUtil;
+import be.ehealth.business.mycarenetdomaincommons.util.WsAddressingUtil;
+import be.ehealth.business.mycarenetdomaincommons.builders.CommonBuilder;
+import be.ehealth.business.mycarenetdomaincommons.builders.RequestBuilderFactory;
 import be.ehealth.businessconnector.test.testcommons.utils.FileTestUtils;
 import be.cin.nip.async.generic.*;
 import java.net.URI;
@@ -30,6 +36,7 @@ import be.cin.mycarenet.esb.common.v2.OrigineType;
 import org.slf4j.LoggerFactory;
 import be.ehealth.technicalconnector.idgenerator.IdGeneratorFactory;
 import org.slf4j.Logger;
+import be.cin.nip.async.generic.Confirm;
 
 public class JavaGateway {
   private static final Logger LOG = LoggerFactory.getLogger(JavaGateway.class);
@@ -124,6 +131,16 @@ public class JavaGateway {
 
   public byte[] getBytesFromFile(String path) throws Exception{
           return ConnectorIOUtils.getResourceAsString(path).getBytes(StandardCharsets.UTF_8);
+  }
+
+  public <T> ConfirmResponse confirmEAgreementMessage(String ref) throws ConnectorException {
+      Confirm confirm = new Confirm();
+      String projectName = "eagreement";
+      McnPackageInfo packageInfo = McnConfigUtil.retrievePackageInfo("genericasync." + projectName);
+      CommonBuilder commonBuilder = RequestBuilderFactory.getCommonBuilder(projectName);
+      confirm.setOrigin(((CommonInputMapper)Mappers.getMapper(CommonInputMapper.class)).map(commonBuilder.createOrigin(packageInfo)));
+      confirm.getMsgRefValues().add(ref);
+      return GenAsyncSessionServiceFactory.getGenAsyncService(projectName).confirmRequest(confirm, WsAddressingUtil.createHeader(null, "urn:be:cin:nip:async:generic:confirm:hash"));
   }
 
 }
