@@ -242,7 +242,8 @@ class EAgreementService(AbstractEAgreementService):
                 transaction_request="",
                 transaction_response=response_string,
                 soap_request=raw_request,
-                soap_response=raw_response
+                soap_response=raw_response,
+                reference=processedMsgResponse.getMsgResponse().getDetail().getReference(),
             )
             async_responses.append(async_response)
             
