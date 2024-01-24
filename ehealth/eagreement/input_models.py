@@ -8,7 +8,9 @@ class Practitioner(BaseModel):
     surname: str
 
 class Patient(BaseModel):
-    ssin: str
+    ssin: Optional[str]
+    insurancymembership: Optional[str]
+    insurancenumber: Optional[str]
     givenname: str
     surname: str
     gender: str

@@ -71,7 +71,7 @@ class EAgreementService(AbstractEAgreementService):
         )
         request = self.redundant_template_render(
             template=template,
-            patient_ssin=input_model.patient.ssin,
+            patient=input_model.patient,
             id_=id_,
             builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildAskAgreementRequest
             )
@@ -112,7 +112,7 @@ class EAgreementService(AbstractEAgreementService):
         )
         request = self.redundant_template_render(
             template=template,
-            patient_ssin=input_model.patient.ssin,
+            patient=input_model.patient,
             id_=id_,
             builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildAskAgreementRequest
             )
@@ -153,7 +153,7 @@ class EAgreementService(AbstractEAgreementService):
         )
         request = self.redundant_template_render(
             template=template,
-            patient_ssin=input_model.patient.ssin,
+            patient=input_model.patient,
             id_=id_,
             builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildAskAgreementRequest
             )
@@ -194,7 +194,7 @@ class EAgreementService(AbstractEAgreementService):
         )
         request = self.redundant_template_render(
             template=template,
-            patient_ssin=input_model.ssin,
+            patient=input_model.patient,
             id_=id_,
             builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildConsultAgreementRequest
             )
