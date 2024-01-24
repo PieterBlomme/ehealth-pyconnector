@@ -4,19 +4,6 @@ from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDate, XmlDateTime
 
 
-@dataclass
-class Assigner:
-    class Meta:
-        name = "assigner"
-        namespace = "http://hl7.org/fhir"
-
-    identifier: Optional["Identifier"] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-        }
-    )
-
 
 @dataclass
 class AuthoredOn:
@@ -547,6 +534,37 @@ class Focus:
         }
     )
 
+@dataclass
+class Identifier0:
+    class Meta:
+        name = "identifier"
+        namespace = "http://hl7.org/fhir"
+
+    system: Optional[System] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+        }
+    )
+    value: Optional[Value] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+        }
+    )
+
+@dataclass
+class Assigner:
+    class Meta:
+        name = "assigner"
+        namespace = "http://hl7.org/fhir"
+
+    identifier: Optional[Identifier0] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+        }
+    )
 
 @dataclass
 class Identifier:

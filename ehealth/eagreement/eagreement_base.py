@@ -25,7 +25,7 @@ from .bundle import (
     Insurance, Item, Coverage, Focal, ProductOrService, ServicedDate,
     QuantityQuantity, AuthoredOn, Parameter, Parameters, ValueCode,
     ValueCoding, ValueString, ValueReference, ValueAttachment,
-    Title, Bundle, Timestamp
+    Title, Bundle, Timestamp, Assigner, Identifier0
 )
 from .input_models import Patient, Practitioner, ClaimAsk, Prescription
 
@@ -202,28 +202,57 @@ class AbstractEAgreementService:
     def _render_patient(cls,
                         patient: Patient):
         entry_uuid = str(uuid.uuid4())
-        return Entry(
-                    full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
-                    resource=Resource(
-                        patient=Patient1(
-                            id=Id("Patient1"),
-                            meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-patient")),
-                            practitioner=Practitioner2(
-                                Reference("Practitioner/Practitioner1")
+        if patient.ssin:
+            return Entry(
+                        full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
+                        resource=Resource(
+                            patient=Patient1(
+                                id=Id("Patient1"),
+                                meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-patient")),
+                                practitioner=Practitioner2(
+                                    Reference("Practitioner/Practitioner1")
+                                ),
+                                identifier=Identifier(
+                                    system=System("https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/ssin"),
+                                    value=Value(patient.ssin)
+                                ),
+                                name=Name(
+                                    family=Family(patient.surname),
+                                    given=Given(patient.givenname)
+                                ),
+                                gender=Gender(patient.gender)
                             ),
-                            identifier=Identifier(
-                                system=System("https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/ssin"),
-                                value=Value(patient.ssin)
-                            ),
-                            name=Name(
-                                family=Family(patient.surname),
-                                given=Given(patient.givenname)
-                            ),
-                            gender=Gender(patient.gender)
-                        ),
+                        )
                     )
-                )
-    
+        else:
+            return Entry(
+                        full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
+                        resource=Resource(
+                            patient=Patient1(
+                                id=Id("Patient1"),
+                                meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-patient")),
+                                practitioner=Practitioner2(
+                                    Reference("Practitioner/Practitioner1")
+                                ),
+                                identifier=Identifier(
+                                    system=System("https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/insurancymembership"),
+                                    value=Value(patient.insurancymembership),
+                                    assigner=Assigner(
+                                        identifier=Identifier0(
+                                            system=System("https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/insurancenumber"),
+                                            value=Value(patient.insurancenumber)
+                                        ),
+                                    )
+                                ),
+                                name=Name(
+                                    family=Family(patient.surname),
+                                    given=Given(patient.givenname)
+                                ),
+                                gender=Gender(patient.gender)
+                            ),
+                        )
+                    )
+        
     @classmethod
     def _render_service_request(cls, prescription: Prescription, seq: int):
         entry_uuid = str(uuid.uuid4())
@@ -476,13 +505,17 @@ class AbstractEAgreementService:
         }
         return serializer.render(bundle, ns_map)
 
-    def redundant_template_render(self, template: Any, patient_ssin: str, id_: str, builder_func: Callable):
+    def redundant_template_render(self, template: Any, patient: Patient, id_: str, builder_func: Callable):
         bundle = bytes(template, encoding="utf-8")
         self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.dump(bundle)
 
         # TODO figure out how to remove this.  The bundle is already rendered at this point ...
         patientInfo = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient()
-        patientInfo.setInss(patient_ssin)
+        if patient.ssin:
+            patientInfo.setInss(patient.ssin)
+        else:
+            patientInfo.setRegNrWithMut(patient.insurancymembership)
+            patientInfo.setMutuality(patient.insurancenumber)
 
         # input reference and Bundle ID must match
         inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(id_)
