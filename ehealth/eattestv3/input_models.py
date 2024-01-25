@@ -24,6 +24,7 @@ class Patient(BaseModel):
 class Location(BaseModel):
     nihii: str
     code_hc: str
+    dienstcode: Optional[str]
 
 class CGDItem(BaseModel):
     claim: str

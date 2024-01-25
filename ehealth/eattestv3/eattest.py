@@ -207,11 +207,7 @@ class EAttestV3Service:
                     ),
                 ]
             if cgd.location:
-                items.append(
-                    Item(
-                        id=Id1(s="ID-KMEHR", sv="1.0", value=2),
-                        cd=Cd(s="CD-ITEM", sv="1.11", value="encounterlocation"),
-                        content=[
+                location_content = [
                             Content(
                                 hcparty=Hcparty(
                                     id=[
@@ -221,7 +217,19 @@ class EAttestV3Service:
                                     cd=Cd(s="CD-HCPARTY", sv="1.16", value=cgd.location.code_hc), # TODO
                                 ),
                             )
-                        ],
+                        ]
+                if cgd.location.dienstcode:
+                    location_content.append(
+                        Content(
+                            cd=Cd(s="LOCAL", sl="NIHDI-SERVICE-CD", sv="1.0", value=cgd.location.dienstcode),
+                        )
+                    )
+
+                items.append(
+                    Item(
+                        id=Id1(s="ID-KMEHR", sv="1.0", value=3),
+                        cd=Cd(s="CD-ITEM", sv="1.11", value="encounterlocation"),
+                        content=location_content,
                     )
                 )
 

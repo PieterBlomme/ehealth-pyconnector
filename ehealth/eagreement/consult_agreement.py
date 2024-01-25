@@ -975,6 +975,19 @@ class Bundle:
         }
     )
 
+@dataclass
+class Text:
+    class Meta:
+        name = "text"
+        namespace = "http://hl7.org/fhir"
+
+    value: Optional[str] = field(
+        default=None,
+        metadata={
+            "type": "Attribute",
+            "required": True,
+        }
+    )
 
 @dataclass
 class Details:
@@ -983,6 +996,13 @@ class Details:
         namespace = "http://hl7.org/fhir"
 
     coding: Optional[Coding] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+    text: Optional[Text] = field(
         default=None,
         metadata={
             "type": "Element",
