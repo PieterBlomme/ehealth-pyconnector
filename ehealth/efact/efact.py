@@ -144,7 +144,8 @@ class EFactService:
         logger.info("Call of handler for the post operation")
         self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getResponseObjectBuilder().handlePostResponse(responsePost)
 
-    def get_messages(self):
+    def get_messages(self, token: str):
+        self.set_configuration_from_token(token)
         logger.info("Creation of the get")
         msgQuery = self.EHEALTH_JVM.newMsgQuery()
         msgQuery.setInclude(True)
@@ -171,6 +172,8 @@ class EFactService:
         except Py4JJavaError as e:
             if "Not enough time" in e.java_exception.getMessage():
                 raise TooManyRequestsException
+            else:
+                raise e
             
         #  validate the get responses ( including check on xades if present)
         self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getResponseObjectBuilder().handleGetResponse(responseGet)
