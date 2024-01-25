@@ -12,6 +12,9 @@ from .input_models import Message200, Header200, Header300
 from .input_models_kine import Message200KineNoPractitioner, Message200Kine
 import tempfile
 from pydantic import BaseModel
+from pydantic import Extra
+from dataclasses import field
+from pydantic.dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +25,16 @@ class Practitioner(BaseModel):
 
 class TooManyRequestsException(Exception):
     pass
+
+class Config:
+    extra = Extra.forbid
+
+@dataclass(config=Config)
+class Response:
+    transaction_request: str
+    transaction_response: str
+    soap_request: str
+    soap_response: str
 
 class EFactService:
     def __init__(
@@ -89,7 +102,7 @@ class EFactService:
             self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
                 entry.getValue().isValid())
 
-    def send_efact(self, token: str, input_model: Message200KineNoPractitioner):
+    def send_efact(self, token: str, input_model: Message200KineNoPractitioner) -> Response:
         practitioner = self.set_configuration_from_token(token)
 
         message_200 = Message200Kine(
@@ -107,8 +120,6 @@ class EFactService:
 
         fp = tmp.name
         mutuality = "500"
-
-
 
         ConnectorIOUtils = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorIOUtils
         PROJECT_NAME = "invoicing"
@@ -143,6 +154,13 @@ class EFactService:
         logger.info(raw_response)
         logger.info("Call of handler for the post operation")
         self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getResponseObjectBuilder().handlePostResponse(responsePost)
+
+        return Response(
+            transaction_request=template,
+            transaction_response="",
+            soap_request="",
+            soap_response=raw_response
+        )
 
     def get_messages(self, token: str):
         self.set_configuration_from_token(token)
