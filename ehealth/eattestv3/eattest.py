@@ -221,10 +221,10 @@ class EAttestV3Service:
                 if cgd.location.dienstcode:
                     location_content.append(
                         Content(
-                            cd=Cd(s="LOCAL", sl="NIHDI-SERVICE_CD", sv="1.11", value=cgd.location.dienstcode),
+                            cd=Cd(s="LOCAL", sl="NIHDI-SERVICE-CD", sv="1.0", value=cgd.location.dienstcode),
                         )
                     )
-                    
+
                 items.append(
                     Item(
                         id=Id1(s="ID-KMEHR", sv="1.0", value=3),
