@@ -30,6 +30,9 @@ class KeyStoreException(Exception):
 class SoapFaultException(Exception):
     pass
 
+class InvalidSessionException(Exception):
+    pass
+
 class STSService(AbstractSTSService):
     def __init__(
             self,
@@ -174,7 +177,10 @@ class STSService(AbstractSTSService):
 
         try:
             self.GATEWAY.jvm.org.junit.Assert.assertNotNull(token)
-            self.GATEWAY.jvm.org.junit.Assert.assertEquals(True, sessionmgmt.hasValidSession())
+            try:
+                self.GATEWAY.jvm.org.junit.Assert.assertEquals(True, sessionmgmt.hasValidSession())
+            except Exception as e:
+                raise InvalidSessionException("Session is invalid or has expired")
             yield sessionmgmt
         finally:
             sessionmgmt.unloadSession()

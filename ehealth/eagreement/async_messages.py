@@ -1179,3 +1179,4 @@ class Response:
     transaction_response: str
     soap_request: str
     soap_response: str
+    reference: str

@@ -21,7 +21,6 @@ class EAgreementService(AbstractEAgreementService):
             mycarenet_license_password: str,
             etk_endpoint: str = "$uddi{uddi:ehealth-fgov-be:business:etkdepot:v1}",
             environment: str = "acc",
-            confirm_messages: Optional[bool] = False
     ):
         super().__init__(environment=environment)
     
@@ -29,9 +28,8 @@ class EAgreementService(AbstractEAgreementService):
         self.config_validator.setProperty("mycarenet.licence.username", mycarenet_license_username)
         self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
         self.config_validator.setProperty("endpoint.etk", etk_endpoint)
-
-        # whether to confirm messages or not
-        self.confirm_messages = confirm_messages
+        self.config_validator.setProperty("endpoint.agreement", "$uddi{uddi:ehealth-fgov-be:business:mycareneteagreement:v1}")
+        self.config_validator.setProperty("endpoint.genericasync.eagreement.v1", "https://pilot.mycarenet.be:9443/mcn/bed/ehealth/GenAsync/eagreement")
 
     def get_service(self):
         return self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.session.AgreementSessionServiceFactory.getAgreementService()
@@ -73,7 +71,7 @@ class EAgreementService(AbstractEAgreementService):
         )
         request = self.redundant_template_render(
             template=template,
-            patient_ssin=input_model.patient.ssin,
+            patient=input_model.patient,
             id_=id_,
             builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildAskAgreementRequest
             )
@@ -114,7 +112,7 @@ class EAgreementService(AbstractEAgreementService):
         )
         request = self.redundant_template_render(
             template=template,
-            patient_ssin=input_model.patient.ssin,
+            patient=input_model.patient,
             id_=id_,
             builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildAskAgreementRequest
             )
@@ -155,7 +153,7 @@ class EAgreementService(AbstractEAgreementService):
         )
         request = self.redundant_template_render(
             template=template,
-            patient_ssin=input_model.patient.ssin,
+            patient=input_model.patient,
             id_=id_,
             builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildAskAgreementRequest
             )
@@ -196,7 +194,7 @@ class EAgreementService(AbstractEAgreementService):
         )
         request = self.redundant_template_render(
             template=template,
-            patient_ssin=input_model.ssin,
+            patient=input_model,
             id_=id_,
             builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildConsultAgreementRequest
             )
@@ -236,6 +234,7 @@ class EAgreementService(AbstractEAgreementService):
         async_responses = []
         for i in range(serviceResponse.getMsgResponses().size()):
             processedMsgResponse = serviceResponse.getMsgResponses().get(i) # TODO what if multiple
+            logger.info(processedMsgResponse.getMsgResponse().getDetail().getReference())
             response_string = self.GATEWAY.jvm.java.lang.String(processedMsgResponse.getBusinessResponse(), "UTF-8")
             response_pydantic = self.convert_response_to_pydantic(processedMsgResponse, AsyncBundle)
             async_response = AsyncResponse(
@@ -243,10 +242,18 @@ class EAgreementService(AbstractEAgreementService):
                 transaction_request="",
                 transaction_response=response_string,
                 soap_request=raw_request,
-                soap_response=raw_response
+                soap_response=raw_response,
+                reference=processedMsgResponse.getMsgResponse().getDetail().getReference(),
             )
             async_responses.append(async_response)
-
-        if self.confirm_messages:
-            service.confirmAllMessages(serviceResponse)
+            
         return async_responses
+
+    def confirm_message(
+            self,
+            token: str,
+            reference: str,
+    ):
+        self.set_configuration_from_token(token)
+        response = self.EHEALTH_JVM.confirmEAgreementMessage(reference)
+        logger.info(response)
