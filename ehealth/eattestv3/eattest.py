@@ -1,9 +1,10 @@
 from py4j.java_gateway import JavaGateway
 from typing import Any
+from fastapi import HTTPException
 import datetime
 from random import randint
 import logging
-from .input_models import Practitioner, Patient as PatientIn, EAttestInputModel, Transaction as TransactionIn
+from .input_models import Practitioner, Patient as PatientIn, EAttestInputModel, CancelEAttestInputModel, Transaction as TransactionIn
 from io import StringIO
 from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
@@ -30,7 +31,8 @@ from .send_transaction_request import (
     Item,
     Cost,
     Content,
-    Quantity
+    Quantity,
+    Text
 )
 from .send_transaction_response import EAttestV3, SendTransactionResponse
 
@@ -313,6 +315,56 @@ class EAttestV3Service:
             )
         )
 
+    def render_cancel_transaction(self, invoice_number: str, reason: str, practitioner: Practitioner, now: datetime.datetime):
+        transaction_seq = 1
+
+        items = [
+                Item(
+                    id=Id1(s="ID-KMEHR", sv="1.0", value=1),
+                    cd=Cd(s="CD-ITEM-MYCARENET", sv="1.64", value="invoicingnumber"),
+                    content=[
+                        Content(text=Text(value=invoice_number)),
+                        Content(
+                            cd=Cd(s="LOCAL", sl="NIHDI-CANCELLATION-REASON", sv="1.0", value=reason)
+                        )
+                    ]
+                ),
+            ]     
+
+        cga = Transaction(
+            id=Id1(s="ID-KMEHR", sv="1.0", value=transaction_seq),
+            cd=Cd(sv="1.54", s="CD-TRANSACTION-MYCARENET", value="cgacancellation"),
+            author=Author1(hcparty=self.render_sender(practitioner)),
+            date=XmlDate.from_date(now),
+            time=XmlTime.from_time(now),
+            iscomplete=True,
+            isvalidated=True,
+            item=items
+            )
+
+        transactions = [cga]
+        return transactions
+    
+    def render_cancel_message(self, practitioner: Practitioner, now: datetime.datetime, input_model: CancelEAttestInputModel):
+        return Kmehrmessage(
+            header=Header(
+                id=Id1(s="ID-KMEHR", sv="1.0", value=1),
+                date=XmlDate.from_date(now),
+                time=XmlTime.from_time(now),
+                sender=Sender(hcparty=self.render_sender(practitioner)),
+                recipient=Recipient(hcparty=Hcparty(
+                    cd=Cd(s="CD-HCPARTY", sv="1.14", value="application"),
+                    name="mycarenet"
+                ))
+            ),
+            folder=Folder(
+                id=Id1(s="ID-KMEHR", sv="1.0", value="1"),
+                patient=self.render_patient(input_model.patient),
+                # NOTE: there could be multiple attestations in a single request?
+                transaction=self.render_cancel_transaction(input_model.invoice_number, input_model.reason, practitioner, now)
+            )
+        )
+    
     @classmethod
     def serialize_template(cls, bundle: BaseModel):
         serializer = XmlSerializer()
@@ -344,7 +396,7 @@ class EAttestV3Service:
         if input_model.patient.ssin:
             ssin = input_model.patient.ssin
         else:
-            ssin = input_model.patient.insurance_number
+            raise HTTPException(status=400, detail="eAttest ondersteunt registratienummer niet")
         
         send_attest_request = (self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.SendAttestationRequestInput
                                .builder()
@@ -370,6 +422,61 @@ class EAttestV3Service:
             logger.info(template)
             raise
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(sendAttestationResponse)
+
+        attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilder)
+        self.verify_result(attestResponse)
+        response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
+        
+        parser = XmlParser()
+        response_pydantic = parser.parse(StringIO(response_string), SendTransactionResponse)
+        
+        return EAttestV3(
+            response=response_pydantic,
+            transaction_request=template,
+            transaction_response=response_string.replace('ns:', ''),
+            soap_request=raw_request,
+            soap_response=raw_response
+        )
+
+
+    def cancel_attestation(self, token: str, input_model: CancelEAttestInputModel):
+        now = datetime.datetime.now().replace(microsecond=0)
+        practitioner = self.set_configuration_from_token(token)
+        kmehrmessage_pydantic = SendTransactionRequest(
+            request=self.render_request(practitioner, now),
+            kmehrmessage=self.render_cancel_message(practitioner, now, input_model)
+        )
+        template = self.serialize_template(kmehrmessage_pydantic).replace('xmlns:xmlns="http://www.ehealth.fgov.be/messageservices/protocol/v1"', 'xmlns="http://www.ehealth.fgov.be/messageservices/protocol/v1"')
+        # obviously this is lazy ...
+        with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
+            tmp.write(template)
+
+        input_reference_str = kmehrmessage_pydantic.request.id.value.split('.')[1]
+        inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(input_reference_str)
+
+        send_cancel_attest_request = (self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.CancelAttestationRequestInput
+                               .builder()
+                               .isTest(self.is_test)
+                               .inputReference(inputReference)
+                               .kmehrmessage(self.EHEALTH_JVM.getBytesFromFile(tmp.name))
+                                .messageVersion("3.0")
+                                .issuer("some issuer")
+                                .commonInputAttributes(self.EHEALTH_JVM.commonInputAttributes()) # TODO probably also needs some updates still
+                                .build())       
+        
+        attestBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.RequestObjectBuilderFactory.getRequestObjectBuilder().buildCancelAttestationRequest(
+            send_cancel_attest_request
+        )
+        cancelAttestationRequest = attestBuilder.getSendAttestationRequest()
+        
+        raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(cancelAttestationRequest)
+
+        try:
+            cancelAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().cancelAttestation(cancelAttestationRequest)
+        except Exception as e:
+            logger.info(template)
+            raise
+        raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(cancelAttestationResponse)
 
         attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilder)
         self.verify_result(attestResponse)

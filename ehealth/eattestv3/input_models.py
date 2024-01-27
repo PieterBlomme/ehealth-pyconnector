@@ -43,3 +43,8 @@ class Transaction(BaseModel):
 class EAttestInputModel(BaseModel):
     patient: Patient
     transaction: Transaction
+
+class CancelEAttestInputModel(BaseModel):
+    patient: Patient
+    invoice_number: str
+    reason: str

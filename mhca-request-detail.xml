@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Note: this example only contains the KMEHR part of the request message -->
+<SendTransactionRequest xmlns="http://www.ehealth.fgov.be/messageservices/protocol/v1" xmlns:msgws="http://www.ehealth.fgov.be/messageservices/core/v1" xmlns:kmehr="http://www.ehealth.fgov.be/standards/kmehr/schema/v1" messageProtocoleSchemaVersion="1.25">
+	<msgws:request>
+		<msgws:id S="ID-KMEHR" SV="1.0">00000000000.20170127090926</msgws:id>
+		<msgws:author>
+			<kmehr:hcparty>
+				<kmehr:id S="ID-HCPARTY" SV="1.0">00000000000</kmehr:id>
+				<kmehr:id S="INSS" SV="1.0">49112002395</kmehr:id>
+				<kmehr:cd S="CD-HCPARTY" SV="1.14">persphysiotherapist</kmehr:cd>
+				<kmehr:firstname>Pierre</kmehr:firstname>
+				<kmehr:familyname>DURAND</kmehr:familyname>
+			</kmehr:hcparty>
+		</msgws:author>
+		<msgws:date>2017-01-27</msgws:date>
+		<msgws:time>08:27:00</msgws:time>
+	</msgws:request>
+	<msgws:kmehrmessage>
+		<kmehr:header>
+			<kmehr:standard>
+				<kmehr:cd S="CD-STANDARD" SV="1.26">20180601</kmehr:cd>
+			</kmehr:standard>
+			<kmehr:id S="ID-KMEHR" SV="1.0">1</kmehr:id>
+			<kmehr:date>2017-01-27</kmehr:date>
+			<kmehr:time>08:27:00</kmehr:time>
+			<kmehr:sender>
+				<kmehr:hcparty>
+					<kmehr:id S="ID-HCPARTY" SV="1.0">00000000000</kmehr:id>
+					<kmehr:id S="INSS" SV="1.0">49112002395</kmehr:id>
+					<kmehr:cd S="CD-HCPARTY" SV="1.14">persphysiotherapist</kmehr:cd>
+					<kmehr:firstname>Dominique</kmehr:firstname>
+					<kmehr:familyname>Larrey</kmehr:familyname>
+				</kmehr:hcparty>
+			</kmehr:sender>
+			<kmehr:recipient>
+				<kmehr:hcparty>
+					<kmehr:cd S="CD-HCPARTY" SV="1.14">application</kmehr:cd>
+					<kmehr:name>mycarenet</kmehr:name>
+				</kmehr:hcparty>
+			</kmehr:recipient>
+		</kmehr:header>
+		<kmehr:folder>
+			<kmehr:id S="ID-KMEHR" SV="1.0">1</kmehr:id>
+			<kmehr:patient>
+				<kmehr:id S="ID-PATIENT" SV="1.0"/>
+				<kmehr:firstname>Julien</kmehr:firstname>
+				<kmehr:familyname>Leclerc</kmehr:familyname>
+				<kmehr:sex>
+					<kmehr:cd S="CD-SEX" SV="1.1">male</kmehr:cd>
+				</kmehr:sex>
+				<kmehr:insurancymembership>
+					<kmehr:id S="ID-INSURANCE" SV="1.0">206</kmehr:id>
+					<kmehr:membership>72070539942</kmehr:membership>
+				</kmehr:insurancymembership>
+			</kmehr:patient>
+			<kmehr:transaction>
+				<kmehr:id S="ID-KMEHR" SV="1.0">1</kmehr:id>
+				<kmehr:cd S="CD-TRANSACTION-MYCARENET" SV="1.4">cgacancellation</kmehr:cd>
+				<kmehr:date>2017-01-27</kmehr:date>
+				<kmehr:time>08:27:00</kmehr:time>
+				<kmehr:author>
+					<kmehr:hcparty>
+						<kmehr:id S="ID-HCPARTY" SV="1.0">00000000000</kmehr:id>
+						<kmehr:id S="INSS" SV="1.0">49112002395</kmehr:id>
+						<kmehr:cd S="CD-HCPARTY" SV="1.14">persphysiotherapist</kmehr:cd>
+						<kmehr:firstname>FirstName</kmehr:firstname>
+						<kmehr:familyname>FamilyName</kmehr:familyname>
+					</kmehr:hcparty>
+				</kmehr:author>
+				<kmehr:iscomplete>true</kmehr:iscomplete>
+				<kmehr:isvalidated>true</kmehr:isvalidated>
+				<kmehr:item>
+					<kmehr:id S="ID-KMEHR" SV="1.0">1</kmehr:id>
+					<kmehr:cd S="CD-ITEM-MYCARENET" SV="1.4">invoicingnumber</kmehr:cd>
+					<kmehr:content>
+						<kmehr:text L="en">200-1-170127-0000005-32</kmehr:text>
+					</kmehr:content>
+					<kmehr:content>
+						<kmehr:cd S="LOCAL" SL="NIHDI-CANCELLATION-REASON" SV="1.0">C</kmehr:cd>
+					</kmehr:content>
+				</kmehr:item>
+			</kmehr:transaction>
+		</kmehr:folder>
+	</msgws:kmehrmessage>
+</SendTransactionRequest>

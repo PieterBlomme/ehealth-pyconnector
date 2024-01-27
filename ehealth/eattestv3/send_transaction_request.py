@@ -160,6 +160,27 @@ class Hcparty:
     )
 
 @dataclass
+class Text:
+    class Meta:
+        name = "text"
+        namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
+
+    l: Optional[str] = field(
+        default="en",
+        metadata={
+            "name": "L",
+            "type": "Attribute",
+            "required": True,
+        }
+    )
+    value: str = field(
+        default="",
+        metadata={
+            "required": True,
+        }
+    )
+
+@dataclass
 class Content:
     class Meta:
         name = "content"
@@ -191,7 +212,12 @@ class Content:
             "required": True,
         }
     )
-
+    text: Optional[Text] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+        }
+    )
 
 @dataclass
 class Insurancymembership:
