@@ -464,21 +464,17 @@ class EAttestV3Service:
                                 .commonInputAttributes(self.EHEALTH_JVM.commonInputAttributes()) # TODO probably also needs some updates still
                                 .build())       
         
-        attestBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.RequestObjectBuilderFactory.getRequestObjectBuilder().buildCancelAttestationRequest(
+        cancelAttestationRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.RequestObjectBuilderFactory.getRequestObjectBuilder().buildCancelAttestationRequest(
             send_cancel_attest_request
         )
-        cancelAttestationRequest = attestBuilder.getSendAttestationRequest()
         
-        raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(cancelAttestationRequest)
-
-        try:
-            cancelAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().cancelAttestation(cancelAttestationRequest)
-        except Exception as e:
-            logger.info(template)
-            raise
-        raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(cancelAttestationResponse)
-
-        attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilder)
+        raw_request = "" # self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(attestBuilderRequest)
+        
+        cancelAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().cancelAttestation(cancelAttestationRequest)
+        
+        raw_response = "" # self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(cancelAttestationResponse)
+        
+        attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleCancelAttestationResponse(cancelAttestationResponse, cancelAttestationRequest)
         self.verify_result(attestResponse)
         response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
         
