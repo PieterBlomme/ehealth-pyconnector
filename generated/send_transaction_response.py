@@ -3,84 +3,7 @@ from decimal import Decimal
 from pydantic.dataclasses import dataclass
 from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDate, XmlTime
-from pydantic import Extra
 
-
-@dataclass
-class Cd:
-    class Meta:
-        name = "cd"
-        namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
-
-    s: Optional[str] = field(
-        default=None,
-        metadata={
-            "name": "S",
-            "type": "Attribute",
-            "required": True,
-        }
-    )
-    sv: Optional[float] = field(
-        default=None,
-        metadata={
-            "name": "SV",
-            "type": "Attribute",
-            "required": True,
-        }
-    )
-    value: Union[int, str] = field(
-        default="",
-        metadata={
-            "required": True,
-        }
-    )
-
-
-@dataclass
-class Description:
-    class Meta:
-        name = "description"
-        namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
-
-    l: Optional[str] = field(
-        default=None,
-        metadata={
-            "name": "L",
-            "type": "Attribute",
-            "required": True,
-        }
-    )
-    
-@dataclass
-class Error:
-    class Meta:
-        name = "error"
-        namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
-
-    cd: Optional[Cd] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "namespace": "http://www.ehealth.fgov.be/standards/kmehr/schema/v1",
-            "required": True,
-        }
-    )
-    description: Optional[Description] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "namespace": "http://www.ehealth.fgov.be/standards/kmehr/schema/v1",
-            "required": True,
-        }
-    )
-    url: Optional[str] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "namespace": "http://www.ehealth.fgov.be/standards/kmehr/schema/v1",
-            "required": True,
-        }
-    )
 
 @dataclass
 class Acknowledge:
@@ -89,13 +12,6 @@ class Acknowledge:
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
     iscomplete: Optional[bool] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-    error: Optional[Error] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -126,8 +42,8 @@ class Id2:
             "required": True,
         }
     )
-    value: Optional[str] = field(
-        default=None,
+    value: Union[Decimal, str] = field(
+        default="",
         metadata={
             "required": True,
         }
@@ -148,13 +64,6 @@ class Cd:
             "required": True,
         }
     )
-    sl: Optional[str] = field(
-        default=None,
-        metadata={
-            "name": "SL",
-            "type": "Attribute",
-        }
-    )
     sv: Optional[float] = field(
         default=None,
         metadata={
@@ -163,7 +72,7 @@ class Cd:
             "required": True,
         }
     )
-    value: Union[int, str] = field(
+    value: Union[str, int] = field(
         default="",
         metadata={
             "required": True,
@@ -202,21 +111,6 @@ class Id1:
 
 
 @dataclass
-class Quantity:
-    class Meta:
-        name = "quantity"
-        namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
-
-    decimal: Optional[int] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-
-
-@dataclass
 class Text:
     class Meta:
         name = "text"
@@ -244,22 +138,11 @@ class Content:
         name = "content"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    date: Optional[XmlDate] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-        }
-    )
-    cd: Optional[Cd] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-        }
-    )
     text: Optional[Text] = field(
         default=None,
         metadata={
             "type": "Element",
+            "required": True,
         }
     )
 
@@ -297,6 +180,7 @@ class Hcparty:
         }
     )
 
+
 @dataclass
 class Insurancymembership:
     class Meta:
@@ -318,6 +202,22 @@ class Insurancymembership:
         }
     )
 
+
+@dataclass
+class Lifecycle:
+    class Meta:
+        name = "lifecycle"
+        namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
+
+    cd: Optional[Cd] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+
+
 @dataclass
 class Sex:
     class Meta:
@@ -337,21 +237,6 @@ class Sex:
 class Standard:
     class Meta:
         name = "standard"
-        namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
-
-    cd: Optional[Cd] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-
-
-@dataclass
-class Unit:
-    class Meta:
-        name = "unit"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
     cd: Optional[Cd] = field(
@@ -395,19 +280,33 @@ class Author1:
 
 
 @dataclass
-class Cost:
+class Item:
     class Meta:
-        name = "cost"
+        name = "item"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    decimal: Optional[float] = field(
+    id: Optional[Id1] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    unit: Optional[Unit] = field(
+    cd: Optional[Cd] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+    content: Optional[Content] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+    lifecycle: Optional[Lifecycle] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -457,6 +356,7 @@ class Patient:
             "required": True,
         }
     )
+
 
 @dataclass
 class Recipient:
@@ -572,114 +472,6 @@ class Header:
             "required": True,
         }
     )
-    
-@dataclass
-class Lifecycle:
-    class Meta:
-        name = "lifecycle"
-        namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
-
-    cd: Optional[Cd] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-
-@dataclass
-class Item:
-    class Meta:
-        name = "item"
-        namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
-
-    id: Optional[Id1] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-    cd: Optional[Cd] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-    content: List[Content] = field(
-        default_factory=list,
-        metadata={
-            "type": "Element",
-        }
-    )
-    author: Optional[Author1] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-        }
-    )
-    quantity: Optional[Quantity] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-        }
-    )
-    cost: Optional[Cost] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-        }
-    )
-    lifecycle: Optional[Lifecycle] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-
-@dataclass
-class Response:
-    class Meta:
-        name = "response"
-        namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
-
-    id: Optional[Id2] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-    author: Optional[Author2] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-    date: Optional[XmlDate] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-    time: Optional[XmlTime] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
-    request: Optional[Request] = field(
-        default=None,
-        metadata={
-            "type": "Element",
-            "required": True,
-        }
-    )
 
 
 @dataclass
@@ -737,11 +529,54 @@ class Transaction:
             "required": True,
         }
     )
-    item: List[Item] = field(
-        default_factory=list,
+    item: Optional[Item] = field(
+        default=None,
         metadata={
             "type": "Element",
-            "min_occurs": 1,
+            "required": True,
+        }
+    )
+
+
+@dataclass
+class Response:
+    class Meta:
+        name = "response"
+        namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
+
+    id: Optional[Id2] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+    author: Optional[Author2] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+    date: Optional[XmlDate] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+    time: Optional[XmlTime] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+    request: Optional[Request] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
         }
     )
 
@@ -766,11 +601,11 @@ class Folder:
             "required": True,
         }
     )
-    transaction: List[Transaction] = field(
-        default_factory=list,
+    transaction: Optional[Transaction] = field(
+        default=None,
         metadata={
             "type": "Element",
-            "min_occurs": 1,
+            "required": True,
         }
     )
 
@@ -836,14 +671,3 @@ class SendTransactionResponse:
             "required": True,
         }
     )
-
-@dataclass
-class EAttestV3:
-    class Config:
-        extra = Extra.forbid
-
-    response: SendTransactionResponse
-    transaction_request: str
-    transaction_response: str
-    soap_request: str
-    soap_response: str

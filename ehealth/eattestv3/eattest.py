@@ -1,8 +1,6 @@
 from py4j.java_gateway import JavaGateway
 from typing import Any
-from fastapi import HTTPException
 import datetime
-from random import randint
 import logging
 from .input_models import Practitioner, Patient as PatientIn, EAttestInputModel, CancelEAttestInputModel, Transaction as TransactionIn
 from io import StringIO
@@ -404,7 +402,7 @@ class EAttestV3Service:
         if input_model.patient.ssin:
             ssin = input_model.patient.ssin
         else:
-            raise HTTPException(status=400, detail="eAttest ondersteunt registratienummer niet")
+            raise Exception("eAttest ondersteunt registratienummer niet")
         
         send_attest_request = (self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.SendAttestationRequestInput
                                .builder()
@@ -476,11 +474,11 @@ class EAttestV3Service:
             send_cancel_attest_request
         )
         
-        raw_request = "" # self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(attestBuilderRequest)
+        raw_request = "" # unable to create but not important
         
         cancelAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().cancelAttestation(cancelAttestationRequest)
         
-        raw_response = "" # self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(cancelAttestationResponse)
+        raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(cancelAttestationResponse)
         
         attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleCancelAttestationResponse(cancelAttestationResponse, cancelAttestationRequest)
         self.verify_result(attestResponse)
