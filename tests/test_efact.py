@@ -1,6 +1,7 @@
 import os
 import datetime
 import pytest
+import random
 import logging
 from pathlib import Path
 from ehealth.efact.efact import EFactService
@@ -10,7 +11,7 @@ from ehealth.efact.input_models import (
     Record51, Record80, Record90, Footer95, Footer96,
     calculate_invoice_control
 )
-from ehealth.efact.input_models_kine import Message200Kine, DetailRecord
+from ehealth.efact.input_models_kine import Message200KineNoPractitioner, DetailRecord
 from ehealth.mda import MDAService
 from ehealth.mda.attribute_query import Facet, Dimension
 from ehealth.sts import STSService
@@ -188,15 +189,18 @@ def test_efact_refusal_1(sts_service, token, efact_service, mda_service):
         bedrag_supplement="0",
     )
 
-    input_model_kine = Message200Kine(
-        reference="20240124000001",
+    today = datetime.date.today()
+    today_numeric = today.isoformat().replace("-", "")
+    random_id = str(random.randint(1, 999999)).rjust(6, "0")
+    reference = f"{today_numeric}{random_id}"
+    logger.info(reference)
+
+    input_model_kine = Message200KineNoPractitioner(
+        reference=reference,
         num_invoice="001",
-        name_contact="BLOMME",
-        first_name_contact="PIETER",
         tel_contact="0487179464",
         hospital_care=False,
         zendingsnummer="500",
-        nummer_derdebetalende="54512317527",
         bic_bank="GKCCBEBB",
         iban_bank="BE19063539637812",
         nummer_individuele_factuur_1="00001",
@@ -205,14 +209,18 @@ def test_efact_refusal_1(sts_service, token, efact_service, mda_service):
         geslacht_rechthebbende="1" if (gender == "male") else "2",
         nummer_ziekenfonds=nummer_mutualiteit,
         identificatie_rechthebbende_2="6" if (gender == "male") else "2", # no idea ...
-        nummer_facturerende_instelling="54512317527", # duplicate
         cg1_cg2=f"{cg1}{cg2}".rjust(10, "0"),
         referentiegegevens_netwerk_1=akkoord_derdebetalers,
         nummer_akkoord=nummer_akkoord,
         detail_records=[detail_record]
     )
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        # efact_service.send_efact(
-        #     token, input_model_kine.to_message200()
-        # )
-        efact_service.get_messages(token)
+        # NOTE waiting on result of message 20240131743098
+        efact_service.send_efact(
+            token, input_model_kine
+        )
+        messages = efact_service.get_messages(token)
+        for m in messages:
+            logger.info(m)
+            if m["reference"] == "20240131743098":
+                logger.info("yay yay yay")

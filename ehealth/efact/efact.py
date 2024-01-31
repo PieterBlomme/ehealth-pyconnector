@@ -8,13 +8,14 @@ from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from py4j.protocol import Py4JJavaError
-from .input_models import Message200, Header200, Header300
+from .input_models import Message200, Header200, Header300, Footer95, Footer96
 from .input_models_kine import Message200KineNoPractitioner, Message200Kine
 import tempfile
 from pydantic import BaseModel
 from pydantic import Extra
 from dataclasses import field
 from pydantic.dataclasses import dataclass
+from unidecode import unidecode
 
 logger = logging.getLogger(__name__)
 
@@ -114,12 +115,15 @@ class EFactService:
         )
 
         template = str(message_200.to_message200())
+        # Sending unicode characters will mess up
+        # the character count, ofcourse ...
+        template = unidecode(template)
         with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
             # obviously this is lazy ...
             tmp.write(template)
 
         fp = tmp.name
-        mutuality = "500"
+        mutuality = message_200.nummer_ziekenfonds
 
         ConnectorIOUtils = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorIOUtils
         PROJECT_NAME = "invoicing"
@@ -134,7 +138,7 @@ class EFactService:
                   self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.RequestBuilderFactory
                   .getCommonBuilder("invoicing")
                   .createCommonInput(
-                      self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.util.McnConfigUtil.retrievePackageInfo("genericasync." + "invoicing"), False, inputReference)
+                      self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.util.McnConfigUtil.retrievePackageInfo("genericasync." + "invoicing"), self.is_test, inputReference)
                   )
         )
 
@@ -147,7 +151,7 @@ class EFactService:
         logger.info("Send of the post request")
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.session.GenAsyncSessionServiceFactory.getGenAsyncService(PROJECT_NAME)
 
-        header = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.util.WsAddressingUtil.createHeader(mutuality, "urn:be:cin:nip:async:generic:post:msg");
+        header = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.util.WsAddressingUtil.createHeader(mutuality, "urn:be:cin:nip:async:generic:post:msg")
 
         responsePost = service.postRequest(post, header)
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(responsePost)
@@ -196,16 +200,44 @@ class EFactService:
         #  validate the get responses ( including check on xades if present)
         self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getResponseObjectBuilder().handleGetResponse(responseGet)
         logger.info("getMsgResponses")
+
+        messages = []
+
         for msgResponse in responseGet.getReturn().getMsgResponses():
-            logger.info(f"msgResponse: {msgResponse}")
             mappedBlob = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.mapper.DomainBlobMapper.mapToBlob(msgResponse.getDetail())
             unwrappedMessageByteArray = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.BlobBuilderFactory.getBlobBuilder(PROJECT_NAME).checkAndRetrieveContent(mappedBlob)
             decoded = unwrappedMessageByteArray.decode("utf-8")
-            logger.info(msgResponse)
             header_200 = Header200.from_str(decoded[:67])
             header_300 = Header300.from_str(decoded[67:227])
-            logger.info(header_200.dict())
-            logger.info(header_300.dict())
+
+            errors = []
+            errors.extend(header_200.errors())
+            errors.extend(header_300.errors())
+
+
+            start_record = 227
+            while True:
+                rec = decoded[start_record:start_record+350]
+                start_record += 350
+                if len(rec) == 0:
+                    break
+                else:
+                    assert len(rec) == 350
+
+                if rec.startswith("95"):
+                    footer95 = Footer95.from_str(rec)
+                    errors.extend(footer95.errors())
+                else:
+                    # TODO map others to responses
+                    logger.info(rec)
+            
+            messages.append(
+                {
+                    "reference": header_200.reference,
+                    "errors": errors
+                }
+            )
+
         logger.info("getTAckResponses")
         for tackResponse in responseGet.getReturn().getTAckResponses():
             tackResponseBytes = tackResponse.getTAck().getValue()
@@ -215,3 +247,5 @@ class EFactService:
         # confirm messages
         if self.confirm_messages:
             self.EHEALTH_JVM.confirmTheseMessages(origin, service, responseGet)
+
+        return messages
