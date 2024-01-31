@@ -174,7 +174,7 @@ def test_efact_refusal_1(sts_service, token, efact_service, mda_service):
     # lets do manual MDA completion for now
     ssin = "58112129084" # TODO needs an update
     gender = "female"
-    nummer_mutualiteit = "134"
+    nummer_mutualiteit = "100"
     akkoord_derdebetalers = "97C95DC003007206C2F839B083498A67"
     cg1 = "130"
     cg2 = "130"
@@ -215,12 +215,16 @@ def test_efact_refusal_1(sts_service, token, efact_service, mda_service):
         detail_records=[detail_record]
     )
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        # NOTE waiting on result of message 20240131743098
-        efact_service.send_efact(
-            token, input_model_kine
-        )
+        # NOTE waiting on result of message 20240131803654
+        # efact_service.send_efact(
+        #     token, input_model_kine
+        # )
         messages = efact_service.get_messages(token)
+        logger.info(f"num messages: {len(messages)}")
+
         for m in messages:
-            logger.info(m)
-            if m["reference"] == "20240131743098":
+            logger.info(m.message.reference)
+            if m.message.reference == "20240131803654":
                 logger.info("yay yay yay")
+                logger.info(m.transaction_response)
+                logger.info(m.message.errors)

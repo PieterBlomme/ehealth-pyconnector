@@ -1,5 +1,5 @@
 from py4j.java_gateway import JavaGateway
-from typing import Any, Optional
+from typing import Any, Optional, List
 import datetime
 from random import randint
 import logging
@@ -8,12 +8,11 @@ from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from py4j.protocol import Py4JJavaError
-from .input_models import Message200, Header200, Header300, Footer95, Footer96
+from .input_models import Message200, Header200, Header300, Footer95, Footer96, ErrorMessage
 from .input_models_kine import Message200KineNoPractitioner, Message200Kine
 import tempfile
 from pydantic import BaseModel
 from pydantic import Extra
-from dataclasses import field
 from pydantic.dataclasses import dataclass
 from unidecode import unidecode
 
@@ -31,11 +30,18 @@ class Config:
     extra = Extra.forbid
 
 @dataclass(config=Config)
+class Message:
+    reference: str
+    errors: List[ErrorMessage]
+
+@dataclass(config=Config)
 class Response:
     transaction_request: str
     transaction_response: str
     soap_request: str
     soap_response: str
+    message: Optional[Message] = None
+
 
 class EFactService:
     def __init__(
@@ -214,7 +220,6 @@ class EFactService:
             errors.extend(header_200.errors())
             errors.extend(header_300.errors())
 
-
             start_record = 227
             while True:
                 rec = decoded[start_record:start_record+350]
@@ -227,15 +232,24 @@ class EFactService:
                 if rec.startswith("95"):
                     footer95 = Footer95.from_str(rec)
                     errors.extend(footer95.errors())
+                elif rec.startswith("96"):
+                    footer96 = Footer96.from_str(rec)
+                    errors.extend(footer96.errors())
                 else:
                     # TODO map others to responses
                     logger.info(rec)
-            
+
             messages.append(
-                {
-                    "reference": header_200.reference,
-                    "errors": errors
-                }
+                Response(
+                    transaction_request="",
+                    transaction_response=decoded,
+                    soap_request="",
+                    soap_response="",
+                    message=Message(
+                        reference=header_200.reference,
+                        errors=errors
+                    )
+                )
             )
 
         logger.info("getTAckResponses")

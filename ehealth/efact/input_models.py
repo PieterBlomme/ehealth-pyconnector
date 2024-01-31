@@ -2,8 +2,17 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import logging
 from .error_constants import ERROR_CONSTANTS
+from pydantic import BaseModel
+from pydantic import Extra
 
 logger = logging.getLogger(__name__)
+
+class ErrorMessage(BaseModel):
+    key: str
+    value: str
+    error_code: str
+    message: Optional[str] = None
+    type: Optional[str] = None
 
 def calculate_control(text) -> str:
     assert len(text) == 348, len(text) # always?? to check
@@ -198,7 +207,7 @@ class Header200(BaseModel):
             self._error_reference(),
             self._error_reference_io()
         ]
-        return [e for e in errors if e is not None]
+        return [ErrorMessage(**e) for e in errors if e is not None]
 
 
 
@@ -431,7 +440,7 @@ class Header300(BaseModel):
             self._error_type_invoice(),
             self._error_type_invoicing(),
         ]
-        return [e for e in errors if e is not None]
+        return [ErrorMessage(**e) for e in errors if e is not None]
       
 class Record10(BaseModel):
     record: Optional[str] = "10"
@@ -1412,7 +1421,7 @@ class Footer95(BaseModel):
             return None
         
         return {
-            "name": self.name,
+            "type": self.name,
             "key": key,
             "value": value,
             "error_code": error,
@@ -1516,7 +1525,7 @@ class Footer95(BaseModel):
             self._error_aantal_records(),
             self._error_controle_nummer()
         ]
-        return [e for e in errors if e is not None]
+        return [ErrorMessage(**e) for e in errors if e is not None]
 
 class Footer96(BaseModel):
     name: Optional[str] = "96"
@@ -1537,6 +1546,30 @@ class Footer96(BaseModel):
     error_aantal_records: Optional[str] = "00"
     controle_nummer_per_mutualiteit: str
     error_controle_nummer: Optional[str] = "00"
+    
+    @classmethod
+    def from_str(cls, msg: str) -> "Footer96":
+        assert len(msg) == 350
+        return Footer96(
+            name = msg[:2],
+            error_name = msg[2:4],
+            nummer_mutualiteit = msg[4:7],
+            error_nummer_mutualiteit = msg[7:9],
+            error_nummer_verzamelfactuur=msg[21:23],
+            teken_gevraagd_bedrag_a=msg[23:24],
+            gevraagd_bedrag_a=msg[24:35],
+            error_gevraagd_bedrag_a=msg[35:37],
+            teken_gevraagd_bedrag_b=msg[37:38],
+            gevraagd_bedrag_b=msg[38:49],
+            error_gevraagd_bedrag_b=msg[49:51],
+            teken_gevraagd_bedrag_a_b_c=msg[51:52],
+            gevraagd_bedrag_a_b_c=msg[52:63],
+            error_gevraagd_bedrag_a_b_c=msg[63:65],
+            aantal_records=msg[65:73],
+            error_aantal_records=msg[73:75],
+            controle_nummer_per_mutualiteit=msg[75:77],
+            error_controle_nummer=msg[77:79],
+        )
     
     def __str__(self):
         to_str = ""
@@ -1586,6 +1619,112 @@ class Footer96(BaseModel):
         to_str += reserve
         return to_str
 
+
+    def _error_shared(self, key, error, value) -> Optional[Dict[str, Any]]:
+        if error == "00":
+            return None
+        
+        return {
+            "type": self.name,
+            "key": key,
+            "value": value,
+            "error_code": error,
+            "message": ERROR_CONSTANTS.get(error)
+        }
+
+    def _error_name(self) -> Optional[Dict[str, Any]]:
+        error = self.error_name
+        value = self.name
+        return self._error_shared("record type", error, value)
+
+    def _error_nummer_mutualiteit(self) -> Optional[Dict[str, Any]]:
+        error = self.error_nummer_mutualiteit
+        value = self.nummer_mutualiteit
+        error_dict = self._error_shared("nummer mutualiteit", error, value)
+
+        if error_dict is None or (error_dict.get("message") is not None and error_dict.get("messages") != "20"):
+            return error_dict
+        
+        msg = ""
+        if error == "20":
+            msg = "Nummer onbekend of codificatie fout"
+        error_dict["message"] = msg
+        return error_dict
+    
+    def _error_nummer_verzamelfactuur(self) -> Optional[Dict[str, Any]]:
+        error = self.error_nummer_verzamelfactuur
+        value = ""
+        return self._error_shared("nummer verzamelfactuur", error, value)
+
+    def _error_gevraagd_bedrag_a(self) -> Optional[Dict[str, Any]]:
+        error = self.error_gevraagd_bedrag_a
+        value = self.teken_gevraagd_bedrag_a + self.gevraagd_bedrag_a
+        error_dict = self._error_shared("gevraagd bedrag a", error, value)
+
+        if error_dict is None or error_dict.get("message") is not None:
+            return error_dict
+        
+        msg = ""
+        if error == "40":
+            msg = "Tekencode is niet gelijk aan “+” of niet gelijk aan “-“"
+        error_dict["message"] = msg
+        return error_dict
+
+    def _error_gevraagd_bedrag_b(self) -> Optional[Dict[str, Any]]:
+        error = self.error_gevraagd_bedrag_b
+        value = self.teken_gevraagd_bedrag_b + self.gevraagd_bedrag_b
+        error_dict = self._error_shared("gevraagd bedrag b", error, value)
+
+        if error_dict is None or error_dict.get("message") is not None:
+            return error_dict
+        
+        msg = ""
+        if error == "15":
+            msg = "Zone # 0 indien de uitgever geen verzorgingsinstelling is"
+        elif error == "40":
+            msg = "Tekencode is niet gelijk aan “+” of niet gelijk aan “-“"
+        error_dict["message"] = msg
+        return error_dict
+
+    def _error_gevraagd_bedrag_a_b_c(self) -> Optional[Dict[str, Any]]:
+        error = self.error_gevraagd_bedrag_a_b_c
+        value = self.teken_gevraagd_bedrag_a_b_c + self.gevraagd_bedrag_a_b_c
+        error_dict = self._error_shared("gevraagd bedrag a+b+c", error, value)
+
+        if error_dict is None or error_dict.get("message") is not None:
+            return error_dict
+        
+        msg = ""
+        if error == "20":
+            msg = "Bedrag # bedrag rekening A, bedrag rekening B en rekening C"
+        elif error == "40":
+            msg = "Tekencode is niet gelijk aan “+” of niet gelijk aan “-“"
+        error_dict["message"] = msg
+        return error_dict
+    
+    def _error_aantal_records(self) -> Optional[Dict[str, Any]]:
+        error = self.error_aantal_records
+        value = self.aantal_records
+        return self._error_shared("aantal detailrecords", error, value)
+
+    def _error_controle_nummer(self) -> Optional[Dict[str, Any]]:
+        error = self.error_controle_nummer
+        value = self.controle_nummer_per_mutualiteit
+        return self._error_shared("controle nummer per mutualiteit", error, value)
+    
+    def errors(self) -> List[Dict[str, Any]]:
+        errors = [
+            self._error_name(),
+            self._error_nummer_mutualiteit(),
+            self._error_nummer_verzamelfactuur(),
+            self._error_gevraagd_bedrag_a(),
+            self._error_gevraagd_bedrag_b(),
+            self._error_gevraagd_bedrag_a_b_c(),
+            self._error_aantal_records(),
+            self._error_controle_nummer()
+        ]
+        return [ErrorMessage(**e) for e in errors if e is not None]
+    
 class Message200(BaseModel):
     header_200: Header200
     header_300: Header300
