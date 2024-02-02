@@ -1,6 +1,6 @@
 from py4j.java_gateway import JavaGateway
 from typing import Any, Optional, List
-import datetime
+import base64
 from random import randint
 import logging
 from io import StringIO
@@ -32,6 +32,7 @@ class Config:
 @dataclass(config=Config)
 class Message:
     reference: str
+    base64_hash: str
     errors: List[ErrorMessage]
 
 @dataclass(config=Config)
@@ -50,7 +51,6 @@ class EFactService:
             mycarenet_license_password: str,
             etk_endpoint: str = "$uddi{uddi:ehealth-fgov-be:business:etkdepot:v1}",
             environment: str = "acc",
-            confirm_messages: Optional[bool] = False
     ):
         self.GATEWAY = JavaGateway()
         self.EHEALTH_JVM = self.GATEWAY.entry_point
@@ -62,7 +62,6 @@ class EFactService:
             self.is_test = True
         else:
             self.is_test = False
-        self.confirm_messages = confirm_messages
 
         self.config_validator.setProperty("mycarenet.licence.username", mycarenet_license_username)
         self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
@@ -210,7 +209,11 @@ class EFactService:
         messages = []
 
         for msgResponse in responseGet.getReturn().getMsgResponses():
-            mappedBlob = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.mapper.DomainBlobMapper.mapToBlob(msgResponse.getDetail())
+            detail = msgResponse.getDetail()
+            hash = detail.getHashValue()
+            base64_hash = base64.b64encode(hash).decode('utf8')
+            logger.info(f"hash: {base64_hash}")
+            mappedBlob = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.mapper.DomainBlobMapper.mapToBlob(detail)
             unwrappedMessageByteArray = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.BlobBuilderFactory.getBlobBuilder(PROJECT_NAME).checkAndRetrieveContent(mappedBlob)
             decoded = unwrappedMessageByteArray.decode("utf-8")
             header_200 = Header200.from_str(decoded[:67])
@@ -247,6 +250,7 @@ class EFactService:
                     soap_response="",
                     message=Message(
                         reference=header_200.reference,
+                        base64_hash=base64_hash,
                         errors=errors
                     )
                 )
@@ -258,8 +262,18 @@ class EFactService:
             tackResponse = self.GATEWAY.jvm.java.lang.String(tackResponseBytes, "UTF-8")
             logger.info(tackResponse)
 
-        # confirm messages
-        if self.confirm_messages:
-            self.EHEALTH_JVM.confirmTheseMessages(origin, service, responseGet)
-
         return messages
+
+
+    def confirm_message(self, token: str, base64_hash: str):
+        self.set_configuration_from_token(token)
+
+        hash = base64.b64decode(base64_hash)
+        logger.info(hash)
+
+        PROJECT_NAME = "invoicing"
+        packageInfo = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.util.McnConfigUtil.retrievePackageInfo("genericasync." + PROJECT_NAME)
+        commonBuilder = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.RequestBuilderFactory.getCommonBuilder(PROJECT_NAME)
+        service = self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.session.GenAsyncSessionServiceFactory.getGenAsyncService(PROJECT_NAME)
+        origin = self.EHEALTH_JVM.getCommontInputMapper().map(commonBuilder.createOrigin(packageInfo))
+        self.EHEALTH_JVM.confirmMessage(origin, service, hash)

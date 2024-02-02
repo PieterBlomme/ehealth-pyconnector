@@ -1,6 +1,7 @@
 import os
 import datetime
 import pytest
+import time
 import random
 import logging
 from pathlib import Path
@@ -224,7 +225,21 @@ def test_efact_refusal_1(sts_service, token, efact_service, mda_service):
 
         for m in messages:
             logger.info(m.message.reference)
+            logger.info(m.message.base64_hash)
             if m.message.reference == "20240131803654":
                 logger.info("yay yay yay")
                 logger.info(m.transaction_response)
                 logger.info(m.message.errors)
+
+
+    
+
+def test_confirm_message(sts_service, token, efact_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        messages = efact_service.get_messages(token)
+        logger.info(f"num messages: {len(messages)}")
+
+        efact_service.confirm_message(token, "x3VbPr7/M8XTeBIclqhuRMCO0yNlNsB60slNOmnMfik=")
+        time.sleep(60)
+        messages = efact_service.get_messages(token)
+        logger.info(f"num messages: {len(messages)}")
