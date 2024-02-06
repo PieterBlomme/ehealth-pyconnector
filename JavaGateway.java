@@ -90,20 +90,9 @@ public class JavaGateway {
     return new Query();
   }
 
-  public ConfirmResponse confirmTheseMessages(OrigineType origin, GenAsyncService service, GetResponse responseGet) throws URISyntaxException, TechnicalConnectorException, GenAsyncBusinessConnectorException, SessionManagementException {
+  public ConfirmResponse confirmMessage(OrigineType origin, GenAsyncService service, byte[] hashValue) throws URISyntaxException, TechnicalConnectorException, GenAsyncBusinessConnectorException, SessionManagementException {
       List<byte[]> msgHashValues = new ArrayList<byte[]>();
-      for (MsgResponse msgResp : responseGet.getReturn().getMsgResponses()) {
-          final byte[] hashValue = msgResp.getDetail().getHashValue();
-          LOG.debug("adding confirm for msg hash >" + hashValue + "<");
-          msgHashValues.add(hashValue);
-      }
-
-      List<byte[]> tackHashValues = new ArrayList<byte[]>();
-      for (TAckResponse tackResponse : responseGet.getReturn().getTAckResponses()) {
-          final byte[] hashValue = tackResponse.getTAck().getValue();
-          LOG.debug("adding confirm for tack hash >" + hashValue + "<");
-          tackHashValues.add(hashValue);
-      }
+      msgHashValues.add(hashValue);
 
       WsAddressingHeader responseConfirmHeader = new WsAddressingHeader(new URI("urn:be:cin:nip:async:generic:confirm:hash"));
       responseConfirmHeader.setTo(new URI(""));
@@ -114,7 +103,6 @@ public class JavaGateway {
       Confirm request = new Confirm();
       request.setOrigin(origin);
       request.getMsgHashValues().addAll(msgHashValues);
-      request.getTAckContents().addAll(tackHashValues);
       ConfirmResponse confirmResponse = service.confirmRequest(request, responseConfirmHeader);
       return confirmResponse;
   }

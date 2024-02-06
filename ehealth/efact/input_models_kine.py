@@ -25,7 +25,7 @@ class Header300Kine(BaseModel):
     type_invoicing: Optional[str] = "01" # 1 bestand, 1 rekening
 
     def to_header_300(self) -> Header300:
-        date_invoice = str(self.date_invoice.year) + str(self.date_invoice.month) + str(self.date_invoice.day).rjust(2, "0")
+        date_invoice = str(self.date_invoice.year) + str(self.date_invoice.month).rjust(2, "0") + str(self.date_invoice.day).rjust(2, "0")
         year_and_month = date_invoice[:6]
         return Header300(
             year_and_month=year_and_month,
@@ -50,7 +50,7 @@ class Record10Kine(BaseModel):
     iban_bank: str
 
     def to_record_10(self) -> Record10:
-        date_creation = str(self.date_creation.year) + str(self.date_creation.month) + str(self.date_creation.day).rjust(2, "0")
+        date_creation = str(self.date_creation.year) + str(self.date_creation.month).rjust(2, "0") + str(self.date_creation.day).rjust(2, "0")
 
         return Record10(
             num_record="000001",
@@ -59,7 +59,7 @@ class Record10Kine(BaseModel):
             inhoud_facturatie="040",
             zendingsnummer=self.zendingsnummer,
             reference="",
-            nummer_derdebetalende=self.nummer_derdebetalende,
+            nummer_derdebetalende=self.nummer_derdebetalende.rjust(12, "0"),
             beroepscode_facturerende_derde=self.beroepscode_facturerende_derde,
             date_creation=date_creation,
             kbo_nummer=self.kbo_number,
@@ -86,12 +86,12 @@ class Record20Kine(BaseModel):
         return Record20(
             num_record="000002",
             nummer_ziekenfonds_aansluiting=self.nummer_ziekenfonds_aansluiting,
-            identificatie_rechthebbende_1=self.insz_rechthebbende,
+            identificatie_rechthebbende_1=self.insz_rechthebbende.rjust(12, "0"),
             identificatie_rechthebbende_2=self.identificatie_rechthebbende_2,
             geslacht_rechthebbende=self.geslacht_rechthebbende,
             type_factuur="1" if self.hospital_care else "3",
             dienst_721_bis="002" if self.hospital_care else "000",
-            nummer_facturerende_instelling=self.nummer_facturerende_instelling,
+            nummer_facturerende_instelling=self.nummer_facturerende_instelling.rjust(12, "0"),
             instelling_van_verblijf=self.instelling_van_verblijf,
             code_stuiten_verjaringstermijn=self.code_stuiten_verjaringstermijn,
             reden_behandeling=self.reden_behandeling,
@@ -124,8 +124,8 @@ class Record50Kine(BaseModel):
     geconventioneerde_verstrekker: Optional[bool] = True
 
     def to_record_50(self) -> Record50:
-        datum_eerste_verstrekking = str(self.datum_eerste_verstrekking.year) + str(self.datum_eerste_verstrekking.month) + str(self.datum_eerste_verstrekking.day).rjust(2, "0")
-        datum_voorschrift = str(self.datum_voorschrift.year) + str(self.datum_voorschrift.month) + str(self.datum_voorschrift.day).rjust(2, "0")
+        datum_eerste_verstrekking = str(self.datum_eerste_verstrekking.year) + str(self.datum_eerste_verstrekking.month).rjust(2, "0") + str(self.datum_eerste_verstrekking.day).rjust(2, "0")
+        datum_voorschrift = str(self.datum_voorschrift.year) + str(self.datum_voorschrift.month).rjust(2, "0") + str(self.datum_voorschrift.day).rjust(2, "0")
 
         return Record50(
             num_record=self.num_record,
@@ -133,12 +133,12 @@ class Record50Kine(BaseModel):
             datum_eerste_verstrekking=datum_eerste_verstrekking,
             datum_laatste_verstrekking=datum_eerste_verstrekking,
             nummer_ziekenfonds_rechthebbende=self.nummer_ziekenfonds_rechthebbende,
-            identificatie_rechthebbende_1=self.insz_rechthebbende,
+            identificatie_rechthebbende_1=self.insz_rechthebbende.rjust(12, "0"),
             identificatie_rechthebbende_2=self.identificatie_rechthebbende_2,
             geslacht_rechthebbende=self.geslacht_rechthebbende,
             dienstcode="002" if self.hospital_care else "990",
             plaats_van_verstrekking=self.plaats_van_verstrekking,
-            identificatie_verstrekker=self.identificatie_verstrekker,
+            identificatie_verstrekker=self.identificatie_verstrekker.rjust(12, "0"),
             norm_verstrekker=self.norm_verstrekker,
             betrekkelijke_verstrekking_1=self.betrekkelijke_verstrekking_1,
             betrekkelijke_verstrekking_2=self.betrekkelijke_verstrekking_2,
@@ -162,15 +162,15 @@ class Record52Kine(BaseModel):
     nummer_akkoord: str
 
     def to_record_52(self) -> Record52:
-        datum_verstrekking = str(self.datum_verstrekking.year) + str(self.datum_verstrekking.month) + str(self.datum_verstrekking.day).rjust(2, "0")
+        datum_verstrekking = str(self.datum_verstrekking.year) + str(self.datum_verstrekking.month).rjust(2, "0") + str(self.datum_verstrekking.day).rjust(2, "0")
 
         return Record52(
             num_record=self.num_record,
             nomenclatuur=self.nomenclatuur,
             datum_verstrekking=datum_verstrekking,
-            identificatie_rechthebbende_1=self.insz_rechthebbende,
+            identificatie_rechthebbende_1=self.insz_rechthebbende.rjust(12, "0"),
             identificatie_rechthebbende_2=self.identificatie_rechthebbende_2,
-            riziv_nummer=self.riziv_nummer,
+            riziv_nummer=self.riziv_nummer.rjust(12, "0"),
             nummer_akkoord=self.nummer_akkoord
         )
 
@@ -196,12 +196,12 @@ class Record80Kine(BaseModel):
         return Record80(
             num_record=self.num_record,
             nummer_ziekenfonds_aansluiting=self.nummer_ziekenfonds_aansluiting,
-            identificatie_rechthebbende_1=self.insz_rechthebbende,
+            identificatie_rechthebbende_1=self.insz_rechthebbende.rjust(12, "0"),
             identificatie_rechthebbende_2=self.identificatie_rechthebbende_2,
             geslacht_rechthebbende=self.geslacht_rechthebbende,
             type_factuur="1" if self.hospital_care else "3",
             dienst_721_bis="002" if self.hospital_care else "000",
-            nummer_facturerende_instelling=self.nummer_facturerende_instelling,
+            nummer_facturerende_instelling=self.nummer_facturerende_instelling.rjust(12, "0"),
             bedrag_financieel_rekeningnummer_b="0",
             reden_behandeling=self.reden_behandeling,
             nummer_ziekenfonds_bestemming=self.nummer_ziekenfonds_bestemming,
@@ -232,7 +232,7 @@ class Record90Kine(BaseModel):
         return Record90(
             num_record=self.num_record,
             zendingsnummer=self.zendingsnummer,
-            nummer_derdebetalende=self.nummer_derdebetalende,
+            nummer_derdebetalende=self.nummer_derdebetalende.rjust(12, "0"),
             bedrag_financieel_rekeningnummer_b="0",
             bedrag_financieel_rekeningnummer_a=self.totaal,
             date_creation=date_creation,
@@ -505,3 +505,31 @@ class Message200Kine(BaseModel):
             footer_95=footer_95,
             footer_96=footer_96
         )
+
+class Message200KineNoPractitioner(BaseModel):
+    """
+    Now what do we need in general to complete these records
+    """
+    reference: str
+    num_invoice: str
+    date_invoice: Optional[datetime.date] = datetime.date.today()
+    is_test: Optional[bool] = True
+    tel_contact: str
+    hospital_care: Optional[bool] = False
+    zendingsnummer: Optional[str] = "500" # no idea how this works
+    beroepscode_facturerende_derde: str = "000" # TODO verplicht vanaf april! zie https://www.riziv.fgov.be/SiteCollectionDocuments/bevoegdheidscodes_kinesitherapeuten.pdf
+    kbo_number: Optional[str] = "0000000000"
+    bic_bank: str
+    iban_bank: str
+    nummer_ziekenfonds: str
+    insz_rechthebbende: str
+    identificatie_rechthebbende_2: str # hoe wordt dit opgevuld
+    geslacht_rechthebbende: str # 1 of 2
+    instelling_van_verblijf: Optional[str] = "000000000000" # indien hospitalisatie ...
+    nummer_individuele_factuur_1: str # eigen volgnummer
+    cg1_cg2: str # op te halen uit MDA denk ik?
+    referentiegegevens_netwerk_1: Optional[str] = "" # nummer verbintenis, zie MDA niet zeker of ik enkel _1 nodig heb
+    geconventioneerde_verstrekker: bool
+    nummer_akkoord: str
+
+    detail_records: List[DetailRecord]
