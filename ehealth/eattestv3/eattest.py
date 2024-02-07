@@ -58,6 +58,7 @@ class EAttestV3Service:
         self.config_validator.setProperty("mycarenet.licence.username", mycarenet_license_username)
         self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
         self.config_validator.setProperty("endpoint.etk", etk_endpoint)
+        self.config_validator.setProperty("endpoint.eattestv3", "$uddi{uddi:ehealth-fgov-be:business:mycareneteattest:v3}")
 
     def set_configuration_from_token(self, token: str) -> Practitioner:
         # TODO copy paste from MDA
