@@ -216,7 +216,7 @@ def test_efact_refusal_1(sts_service, token, efact_service, mda_service):
         detail_records=[detail_record]
     )
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        # NOTE waiting on result of message 20240131803654
+        # NOTE waiting on result of message 20240202860044
         # efact_service.send_efact(
         #     token, input_model_kine
         # )
@@ -226,7 +226,9 @@ def test_efact_refusal_1(sts_service, token, efact_service, mda_service):
         for m in messages:
             logger.info(m.message.reference)
             logger.info(m.message.base64_hash)
-            if m.message.reference == "20240131803654":
+            logger.info(m.transaction_response) 
+            logger.info(m.message.errors)
+            if m.message.reference == "20240202860044":
                 logger.info("yay yay yay")
                 logger.info(m.transaction_response)
                 logger.info(m.message.errors)
@@ -238,8 +240,22 @@ def test_confirm_message(sts_service, token, efact_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         messages = efact_service.get_messages(token)
         logger.info(f"num messages: {len(messages)}")
+        
 
         efact_service.confirm_message(token, "x3VbPr7/M8XTeBIclqhuRMCO0yNlNsB60slNOmnMfik=")
         time.sleep(60)
         messages = efact_service.get_messages(token)
         logger.info(f"num messages: {len(messages)}")
+
+@pytest.mark.parametrize("message", [
+    # 920999 refusals
+    "920999000200920040002024013180365400240310010000010000000000000000020240100001002024013100             00999199900Roebben                                      00Sofie Paula Renee       00048717946400030001000000000000000000000096001002000000000000000+0000000223500+0000000000000+000000022350000000007004600            00                                                                                                                                                                                                                                                                 ",
+    "920999000200920040002024020265296800240330010000010000000000000000020240200358002024020200             00999199900Roebben                                      00Sofie Paula Renee       00048717946400030001000000000000000000000096001342000000000000000+0000000237500+0000000000000+000000023750000000007004600            00                                                                                                                                                                                                                                                                 ",
+    # 931000 ontvangstbevestiging
+    "9310000001009200000020240207390060000000001012249400               92000000                                                                                                                                                        "
+])
+def test_load_errors(efact_service, message):
+    message = efact_service.message_to_object(
+        message, ""
+    )
+    logger.info(message.message.errors)

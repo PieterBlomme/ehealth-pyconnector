@@ -171,6 +171,51 @@ class EFactService:
             soap_response=raw_response
         )
 
+    def message_to_object(self, decoded: str, base64_hash: str) -> Response:
+            errors = []
+            logger.info(f"Length decoded: {len(decoded)}")
+            header_200 = Header200.from_str(decoded[:67])
+            errors.extend(header_200.errors())
+
+            if not decoded.startswith("931000"):
+                # in the case of a 931000
+                # the structure is different but
+                # there's no meaningful inforomation
+                # so just skip
+                header_300 = Header300.from_str(decoded[67:227])
+                errors.extend(header_300.errors())
+
+            start_record = 227
+            while True:
+                rec = decoded[start_record:start_record+350]
+                start_record += 350
+                if len(rec) == 0:
+                    break
+                else:
+                    assert len(rec) == 350
+
+                if rec.startswith("95"):
+                    footer95 = Footer95.from_str(rec)
+                    errors.extend(footer95.errors())
+                elif rec.startswith("96"):
+                    footer96 = Footer96.from_str(rec)
+                    errors.extend(footer96.errors())
+                else:
+                    # TODO map others to responses
+                    logger.warning(f"Part of message could not be mapped: {rec}")
+
+            return Response(
+                    transaction_request="",
+                    transaction_response=decoded,
+                    soap_request="",
+                    soap_response="",
+                    message=Message(
+                        reference=header_200.reference,
+                        base64_hash=base64_hash,
+                        errors=errors
+                    )
+                )
+
     def get_messages(self, token: str):
         self.set_configuration_from_token(token)
         logger.info("Creation of the get")
@@ -216,45 +261,7 @@ class EFactService:
             mappedBlob = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.mapper.DomainBlobMapper.mapToBlob(detail)
             unwrappedMessageByteArray = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.BlobBuilderFactory.getBlobBuilder(PROJECT_NAME).checkAndRetrieveContent(mappedBlob)
             decoded = unwrappedMessageByteArray.decode("utf-8")
-            header_200 = Header200.from_str(decoded[:67])
-            header_300 = Header300.from_str(decoded[67:227])
-
-            errors = []
-            errors.extend(header_200.errors())
-            errors.extend(header_300.errors())
-
-            start_record = 227
-            while True:
-                rec = decoded[start_record:start_record+350]
-                start_record += 350
-                if len(rec) == 0:
-                    break
-                else:
-                    assert len(rec) == 350
-
-                if rec.startswith("95"):
-                    footer95 = Footer95.from_str(rec)
-                    errors.extend(footer95.errors())
-                elif rec.startswith("96"):
-                    footer96 = Footer96.from_str(rec)
-                    errors.extend(footer96.errors())
-                else:
-                    # TODO map others to responses
-                    logger.info(rec)
-
-            messages.append(
-                Response(
-                    transaction_request="",
-                    transaction_response=decoded,
-                    soap_request="",
-                    soap_response="",
-                    message=Message(
-                        reference=header_200.reference,
-                        base64_hash=base64_hash,
-                        errors=errors
-                    )
-                )
-            )
+            messages.append(self.message_to_object(decoded, base64_hash))
 
         logger.info("getTAckResponses")
         for tackResponse in responseGet.getReturn().getTAckResponses():
