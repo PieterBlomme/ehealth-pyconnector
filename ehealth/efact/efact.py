@@ -172,13 +172,18 @@ class EFactService:
         )
 
     def message_to_object(self, decoded: str, base64_hash: str) -> Response:
+            errors = []
             logger.info(f"Length decoded: {len(decoded)}")
             header_200 = Header200.from_str(decoded[:67])
-            header_300 = Header300.from_str(decoded[67:227])
-
-            errors = []
             errors.extend(header_200.errors())
-            errors.extend(header_300.errors())
+
+            if not decoded.startswith("931000"):
+                # in the case of a 931000
+                # the structure is different but
+                # there's no meaningful inforomation
+                # so just skip
+                header_300 = Header300.from_str(decoded[67:227])
+                errors.extend(header_300.errors())
 
             start_record = 227
             while True:
