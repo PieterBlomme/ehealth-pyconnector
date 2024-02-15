@@ -348,7 +348,7 @@ class Message200Kine(BaseModel):
     hospital_care: Optional[bool] = False
     nummer_derdebetalende: str # riziv nummer facturerende derde (maw riziv kine ...)
     beroepscode_facturerende_derde: str = "000" # TODO verplicht vanaf april! zie https://www.riziv.fgov.be/SiteCollectionDocuments/bevoegdheidscodes_kinesitherapeuten.pdf
-    kbo_number: Optional[str] = "0000000000"
+    kbo_number: str
     bic_bank: str
     iban_bank: str
     nummer_ziekenfonds: str
@@ -516,7 +516,7 @@ class Message200KineNoPractitioner(BaseModel):
     tel_contact: str
     hospital_care: Optional[bool] = False
     beroepscode_facturerende_derde: str = "000" # TODO verplicht vanaf april! zie https://www.riziv.fgov.be/SiteCollectionDocuments/bevoegdheidscodes_kinesitherapeuten.pdf
-    kbo_number: Optional[str] = "0000000000"
+    kbo_number: str
     bic_bank: str
     iban_bank: str
     nummer_ziekenfonds: str
