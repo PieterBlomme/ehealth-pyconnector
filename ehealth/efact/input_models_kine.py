@@ -346,7 +346,6 @@ class Message200Kine(BaseModel):
     first_name_contact: str
     tel_contact: str
     hospital_care: Optional[bool] = False
-    zendingsnummer: Optional[str] = "500" # no idea how this works
     nummer_derdebetalende: str # riziv nummer facturerende derde (maw riziv kine ...)
     beroepscode_facturerende_derde: str = "000" # TODO verplicht vanaf april! zie https://www.riziv.fgov.be/SiteCollectionDocuments/bevoegdheidscodes_kinesitherapeuten.pdf
     kbo_number: Optional[str] = "0000000000"
@@ -382,7 +381,7 @@ class Message200Kine(BaseModel):
         ).to_header_300()
         record_10 = Record10Kine(
             is_test=self.is_test,
-            zendingsnummer=self.zendingsnummer,
+            zendingsnummer=self.num_invoice,
             nummer_derdebetalende=self.nummer_derdebetalende,
             date_creation=self.date_invoice,
             kbo_nummer=self.kbo_number,
@@ -516,7 +515,6 @@ class Message200KineNoPractitioner(BaseModel):
     is_test: Optional[bool] = True
     tel_contact: str
     hospital_care: Optional[bool] = False
-    zendingsnummer: Optional[str] = "500" # no idea how this works
     beroepscode_facturerende_derde: str = "000" # TODO verplicht vanaf april! zie https://www.riziv.fgov.be/SiteCollectionDocuments/bevoegdheidscodes_kinesitherapeuten.pdf
     kbo_number: Optional[str] = "0000000000"
     bic_bank: str
