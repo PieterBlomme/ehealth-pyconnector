@@ -487,7 +487,7 @@ class Message200Kine(BaseModel):
         ).to_footer_95()
 
         footer_96 = Footer96Kine(
-            nummer_mutualiteit=self.nummer_ziekenfonds,
+            nummer_mutualiteit=self.nummer_ziekenfonds[0] + "99",
             totaal=totaal,
             aantal_records=4+2+len(self.detail_records),
             controle_nummer_per_mutualiteit=calculate_invoice_control([dr.nomenclatuur.rjust(7, "0") for dr in self.detail_records])
