@@ -227,7 +227,7 @@ class Record90Kine(BaseModel):
     control_message: str
 
     def to_record_90(self) -> Record90:
-        date_creation = str(self.date_creation.year) + str(self.date_creation.month) + str(self.date_creation.day).rjust(2, "0")
+        date_creation = str(self.date_creation.year) + str(self.date_creation.month).rjust(2, "0") + str(self.date_creation.day).rjust(2, "0")
 
         return Record90(
             num_record=self.num_record,
@@ -346,10 +346,9 @@ class Message200Kine(BaseModel):
     first_name_contact: str
     tel_contact: str
     hospital_care: Optional[bool] = False
-    zendingsnummer: Optional[str] = "500" # no idea how this works
     nummer_derdebetalende: str # riziv nummer facturerende derde (maw riziv kine ...)
     beroepscode_facturerende_derde: str = "000" # TODO verplicht vanaf april! zie https://www.riziv.fgov.be/SiteCollectionDocuments/bevoegdheidscodes_kinesitherapeuten.pdf
-    kbo_number: Optional[str] = "0000000000"
+    kbo_number: str
     bic_bank: str
     iban_bank: str
     nummer_ziekenfonds: str
@@ -382,7 +381,7 @@ class Message200Kine(BaseModel):
         ).to_header_300()
         record_10 = Record10Kine(
             is_test=self.is_test,
-            zendingsnummer=self.zendingsnummer,
+            zendingsnummer=self.num_invoice,
             nummer_derdebetalende=self.nummer_derdebetalende,
             date_creation=self.date_invoice,
             kbo_nummer=self.kbo_number,
@@ -469,7 +468,7 @@ class Message200Kine(BaseModel):
         i += 1
         record_90 = Record90Kine(
             num_record=str(i).rjust(6, "0"),
-            zendingsnummer=self.zendingsnummer,
+            zendingsnummer=self.num_invoice,
             nummer_derdebetalende=self.nummer_derdebetalende,
             totaal=totaal,
             date_creation=self.date_invoice,
@@ -516,9 +515,8 @@ class Message200KineNoPractitioner(BaseModel):
     is_test: Optional[bool] = True
     tel_contact: str
     hospital_care: Optional[bool] = False
-    zendingsnummer: Optional[str] = "500" # no idea how this works
     beroepscode_facturerende_derde: str = "000" # TODO verplicht vanaf april! zie https://www.riziv.fgov.be/SiteCollectionDocuments/bevoegdheidscodes_kinesitherapeuten.pdf
-    kbo_number: Optional[str] = "0000000000"
+    kbo_number: str
     bic_bank: str
     iban_bank: str
     nummer_ziekenfonds: str
