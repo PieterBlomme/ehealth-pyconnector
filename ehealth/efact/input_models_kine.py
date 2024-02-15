@@ -468,7 +468,7 @@ class Message200Kine(BaseModel):
         i += 1
         record_90 = Record90Kine(
             num_record=str(i).rjust(6, "0"),
-            zendingsnummer=self.zendingsnummer,
+            zendingsnummer=self.num_invoice,
             nummer_derdebetalende=self.nummer_derdebetalende,
             totaal=totaal,
             date_creation=self.date_invoice,
