@@ -227,7 +227,7 @@ class Record90Kine(BaseModel):
     control_message: str
 
     def to_record_90(self) -> Record90:
-        date_creation = str(self.date_creation.year) + str(self.date_creation.month) + str(self.date_creation.day).rjust(2, "0")
+        date_creation = str(self.date_creation.year) + str(self.date_creation.month).rjust(2, "0") + str(self.date_creation.day).rjust(2, "0")
 
         return Record90(
             num_record=self.num_record,
