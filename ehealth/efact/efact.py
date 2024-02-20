@@ -9,7 +9,7 @@ from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from py4j.protocol import Py4JJavaError
-from .input_models import Message200, Header200, Header300, Footer95, Footer96, ErrorMessage, Header300Refusal, Record10
+from .input_models import Record80, Header200, Header300, Footer95, Footer96, ErrorMessage, Header300Refusal, Record10, Record90, Record20, Record50, Record52
 from .input_models_kine import Message200KineNoPractitioner, Message200Kine
 import tempfile
 from pydantic import BaseModel
@@ -184,12 +184,7 @@ class EFactService:
         logger.info("mapping refusal")
         # this is a super weird mapping ...
         header_200 = Header200.from_str(decoded[:67])
-        logger.info(header_200.errors())
         header_300 = Header300Refusal.from_str(decoded[67:677])
-        logger.info(header_300.errors())
-        logger.info(header_300.refusal_type)
-        logger.info(header_300.percentage_errors)
-
         message = Message(
                     reference=header_200.reference,
                     base64_hash=base64_hash,
@@ -200,11 +195,13 @@ class EFactService:
         else:
             message.reden_weigering = "Aantal fouten > 5%"
             message.percentage_fouten = int(header_300.percentage_errors) / 100.0
-
+        
+        logger.info(len(decoded))
         start_record = 677
         errors = []
         while True:
             rec = decoded[start_record:start_record+800]
+            logger.info(rec[:2])
             start_record += 800
             if len(rec) == 0:
                 break
@@ -219,9 +216,17 @@ class EFactService:
                 errors.extend(footer96.errors())
             elif rec.startswith("10"):
                 errors.extend(Record10.errors_from_str(rec))
+            elif rec.startswith("20"):
+                errors.extend(Record20.errors_from_str(rec))
+            elif rec.startswith("50"):
+                errors.extend(Record50.errors_from_str(rec))
+            elif rec.startswith("80"):
+                errors.extend(Record80.errors_from_str(rec))
+            elif rec.startswith("90"):
+                errors.extend(Record90.errors_from_str(rec))
             else:
                 # TODO map others to responses
-                logger.warning(f"Part of message could not be mapped: {rec[350:]}")
+                raise Exception(f"Part of message could not be mapped: {rec}")
 
         message.errors = errors
         return Response(

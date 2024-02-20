@@ -13,6 +13,7 @@ class ErrorMessage(BaseModel):
     error_code: str
     message: Optional[str] = None
     type: Optional[str] = None
+    verwerpingsletter: Optional[str] = None
 
 def calculate_control(text) -> str:
     assert len(text) == 348, len(text) # always?? to check
@@ -632,14 +633,20 @@ class Record10(BaseModel):
                 if key_numeric == "07":
                     key = "zendingsnummer"
                     value = record[32:35]
+                elif key_numeric == "14":
+                    key = "nummer derdebetalende"
+                    value = record[55:67]
                 elif key_numeric == "27":
                     key = "KBO nummer"
                     value = record[127:137]
+                elif key_numeric == "31":
+                    key = "BIC Bank"
+                    value = record[166:174]
                 else:
                     raise Exception(f"Numeric key {key_numeric} not yet mapped for Record10")
 
                 e_dict = cls._error_shared(key, error, value, e[0])
-            result.append(e_dict)
+            result.append(ErrorMessage(**e_dict))
         return result
     
     def __str__(self):
@@ -830,6 +837,50 @@ class Record20(BaseModel):
     maf_lopend_jaar_min1: Optional[str] = "0000"
     maf_lopend_jaar_min2: Optional[str] = "0000"
 
+    @classmethod
+    def _error_shared(cls, key, error, value, refusal_code) -> Optional[Dict[str, Any]]:
+        if error == "00":
+            return None
+        
+        _ERROR_CONSTANTS = {
+            "01": "Gegeven niet numeriek",
+            "02": "Controlecijfer foutief",
+            "03": "Gegeven niet toegelaten",
+            "09": "Verboden karakters",
+            "20": "Gegeven niet gekend in bestand ziekenfonds",
+        }
+        
+        return {
+            "type": "20",
+            "key": key,
+            "value": value,
+            "error_code": error,
+            "message": _ERROR_CONSTANTS.get(error),
+            "verwerpingsletter": refusal_code
+        }
+    
+    @classmethod
+    def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
+        # I'm only going to bother to map the actual errors
+        result = []
+        for i in range(3):
+            e = record[456+i*7:456+7+i*7]
+            if e[0] == " ":
+                # no more errors
+                break
+            else:
+                # I'm only going to bother with fields that I actually encounter
+                key_numeric = e[3:5]
+                key = ""
+                error = e[5:7]
+                value = ""
+
+                raise Exception(f"Numeric key {key_numeric} not yet mapped for Record20")
+
+                e_dict = cls._error_shared(key, error, value, e[0])
+            result.append(ErrorMessage(**e_dict))
+        return result
+    
     def __str__(self):
         to_str = ""
         assert len(self.record) == 2
@@ -1025,6 +1076,60 @@ class Record50(BaseModel):
     registratiecode: Optional[str] = "0" * 14
     flag_btw: Optional[str] = "00"
 
+    @classmethod
+    def _error_shared(cls, key, error, value, refusal_code) -> Optional[Dict[str, Any]]:
+        if error == "00":
+            return None
+        
+        _ERROR_CONSTANTS = {
+            "01": "Gegeven niet numeriek",
+            "02": "Controlecijfer foutief",
+            "03": "Gegeven niet toegelaten",
+            "09": "Verboden karakters",
+            "20": "Gegeven niet gekend in bestand ziekenfonds",
+        }
+        
+        return {
+            "type": "50",
+            "key": key,
+            "value": value,
+            "error_code": error,
+            "message": _ERROR_CONSTANTS.get(error),
+            "verwerpingsletter": refusal_code
+        }
+    
+    @classmethod
+    def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
+        # I'm only going to bother to map the actual errors
+        result = []
+        for i in range(3):
+            e = record[456+i*7:456+7+i*7]
+            if e[0] == " ":
+                # no more errors
+                break
+            else:
+                # I'm only going to bother with fields that I actually encounter
+                key_numeric = e[3:5]
+                key = ""
+                error = e[5:7]
+                value = ""
+
+                if key_numeric == "19":
+                    key = "Teken en bedrag verzekeringstegemoetkoming"
+                    value = record[87:99]
+                elif key_numeric == "27":
+                    key = "Teken en bedrag persoonlijk aandeel patiënt"
+                    value = record[127:137]
+                elif key_numeric == "30":
+                    key = "Teken en bedrag persoonlijk supplement"
+                    value = record[164:174]
+                else:
+                    raise Exception(f"Numeric key {key_numeric} not yet mapped for Record50")
+
+                e_dict = cls._error_shared(key, error, value, e[0])
+            result.append(ErrorMessage(**e_dict))
+        return result
+    
     def __str__(self):
         to_str = ""
         assert len(self.record) == 2
@@ -1319,6 +1424,54 @@ class Record80(BaseModel):
     voorschot_financieel_rekeningnummer_a: str
     control_invoice: str
 
+    @classmethod
+    def _error_shared(cls, key, error, value, refusal_code) -> Optional[Dict[str, Any]]:
+        if error == "00":
+            return None
+        
+        _ERROR_CONSTANTS = {
+            "01": "Gegeven niet numeriek",
+            "02": "Controlecijfer foutief",
+            "03": "Gegeven niet toegelaten",
+            "09": "Verboden karakters",
+            "20": "Gegeven niet gekend in bestand ziekenfonds",
+        }
+        
+        return {
+            "type": "50",
+            "key": key,
+            "value": value,
+            "error_code": error,
+            "message": _ERROR_CONSTANTS.get(error),
+            "verwerpingsletter": refusal_code
+        }
+    
+    @classmethod
+    def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
+        # I'm only going to bother to map the actual errors
+        result = []
+        for i in range(3):
+            e = record[456+i*7:456+7+i*7]
+            if e[0] == " ":
+                # no more errors
+                break
+            else:
+                # I'm only going to bother with fields that I actually encounter
+                key_numeric = e[3:5]
+                key = ""
+                error = e[5:7]
+                value = ""
+
+                if key_numeric == " ":
+                    key = "Teken en bedrag verzekeringstegemoetkoming"
+                    value = record[87:99]
+                else:
+                    raise Exception(f"Numeric key {key_numeric} not yet mapped for Record80")
+
+                e_dict = cls._error_shared(key, error, value, e[0])
+            result.append(ErrorMessage(**e_dict))
+        return result
+    
     def __str__(self):
         to_str = ""
         assert len(self.record) == 2
@@ -1414,6 +1567,54 @@ class Record90(BaseModel):
     iban_bank_2: Optional[str] = ""
     control_message: str
 
+    @classmethod
+    def _error_shared(cls, key, error, value, refusal_code) -> Optional[Dict[str, Any]]:
+        if error == "00":
+            return None
+        
+        _ERROR_CONSTANTS = {
+            "01": "Gegeven niet numeriek",
+            "02": "Controlecijfer foutief",
+            "03": "Gegeven niet toegelaten",
+            "09": "Verboden karakters",
+            "20": "Gegeven niet gekend in bestand ziekenfonds",
+        }
+        
+        return {
+            "type": "90",
+            "key": key,
+            "value": value,
+            "error_code": error,
+            "message": _ERROR_CONSTANTS.get(error),
+            "verwerpingsletter": refusal_code
+        }
+    
+    @classmethod
+    def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
+        # I'm only going to bother to map the actual errors
+        result = []
+        for i in range(3):
+            e = record[456+i*7:456+7+i*7]
+            if e[0] == " ":
+                # no more errors
+                break
+            else:
+                # I'm only going to bother with fields that I actually encounter
+                key_numeric = e[3:5]
+                key = ""
+                error = e[5:7]
+                value = ""
+
+                if key_numeric == "23":
+                    key = "gefactureerde maand"
+                    value = record[112:114]
+                else:
+                    raise Exception(f"Numeric key {key_numeric} not yet mapped for Record90")
+
+                e_dict = cls._error_shared(key, error, value, e[0])
+            result.append(ErrorMessage(**e_dict))
+        return result
+    
     def __str__(self):
         to_str = ""
         assert len(self.record) == 2
