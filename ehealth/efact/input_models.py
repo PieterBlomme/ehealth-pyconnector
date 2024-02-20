@@ -13,6 +13,7 @@ class ErrorMessage(BaseModel):
     error_code: str
     message: Optional[str] = None
     type: Optional[str] = None
+    verwerpingsletter: Optional[str] = None
 
 def calculate_control(text) -> str:
     assert len(text) == 348, len(text) # always?? to check
@@ -441,7 +442,133 @@ class Header300(BaseModel):
             self._error_type_invoicing(),
         ]
         return [ErrorMessage(**e) for e in errors if e is not None]
-      
+
+
+class Header300Refusal(Header300):
+    percentage_errors: str
+    error_percentage_errors: Optional[str] = "00"
+    refusal_type: str
+    error_refusal_type: Optional[str] = "00"
+
+    @classmethod
+    def from_str(cls, msg: str) -> "Header300Refusal":
+        assert len(msg) == 677-67
+        return Header300Refusal(
+            year_and_month = msg[:6],
+            error_year_and_month = msg[6:8],
+            num_invoice = msg[8:11],
+            error_num_invoice = msg[11:13],
+            date_invoice = msg[13:21],
+            error_date_invoice = msg[21:23],
+            reference_invoice = msg[23:36],
+            error_reference_invoice = msg[36:38],
+            version_instructions = msg[38:45],
+            error_version_instructions = msg[45:47],
+            name_contact = msg[47:92],
+            error_name_contact = msg[92:94],
+            first_name_contact = msg[94:118],
+            error_first_name_contact = msg[118:120],
+            tel_contact = msg[120:130],
+            error_tel_contact = msg[130:132],
+            type_invoice = msg[132:134],
+            error_type_invoice = msg[134:136],
+            type_invoicing = msg[136:138],
+            error_type_invoicing = msg[138:140],
+            percentage_errors = msg[140:145],
+            error_percentage_errors = msg[145:147],
+            refusal_type = msg[147:149],
+            error_refusal_type = msg[149:151],
+        )
+    
+    def __str__(self):
+        to_str = ""
+        assert len(self.year_and_month) == 6
+        to_str += self.year_and_month
+        assert len(self.error_year_and_month) == 2
+        to_str += self.error_year_and_month
+        assert len(self.num_invoice) == 3
+        to_str += self.num_invoice
+        assert len(self.error_num_invoice) == 2
+        to_str += self.error_num_invoice
+        assert len(self.date_invoice) == 8
+        to_str += self.date_invoice
+        assert len(self.error_date_invoice) == 2
+        to_str += self.error_date_invoice
+        assert len(self.reference_invoice) == 13
+        to_str += self.reference_invoice
+        assert len(self.error_reference_invoice) == 2
+        to_str += self.error_reference_invoice
+        assert len(self.version_instructions) == 7
+        to_str += self.version_instructions
+        assert len(self.error_version_instructions) == 2
+        to_str += self.error_version_instructions
+
+        # pad name to 45 characters
+        to_str += self.name_contact.ljust(45)
+        assert len(self.error_name_contact) == 2
+        to_str += self.error_name_contact
+
+        # pad first_name to 24 characters
+        to_str += self.first_name_contact.ljust(24)
+        assert len(self.error_first_name_contact) == 2
+        to_str += self.error_first_name_contact
+
+        assert len(self.tel_contact) == 10
+        to_str += self.tel_contact
+        assert len(self.error_tel_contact) == 2
+        to_str += self.error_tel_contact
+
+        assert len(self.type_invoice) == 2
+        to_str += self.type_invoice
+        assert len(self.error_type_invoice) == 2
+        to_str += self.error_type_invoice
+
+        assert len(self.type_invoicing) == 2
+        to_str += self.type_invoicing
+        assert len(self.error_type_invoicing) == 2
+        to_str += self.error_type_invoicing
+
+        assert len(self.percentage_errors) == 5
+        to_str += self.percentage_errors
+        assert len(self.error_percentage_errors) == 2
+        to_str += self.error_percentage_errors
+
+        assert len(self.refusal_type) == 2
+        to_str += self.refusal_type
+        assert len(self.error_refusal_type) == 2
+        to_str += self.error_refusal_type
+
+        reserve = " " * 459
+        to_str += reserve
+        
+        return to_str
+
+    def _error_shared(self, key, error, value) -> Optional[Dict[str, Any]]:
+        if error == "00":
+            return None
+        
+        return {
+            "key": key,
+            "value": value,
+            "error_code": error,
+            "message": ERROR_CONSTANTS.get(error)
+        }
+    
+    def errors(self) -> List[Dict[str, Any]]:
+        errors = [
+            self._error_year_and_month(),
+            self._error_num_invoice(),
+            self._error_date_invoice(),
+            self._error_reference_invoice(),
+            self._error_version_instructions(),
+            self._error_name_contact(),
+            self._error_first_name_contact(),
+            self._error_tel_contact(),
+            self._error_type_invoice(),
+            self._error_type_invoicing(),
+        ]
+        return [ErrorMessage(**e) for e in errors if e is not None]
+    
 class Record10(BaseModel):
     record: Optional[str] = "10"
     num_record: Optional[str] = "000001"
@@ -465,6 +592,63 @@ class Record10(BaseModel):
     bic_bank_2: Optional[str] = ""
     iban_bank_2: Optional[str] = ""
 
+    @classmethod
+    def _error_shared(cls, key, error, value, refusal_code) -> Optional[Dict[str, Any]]:
+        if error == "00":
+            return None
+        
+        _ERROR_CONSTANTS = {
+            "01": "Gegeven niet numeriek",
+            "02": "Controlecijfer foutief",
+            "03": "Gegeven niet toegelaten",
+            "09": "Verboden karakters",
+            "20": "Gegeven niet gekend in bestand ziekenfonds",
+        }
+        
+        return {
+            "type": "10",
+            "key": key,
+            "value": value,
+            "error_code": error,
+            "message": _ERROR_CONSTANTS.get(error),
+            "verwerpingsletter": refusal_code
+        }
+    
+    @classmethod
+    def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
+        # I'm only going to bother to map the actual errors
+        result = []
+        for i in range(3):
+            e = record[456+i*7:456+7+i*7]
+            if e[0] == " ":
+                # no more errors
+                break
+            else:
+                # I'm only going to bother with fields that I actually encounter
+                key_numeric = e[3:5]
+                key = ""
+                error = e[5:7]
+                value = ""
+
+                if key_numeric == "07":
+                    key = "zendingsnummer"
+                    value = record[32:35]
+                elif key_numeric == "14":
+                    key = "nummer derdebetalende"
+                    value = record[55:67]
+                elif key_numeric == "27":
+                    key = "KBO nummer"
+                    value = record[127:137]
+                elif key_numeric == "31":
+                    key = "BIC Bank"
+                    value = record[166:174]
+                else:
+                    raise Exception(f"Numeric key {key_numeric} not yet mapped for Record10")
+
+                e_dict = cls._error_shared(key, error, value, e[0])
+            result.append(ErrorMessage(**e_dict))
+        return result
+    
     def __str__(self):
         to_str = ""
         assert len(self.record) == 2
@@ -653,6 +837,50 @@ class Record20(BaseModel):
     maf_lopend_jaar_min1: Optional[str] = "0000"
     maf_lopend_jaar_min2: Optional[str] = "0000"
 
+    @classmethod
+    def _error_shared(cls, key, error, value, refusal_code) -> Optional[Dict[str, Any]]:
+        if error == "00":
+            return None
+        
+        _ERROR_CONSTANTS = {
+            "01": "Gegeven niet numeriek",
+            "02": "Controlecijfer foutief",
+            "03": "Gegeven niet toegelaten",
+            "09": "Verboden karakters",
+            "20": "Gegeven niet gekend in bestand ziekenfonds",
+        }
+        
+        return {
+            "type": "20",
+            "key": key,
+            "value": value,
+            "error_code": error,
+            "message": _ERROR_CONSTANTS.get(error),
+            "verwerpingsletter": refusal_code
+        }
+    
+    @classmethod
+    def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
+        # I'm only going to bother to map the actual errors
+        result = []
+        for i in range(3):
+            e = record[456+i*7:456+7+i*7]
+            if e[0] == " ":
+                # no more errors
+                break
+            else:
+                # I'm only going to bother with fields that I actually encounter
+                key_numeric = e[3:5]
+                key = ""
+                error = e[5:7]
+                value = ""
+
+                raise Exception(f"Numeric key {key_numeric} not yet mapped for Record20")
+
+                e_dict = cls._error_shared(key, error, value, e[0])
+            result.append(ErrorMessage(**e_dict))
+        return result
+    
     def __str__(self):
         to_str = ""
         assert len(self.record) == 2
@@ -848,6 +1076,60 @@ class Record50(BaseModel):
     registratiecode: Optional[str] = "0" * 14
     flag_btw: Optional[str] = "00"
 
+    @classmethod
+    def _error_shared(cls, key, error, value, refusal_code) -> Optional[Dict[str, Any]]:
+        if error == "00":
+            return None
+        
+        _ERROR_CONSTANTS = {
+            "01": "Gegeven niet numeriek",
+            "02": "Controlecijfer foutief",
+            "03": "Gegeven niet toegelaten",
+            "09": "Verboden karakters",
+            "20": "Gegeven niet gekend in bestand ziekenfonds",
+        }
+        
+        return {
+            "type": "50",
+            "key": key,
+            "value": value,
+            "error_code": error,
+            "message": _ERROR_CONSTANTS.get(error),
+            "verwerpingsletter": refusal_code
+        }
+    
+    @classmethod
+    def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
+        # I'm only going to bother to map the actual errors
+        result = []
+        for i in range(3):
+            e = record[456+i*7:456+7+i*7]
+            if e[0] == " ":
+                # no more errors
+                break
+            else:
+                # I'm only going to bother with fields that I actually encounter
+                key_numeric = e[3:5]
+                key = ""
+                error = e[5:7]
+                value = ""
+
+                if key_numeric == "19":
+                    key = "Teken en bedrag verzekeringstegemoetkoming"
+                    value = record[87:99]
+                elif key_numeric == "27":
+                    key = "Teken en bedrag persoonlijk aandeel patiënt"
+                    value = record[127:137]
+                elif key_numeric == "30":
+                    key = "Teken en bedrag persoonlijk supplement"
+                    value = record[164:174]
+                else:
+                    raise Exception(f"Numeric key {key_numeric} not yet mapped for Record50")
+
+                e_dict = cls._error_shared(key, error, value, e[0])
+            result.append(ErrorMessage(**e_dict))
+        return result
+    
     def __str__(self):
         to_str = ""
         assert len(self.record) == 2
@@ -1142,6 +1424,54 @@ class Record80(BaseModel):
     voorschot_financieel_rekeningnummer_a: str
     control_invoice: str
 
+    @classmethod
+    def _error_shared(cls, key, error, value, refusal_code) -> Optional[Dict[str, Any]]:
+        if error == "00":
+            return None
+        
+        _ERROR_CONSTANTS = {
+            "01": "Gegeven niet numeriek",
+            "02": "Controlecijfer foutief",
+            "03": "Gegeven niet toegelaten",
+            "09": "Verboden karakters",
+            "20": "Gegeven niet gekend in bestand ziekenfonds",
+        }
+        
+        return {
+            "type": "50",
+            "key": key,
+            "value": value,
+            "error_code": error,
+            "message": _ERROR_CONSTANTS.get(error),
+            "verwerpingsletter": refusal_code
+        }
+    
+    @classmethod
+    def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
+        # I'm only going to bother to map the actual errors
+        result = []
+        for i in range(3):
+            e = record[456+i*7:456+7+i*7]
+            if e[0] == " ":
+                # no more errors
+                break
+            else:
+                # I'm only going to bother with fields that I actually encounter
+                key_numeric = e[3:5]
+                key = ""
+                error = e[5:7]
+                value = ""
+
+                if key_numeric == " ":
+                    key = "Teken en bedrag verzekeringstegemoetkoming"
+                    value = record[87:99]
+                else:
+                    raise Exception(f"Numeric key {key_numeric} not yet mapped for Record80")
+
+                e_dict = cls._error_shared(key, error, value, e[0])
+            result.append(ErrorMessage(**e_dict))
+        return result
+    
     def __str__(self):
         to_str = ""
         assert len(self.record) == 2
@@ -1237,6 +1567,54 @@ class Record90(BaseModel):
     iban_bank_2: Optional[str] = ""
     control_message: str
 
+    @classmethod
+    def _error_shared(cls, key, error, value, refusal_code) -> Optional[Dict[str, Any]]:
+        if error == "00":
+            return None
+        
+        _ERROR_CONSTANTS = {
+            "01": "Gegeven niet numeriek",
+            "02": "Controlecijfer foutief",
+            "03": "Gegeven niet toegelaten",
+            "09": "Verboden karakters",
+            "20": "Gegeven niet gekend in bestand ziekenfonds",
+        }
+        
+        return {
+            "type": "90",
+            "key": key,
+            "value": value,
+            "error_code": error,
+            "message": _ERROR_CONSTANTS.get(error),
+            "verwerpingsletter": refusal_code
+        }
+    
+    @classmethod
+    def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
+        # I'm only going to bother to map the actual errors
+        result = []
+        for i in range(3):
+            e = record[456+i*7:456+7+i*7]
+            if e[0] == " ":
+                # no more errors
+                break
+            else:
+                # I'm only going to bother with fields that I actually encounter
+                key_numeric = e[3:5]
+                key = ""
+                error = e[5:7]
+                value = ""
+
+                if key_numeric == "23":
+                    key = "gefactureerde maand"
+                    value = record[112:114]
+                else:
+                    raise Exception(f"Numeric key {key_numeric} not yet mapped for Record90")
+
+                e_dict = cls._error_shared(key, error, value, e[0])
+            result.append(ErrorMessage(**e_dict))
+        return result
+    
     def __str__(self):
         to_str = ""
         assert len(self.record) == 2

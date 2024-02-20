@@ -1,6 +1,7 @@
 from py4j.java_gateway import JavaGateway
 from typing import Any, Optional, List
 import base64
+from uuid import uuid4
 from random import randint
 import logging
 from io import StringIO
@@ -8,7 +9,7 @@ from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from py4j.protocol import Py4JJavaError
-from .input_models import Message200, Header200, Header300, Footer95, Footer96, ErrorMessage
+from .input_models import Record80, Header200, Header300, Footer95, Footer96, ErrorMessage, Header300Refusal, Record10, Record90, Record20, Record50, Record52
 from .input_models_kine import Message200KineNoPractitioner, Message200Kine
 import tempfile
 from pydantic import BaseModel
@@ -34,6 +35,8 @@ class Message:
     reference: str
     base64_hash: str
     errors: List[ErrorMessage]
+    reden_weigering: Optional[str] = None
+    percentage_fouten: Optional[float] = None
 
 @dataclass(config=Config)
 class Response:
@@ -176,51 +179,111 @@ class EFactService:
             soap_request="",
             soap_response=raw_response
         )
-
-    def message_to_object(self, decoded: str, base64_hash: str) -> Response:
-            errors = []
-            logger.info(f"Length decoded: {len(decoded)}")
-            header_200 = Header200.from_str(decoded[:67])
-            errors.extend(header_200.errors())
-
-            if not decoded.startswith("931000"):
-                # in the case of a 931000
-                # the structure is different but
-                # there's no meaningful inforomation
-                # so just skip
-                header_300 = Header300.from_str(decoded[67:227])
-                errors.extend(header_300.errors())
-
-            start_record = 227
-            while True:
-                rec = decoded[start_record:start_record+350]
-                start_record += 350
-                if len(rec) == 0:
-                    break
-                else:
-                    assert len(rec) == 350
-
-                if rec.startswith("95"):
-                    footer95 = Footer95.from_str(rec)
-                    errors.extend(footer95.errors())
-                elif rec.startswith("96"):
-                    footer96 = Footer96.from_str(rec)
-                    errors.extend(footer96.errors())
-                else:
-                    # TODO map others to responses
-                    logger.warning(f"Part of message could not be mapped: {rec}")
-
-            return Response(
-                    transaction_request="",
-                    transaction_response=decoded,
-                    soap_request="",
-                    soap_response="",
-                    message=Message(
-                        reference=header_200.reference,
-                        base64_hash=base64_hash,
-                        errors=errors
-                    )
+    
+    def message_to_object_refusal(self, decoded: str, base64_hash: str) -> Response:
+        logger.info("mapping refusal")
+        # this is a super weird mapping ...
+        header_200 = Header200.from_str(decoded[:67])
+        header_300 = Header300Refusal.from_str(decoded[67:677])
+        message = Message(
+                    reference=header_200.reference,
+                    base64_hash=base64_hash,
+                    errors=[],
                 )
+        if header_300.refusal_type == "01":
+            message.reden_weigering = "Blokkerende fouten"
+        else:
+            message.reden_weigering = "Aantal fouten > 5%"
+            message.percentage_fouten = int(header_300.percentage_errors) / 100.0
+        
+        logger.info(len(decoded))
+        start_record = 677
+        errors = []
+        while True:
+            rec = decoded[start_record:start_record+800]
+            logger.info(rec[:2])
+            start_record += 800
+            if len(rec) == 0:
+                break
+            else:
+                assert len(rec) == 800
+
+            if rec.startswith("95"):
+                footer95 = Footer95.from_str(rec)
+                errors.extend(footer95.errors())
+            elif rec.startswith("96"):
+                footer96 = Footer96.from_str(rec)
+                errors.extend(footer96.errors())
+            elif rec.startswith("10"):
+                errors.extend(Record10.errors_from_str(rec))
+            elif rec.startswith("20"):
+                errors.extend(Record20.errors_from_str(rec))
+            elif rec.startswith("50"):
+                errors.extend(Record50.errors_from_str(rec))
+            elif rec.startswith("80"):
+                errors.extend(Record80.errors_from_str(rec))
+            elif rec.startswith("90"):
+                errors.extend(Record90.errors_from_str(rec))
+            else:
+                # TODO map others to responses
+                raise Exception(f"Part of message could not be mapped: {rec}")
+
+        message.errors = errors
+        return Response(
+                transaction_request="",
+                transaction_response=decoded,
+                soap_request="",
+                soap_response="",
+                message=message
+            )
+    
+    def message_to_object(self, decoded: str, base64_hash: str) -> Response:
+        if decoded[:6] == "920099":
+            return self.message_to_object_refusal(decoded, base64_hash)
+        
+        errors = []
+        logger.info(f"Length decoded: {len(decoded)}")
+        header_200 = Header200.from_str(decoded[:67])
+        errors.extend(header_200.errors())
+
+        if not decoded.startswith("931000"):
+            # in the case of a 931000
+            # the structure is different but
+            # there's no meaningful inforomation
+            # so just skip
+            header_300 = Header300.from_str(decoded[67:227])
+            errors.extend(header_300.errors())
+
+        start_record = 227
+        while True:
+            rec = decoded[start_record:start_record+350]
+            start_record += 350
+            if len(rec) == 0:
+                break
+            else:
+                assert len(rec) == 350
+
+            if rec.startswith("95"):
+                footer95 = Footer95.from_str(rec)
+                errors.extend(footer95.errors())
+            elif rec.startswith("96"):
+                footer96 = Footer96.from_str(rec)
+                errors.extend(footer96.errors())
+            else:
+                # TODO map others to responses
+                logger.warning(f"Part of message could not be mapped: {rec}")
+
+        return Response(
+                transaction_request="",
+                transaction_response=decoded,
+                soap_request="",
+                soap_response="",
+                message=Message(
+                    reference=header_200.reference,
+                    base64_hash=base64_hash,
+                    errors=errors
+                )
+            )
 
     def get_messages(self, token: str):
         self.set_configuration_from_token(token)
@@ -229,9 +292,11 @@ class EFactService:
         msgQuery.setInclude(True)
         msgQuery.setMax(200)
         msgQuery.getMessageNames().add("HCPFAC")
+        msgQuery.getMessageNames().add("HCPAFD")
+        msgQuery.getMessageNames().add("HCPVWR")
 
         tackQuery = self.EHEALTH_JVM.newQuery()
-        tackQuery.setInclude(False)
+        tackQuery.setInclude(True)
         tackQuery.setMax(100)
         logger.info("Send of the get request")
 
@@ -267,18 +332,24 @@ class EFactService:
             mappedBlob = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.mapper.DomainBlobMapper.mapToBlob(detail)
             unwrappedMessageByteArray = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.BlobBuilderFactory.getBlobBuilder(PROJECT_NAME).checkAndRetrieveContent(mappedBlob)
             decoded = unwrappedMessageByteArray.decode("utf-8")
-            messages.append(self.message_to_object(decoded, base64_hash))
+            try:
+                messages.append(self.message_to_object(decoded, base64_hash))
+            except Exception as e:
+                logger.info(f"Failed to convert message with hash {base64_hash}")
+                with open(f"{uuid4()}.txt", "w") as f:
+                    f.write(decoded)
 
         logger.info("getTAckResponses")
         for tackResponse in responseGet.getReturn().getTAckResponses():
+            # just always confirm TAck messages, I guess
             tackResponseBytes = tackResponse.getTAck().getValue()
-            tackResponse = self.GATEWAY.jvm.java.lang.String(tackResponseBytes, "UTF-8")
-            logger.info(tackResponse)
-
+            base64_hash = base64.b64encode(tackResponseBytes).decode('utf8')
+            logger.info(f"hash: {base64_hash}")
+            self.confirm_message(token, base64_hash, tack=True)
         return messages
 
 
-    def confirm_message(self, token: str, base64_hash: str):
+    def confirm_message(self, token: str, base64_hash: str, tack: bool = False):
         self.set_configuration_from_token(token)
 
         hash = base64.b64decode(base64_hash)
@@ -289,4 +360,9 @@ class EFactService:
         commonBuilder = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.RequestBuilderFactory.getCommonBuilder(PROJECT_NAME)
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.session.GenAsyncSessionServiceFactory.getGenAsyncService(PROJECT_NAME)
         origin = self.EHEALTH_JVM.getCommontInputMapper().map(commonBuilder.createOrigin(packageInfo))
-        self.EHEALTH_JVM.confirmMessage(origin, service, hash)
+        if not tack:
+            logger.info(f"confirming message with hash {hash}")
+            self.EHEALTH_JVM.confirmMessage(origin, service, hash)
+        else:
+            logger.info(f"confirming TAck message with hash {hash}")
+            self.EHEALTH_JVM.confirmTAckMessage(origin, service, hash)
