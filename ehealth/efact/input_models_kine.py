@@ -384,7 +384,7 @@ class Message200Kine(BaseModel):
             zendingsnummer=self.num_invoice,
             nummer_derdebetalende=self.nummer_derdebetalende,
             date_creation=self.date_invoice,
-            kbo_nummer=self.kbo_number,
+            kbo_number=self.kbo_number,
             bic_bank=self.bic_bank,
             iban_bank=self.iban_bank
         ).to_record_10()
