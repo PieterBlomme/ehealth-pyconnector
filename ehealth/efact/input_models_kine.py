@@ -62,7 +62,7 @@ class Record10Kine(BaseModel):
             nummer_derdebetalende=self.nummer_derdebetalende.rjust(12, "0"),
             beroepscode_facturerende_derde=self.beroepscode_facturerende_derde,
             date_creation=date_creation,
-            kbo_nummer=self.kbo_number,
+            kbo_number=self.kbo_number,
             bic_bank=self.bic_bank,
             iban_bank=self.iban_bank
         )
@@ -236,7 +236,7 @@ class Record90Kine(BaseModel):
             bedrag_financieel_rekeningnummer_b="0",
             bedrag_financieel_rekeningnummer_a=self.totaal,
             date_creation=date_creation,
-            kbo_nummer=self.kbo_number,
+            kbo_number=self.kbo_number,
             reference="", # optional
             bic_bank=self.bic_bank,
             iban_bank=self.iban_bank,
@@ -472,7 +472,7 @@ class Message200Kine(BaseModel):
             nummer_derdebetalende=self.nummer_derdebetalende,
             totaal=totaal,
             date_creation=self.date_invoice,
-            kbo_nummer=self.kbo_number,
+            kbo_number=self.kbo_number,
             bic_bank=self.bic_bank,
             iban_bank=self.iban_bank,
             control_message=calculate_invoice_control([dr.nomenclatuur.rjust(7, "0") for dr in self.detail_records])
