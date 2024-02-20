@@ -106,6 +106,24 @@ public class JavaGateway {
       ConfirmResponse confirmResponse = service.confirmRequest(request, responseConfirmHeader);
       return confirmResponse;
   }
+
+    public ConfirmResponse confirmTAckMessage(OrigineType origin, GenAsyncService service, byte[] hashValue) throws URISyntaxException, TechnicalConnectorException, GenAsyncBusinessConnectorException, SessionManagementException {
+      List<byte[]> tackHashValues = new ArrayList<byte[]>();
+      tackHashValues.add(hashValue);
+
+      WsAddressingHeader responseConfirmHeader = new WsAddressingHeader(new URI("urn:be:cin:nip:async:generic:confirm:hash"));
+      responseConfirmHeader.setTo(new URI(""));
+      responseConfirmHeader.setFaultTo("http://www.w3.org/2005/08/addressing/anonymous");
+      responseConfirmHeader.setReplyTo("http://www.w3.org/2005/08/addressing/anonymous");
+      responseConfirmHeader.setMessageID(new URI(IdGeneratorFactory.getIdGenerator("uuid").generateId()));
+
+      Confirm request = new Confirm();
+      request.setOrigin(origin);
+      request.getTAckContents().addAll(tackHashValues);
+      ConfirmResponse confirmResponse = service.confirmRequest(request, responseConfirmHeader);
+      return confirmResponse;
+  }
+
   public List commonInputAttributes() {
     return Arrays.asList(Attribute.builder()
                 .key("urn:be:cin:nippin:purpose")

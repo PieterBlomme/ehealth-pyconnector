@@ -196,25 +196,25 @@ def test_efact_refusal_1(sts_service, token, efact_service, mda_service):
     reference = f"{today_numeric}{random_id}"
     logger.info(reference)
 
-    input_model_kine = Message200KineNoPractitioner(
-        reference=reference,
-        num_invoice="001",
-        tel_contact="0487179464",
-        hospital_care=False,
-        zendingsnummer="500",
-        bic_bank="GKCCBEBB",
-        iban_bank="BE19063539637812",
-        nummer_individuele_factuur_1="00001",
-        geconventioneerde_verstrekker=True,
-        insz_rechthebbende=ssin,
-        geslacht_rechthebbende="1" if (gender == "male") else "2",
-        nummer_ziekenfonds=nummer_mutualiteit,
-        identificatie_rechthebbende_2="6" if (gender == "male") else "2", # no idea ...
-        cg1_cg2=f"{cg1}{cg2}".rjust(10, "0"),
-        referentiegegevens_netwerk_1=akkoord_derdebetalers,
-        nummer_akkoord=nummer_akkoord,
-        detail_records=[detail_record]
-    )
+    # input_model_kine = Message200KineNoPractitioner(
+    #     reference=reference,
+    #     num_invoice="001",
+    #     tel_contact="0487179464",
+    #     hospital_care=False,
+    #     zendingsnummer="500",
+    #     bic_bank="GKCCBEBB",
+    #     iban_bank="BE19063539637812",
+    #     nummer_individuele_factuur_1="00001",
+    #     geconventioneerde_verstrekker=True,
+    #     insz_rechthebbende=ssin,
+    #     geslacht_rechthebbende="1" if (gender == "male") else "2",
+    #     nummer_ziekenfonds=nummer_mutualiteit,
+    #     identificatie_rechthebbende_2="6" if (gender == "male") else "2", # no idea ...
+    #     cg1_cg2=f"{cg1}{cg2}".rjust(10, "0"),
+    #     referentiegegevens_netwerk_1=akkoord_derdebetalers,
+    #     nummer_akkoord=nummer_akkoord,
+    #     detail_records=[detail_record]
+    # )
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         # NOTE waiting on result of message 20240202860044
         # efact_service.send_efact(
@@ -225,13 +225,8 @@ def test_efact_refusal_1(sts_service, token, efact_service, mda_service):
 
         for m in messages:
             logger.info(m.message.reference)
-            logger.info(m.message.base64_hash)
-            logger.info(m.transaction_response) 
-            logger.info(m.message.errors)
-            if m.message.reference == "20240202860044":
-                logger.info("yay yay yay")
-                logger.info(m.transaction_response)
-                logger.info(m.message.errors)
+            # logger.info(m.message.base64_hash)
+            logger.info(m.transaction_response[:10])
 
 
     

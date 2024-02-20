@@ -1,6 +1,7 @@
 from py4j.java_gateway import JavaGateway
 from typing import Any, Optional, List
 import base64
+from uuid import uuid4
 from random import randint
 import logging
 from io import StringIO
@@ -229,9 +230,11 @@ class EFactService:
         msgQuery.setInclude(True)
         msgQuery.setMax(200)
         msgQuery.getMessageNames().add("HCPFAC")
+        msgQuery.getMessageNames().add("HCPAFD")
+        msgQuery.getMessageNames().add("HCPVWR")
 
         tackQuery = self.EHEALTH_JVM.newQuery()
-        tackQuery.setInclude(False)
+        tackQuery.setInclude(True)
         tackQuery.setMax(100)
         logger.info("Send of the get request")
 
@@ -267,18 +270,24 @@ class EFactService:
             mappedBlob = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.mapper.DomainBlobMapper.mapToBlob(detail)
             unwrappedMessageByteArray = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.BlobBuilderFactory.getBlobBuilder(PROJECT_NAME).checkAndRetrieveContent(mappedBlob)
             decoded = unwrappedMessageByteArray.decode("utf-8")
-            messages.append(self.message_to_object(decoded, base64_hash))
+            try:
+                messages.append(self.message_to_object(decoded, base64_hash))
+            except Exception as e:
+                logger.info(f"Failed to convert message with hash {base64_hash}")
+                with open(f"{uuid4()}.txt", "w") as f:
+                    f.write(decoded)
 
         logger.info("getTAckResponses")
         for tackResponse in responseGet.getReturn().getTAckResponses():
+            # just always confirm TAck messages, I guess
             tackResponseBytes = tackResponse.getTAck().getValue()
-            tackResponse = self.GATEWAY.jvm.java.lang.String(tackResponseBytes, "UTF-8")
-            logger.info(tackResponse)
-
+            base64_hash = base64.b64encode(tackResponseBytes).decode('utf8')
+            logger.info(f"hash: {base64_hash}")
+            self.confirm_message(token, base64_hash, tack=True)
         return messages
 
 
-    def confirm_message(self, token: str, base64_hash: str):
+    def confirm_message(self, token: str, base64_hash: str, tack: bool = False):
         self.set_configuration_from_token(token)
 
         hash = base64.b64decode(base64_hash)
@@ -289,4 +298,9 @@ class EFactService:
         commonBuilder = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.RequestBuilderFactory.getCommonBuilder(PROJECT_NAME)
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.session.GenAsyncSessionServiceFactory.getGenAsyncService(PROJECT_NAME)
         origin = self.EHEALTH_JVM.getCommontInputMapper().map(commonBuilder.createOrigin(packageInfo))
-        self.EHEALTH_JVM.confirmMessage(origin, service, hash)
+        if not tack:
+            logger.info(f"confirming message with hash {hash}")
+            self.EHEALTH_JVM.confirmMessage(origin, service, hash)
+        else:
+            logger.info(f"confirming TAck message with hash {hash}")
+            self.EHEALTH_JVM.confirmTAckMessage(origin, service, hash)
