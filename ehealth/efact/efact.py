@@ -9,7 +9,7 @@ from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from py4j.protocol import Py4JJavaError
-from .input_models import Message200, Header200, Header300, Footer95, Footer96, ErrorMessage
+from .input_models import Message200, Header200, Header300, Footer95, Footer96, ErrorMessage, Header300Refusal, Record10
 from .input_models_kine import Message200KineNoPractitioner, Message200Kine
 import tempfile
 from pydantic import BaseModel
@@ -35,6 +35,8 @@ class Message:
     reference: str
     base64_hash: str
     errors: List[ErrorMessage]
+    reden_weigering: Optional[str] = None
+    percentage_fouten: Optional[float] = None
 
 @dataclass(config=Config)
 class Response:
@@ -177,51 +179,106 @@ class EFactService:
             soap_request="",
             soap_response=raw_response
         )
+    
+    def message_to_object_refusal(self, decoded: str, base64_hash: str) -> Response:
+        logger.info("mapping refusal")
+        # this is a super weird mapping ...
+        header_200 = Header200.from_str(decoded[:67])
+        logger.info(header_200.errors())
+        header_300 = Header300Refusal.from_str(decoded[67:677])
+        logger.info(header_300.errors())
+        logger.info(header_300.refusal_type)
+        logger.info(header_300.percentage_errors)
 
-    def message_to_object(self, decoded: str, base64_hash: str) -> Response:
-            errors = []
-            logger.info(f"Length decoded: {len(decoded)}")
-            header_200 = Header200.from_str(decoded[:67])
-            errors.extend(header_200.errors())
-
-            if not decoded.startswith("931000"):
-                # in the case of a 931000
-                # the structure is different but
-                # there's no meaningful inforomation
-                # so just skip
-                header_300 = Header300.from_str(decoded[67:227])
-                errors.extend(header_300.errors())
-
-            start_record = 227
-            while True:
-                rec = decoded[start_record:start_record+350]
-                start_record += 350
-                if len(rec) == 0:
-                    break
-                else:
-                    assert len(rec) == 350
-
-                if rec.startswith("95"):
-                    footer95 = Footer95.from_str(rec)
-                    errors.extend(footer95.errors())
-                elif rec.startswith("96"):
-                    footer96 = Footer96.from_str(rec)
-                    errors.extend(footer96.errors())
-                else:
-                    # TODO map others to responses
-                    logger.warning(f"Part of message could not be mapped: {rec}")
-
-            return Response(
-                    transaction_request="",
-                    transaction_response=decoded,
-                    soap_request="",
-                    soap_response="",
-                    message=Message(
-                        reference=header_200.reference,
-                        base64_hash=base64_hash,
-                        errors=errors
-                    )
+        message = Message(
+                    reference=header_200.reference,
+                    base64_hash=base64_hash,
+                    errors=[],
                 )
+        if header_300.refusal_type == "01":
+            message.reden_weigering = "Blokkerende fouten"
+        else:
+            message.reden_weigering = "Aantal fouten > 5%"
+            message.percentage_fouten = int(header_300.percentage_errors) / 100.0
+
+        start_record = 677
+        errors = []
+        while True:
+            rec = decoded[start_record:start_record+800]
+            start_record += 800
+            if len(rec) == 0:
+                break
+            else:
+                assert len(rec) == 800
+
+            if rec.startswith("95"):
+                footer95 = Footer95.from_str(rec)
+                errors.extend(footer95.errors())
+            elif rec.startswith("96"):
+                footer96 = Footer96.from_str(rec)
+                errors.extend(footer96.errors())
+            elif rec.startswith("10"):
+                errors.extend(Record10.errors_from_str(rec))
+            else:
+                # TODO map others to responses
+                logger.warning(f"Part of message could not be mapped: {rec[350:]}")
+
+        message.errors = errors
+        return Response(
+                transaction_request="",
+                transaction_response=decoded,
+                soap_request="",
+                soap_response="",
+                message=message
+            )
+    
+    def message_to_object(self, decoded: str, base64_hash: str) -> Response:
+        if decoded[:6] == "920099":
+            return self.message_to_object_refusal(decoded, base64_hash)
+        
+        errors = []
+        logger.info(f"Length decoded: {len(decoded)}")
+        header_200 = Header200.from_str(decoded[:67])
+        errors.extend(header_200.errors())
+
+        if not decoded.startswith("931000"):
+            # in the case of a 931000
+            # the structure is different but
+            # there's no meaningful inforomation
+            # so just skip
+            header_300 = Header300.from_str(decoded[67:227])
+            errors.extend(header_300.errors())
+
+        start_record = 227
+        while True:
+            rec = decoded[start_record:start_record+350]
+            start_record += 350
+            if len(rec) == 0:
+                break
+            else:
+                assert len(rec) == 350
+
+            if rec.startswith("95"):
+                footer95 = Footer95.from_str(rec)
+                errors.extend(footer95.errors())
+            elif rec.startswith("96"):
+                footer96 = Footer96.from_str(rec)
+                errors.extend(footer96.errors())
+            else:
+                # TODO map others to responses
+                logger.warning(f"Part of message could not be mapped: {rec}")
+
+        return Response(
+                transaction_request="",
+                transaction_response=decoded,
+                soap_request="",
+                soap_response="",
+                message=Message(
+                    reference=header_200.reference,
+                    base64_hash=base64_hash,
+                    errors=errors
+                )
+            )
 
     def get_messages(self, token: str):
         self.set_configuration_from_token(token)
