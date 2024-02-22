@@ -9,7 +9,7 @@ from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from py4j.protocol import Py4JJavaError
-from .input_models import Record80, Header200, Header300, Footer95, Footer96, ErrorMessage, Header300Refusal, Record10, Record90, Record20, Record50, Record52
+from .input_models import Record80, Header200, Header300, Footer95, Footer96, ErrorMessage, Header300Refusal, Record10, Record90, Record20, Record50, Record52, Record51
 from .input_models_kine import Message200KineNoPractitioner, Message200Kine
 import tempfile
 from pydantic import BaseModel
@@ -185,6 +185,7 @@ class EFactService:
         # this is a super weird mapping ...
         header_200 = Header200.from_str(decoded[:67])
         header_300 = Header300Refusal.from_str(decoded[67:677])
+        logger.info(header_200.reference)
         message = Message(
                     reference=header_200.reference,
                     base64_hash=base64_hash,
@@ -220,6 +221,8 @@ class EFactService:
                 errors.extend(Record20.errors_from_str(rec))
             elif rec.startswith("50"):
                 errors.extend(Record50.errors_from_str(rec))
+            elif rec.startswith("51"):
+                errors.extend(Record51.errors_from_str(rec))
             elif rec.startswith("80"):
                 errors.extend(Record80.errors_from_str(rec))
             elif rec.startswith("90"):
