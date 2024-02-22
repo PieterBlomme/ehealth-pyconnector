@@ -642,6 +642,9 @@ class Record10(BaseModel):
                 elif key_numeric == "31":
                     key = "BIC Bank"
                     value = record[166:174]
+                elif key_numeric == "99":
+                    key = "Controlecijfer"
+                    value = record[348:350]
                 else:
                     raise Exception(f"Numeric key {key_numeric} not yet mapped for Record10")
 
@@ -874,8 +877,17 @@ class Record20(BaseModel):
                 key = ""
                 error = e[5:7]
                 value = ""
-
-                raise Exception(f"Numeric key {key_numeric} not yet mapped for Record20")
+                if key_numeric == "08":
+                    key = "identificatie rechthebbende"
+                    value = record[35:47]
+                elif key_numeric == "09":
+                    key = "geslacht rechthebbende"
+                    value = record[48:49]
+                elif key_numeric == "99":
+                    key = "controlecijfer record"
+                    value = record[348:350]
+                else:
+                    raise Exception(f"Numeric key {key_numeric} not yet mapped for Record20")
 
                 e_dict = cls._error_shared(key, error, value, e[0])
             result.append(ErrorMessage(**e_dict))
@@ -1113,18 +1125,32 @@ class Record50(BaseModel):
                 key = ""
                 error = e[5:7]
                 value = ""
+                if key_numeric == "00":
+                    continue # TODO?
 
-                if key_numeric == "19":
+                if key_numeric == "08":
+                    key = "identificatie rechthebbende"
+                    value = record[35:47]
+                elif key_numeric == "19":
                     key = "Teken en bedrag verzekeringstegemoetkoming"
                     value = record[87:99]
+                elif key_numeric == "24":
+                    key = "Identificatie voorschrijver"
+                    value = record[114:119]
                 elif key_numeric == "27":
                     key = "Teken en bedrag persoonlijk aandeel patiënt"
                     value = record[127:137]
+                elif key_numeric == "28":
+                    key = "Referentie instelling"
+                    value = record[137:162]
                 elif key_numeric == "30":
                     key = "Teken en bedrag persoonlijk supplement"
                     value = record[164:174]
+                elif key_numeric == "99":
+                    key = "controlecijfer record"
+                    value = record[348:350]
                 else:
-                    raise Exception(f"Numeric key {key_numeric} not yet mapped for Record50")
+                    raise Exception(f"Numeric key {key_numeric} not yet mapped for Record50 {e}")
 
                 e_dict = cls._error_shared(key, error, value, e[0])
             result.append(ErrorMessage(**e_dict))
@@ -1266,6 +1292,72 @@ class Record51(BaseModel):
     nummer_akkoord_tariefverbintenis: str
     datum_mededeling_informatie: str
 
+    @classmethod
+    def _error_shared(cls, key, error, value, refusal_code) -> Optional[Dict[str, Any]]:
+        if error == "00":
+            return None
+        
+        _ERROR_CONSTANTS = {
+            "01": "Gegeven niet numeriek",
+            "02": "Controlecijfer foutief",
+            "03": "Gegeven niet toegelaten",
+            "09": "Verboden karakters",
+            "20": "Gegeven niet gekend in bestand ziekenfonds",
+        }
+        
+        return {
+            "type": "51",
+            "key": key,
+            "value": value,
+            "error_code": error,
+            "message": _ERROR_CONSTANTS.get(error),
+            "verwerpingsletter": refusal_code
+        }
+    
+    @classmethod
+    def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
+        # I'm only going to bother to map the actual errors
+        result = []
+        for i in range(3):
+            e = record[456+i*7:456+7+i*7]
+            if e[0] == " ":
+                # no more errors
+                break
+            else:
+                # I'm only going to bother with fields that I actually encounter
+                key_numeric = e[3:5]
+                key = ""
+                error = e[5:7]
+                value = ""
+
+                if key_numeric == "00":
+                    continue # TODO?
+
+                if key_numeric == "01":
+                    key = "recordtype"
+                    value = record[0:1]
+                elif key_numeric == "08":
+                    key = "identificatie rechthebbende"
+                    value = record[35:47]
+                elif key_numeric == "15":
+                    key = "identificatie verstrekker"
+                    value = record[67:79]
+                elif key_numeric == "19":
+                    key = "Teken + bedrag verzekeringstegemoetkoming"
+                    value = record[87:99]
+                elif key_numeric == "28":
+                    key = "Reserve"
+                    value = record[137:162]
+                elif key_numeric == "99":
+                    key = "controlecijfer record"
+                    value = record[348:350]
+                else:
+                    raise Exception(f"Numeric key {key_numeric} not yet mapped for Record51")
+
+                e_dict = cls._error_shared(key, error, value, e[0])
+            result.append(ErrorMessage(**e_dict))
+        return result
+    
     def __str__(self):
         to_str = ""
         assert len(self.record) == 2
@@ -1324,7 +1416,7 @@ class Record51(BaseModel):
         return to_str
 
 class Record52(BaseModel):
-    record: Optional[str] = "51"
+    record: Optional[str] = "52"
     num_record: Optional[str] = "000004"
     reden_manuele_invoering: Optional[str] = "0"
     nomenclatuur: str
@@ -1462,9 +1554,21 @@ class Record80(BaseModel):
                 error = e[5:7]
                 value = ""
 
-                if key_numeric == " ":
-                    key = "Teken en bedrag verzekeringstegemoetkoming"
+                if key_numeric == "98":
+                    key = "Controlecijfer factuur"
+                    value = record[346:348]
+                elif key_numeric == "19":
+                    key = "teken + bedrag financieel rekeningnummer a"
                     value = record[87:99]
+                elif key_numeric == "27":
+                    key = "teken + bedrag persoonlijk aandeel patient"
+                    value = record[127:137]
+                elif key_numeric == "30":
+                    key = "teken + bedrag supplement"
+                    value = record[164:166]
+                elif key_numeric == "99":
+                    key = "Controlecijfer record"
+                    value = record[348:350]
                 else:
                     raise Exception(f"Numeric key {key_numeric} not yet mapped for Record80")
 
@@ -1605,9 +1709,18 @@ class Record90(BaseModel):
                 error = e[5:7]
                 value = ""
 
-                if key_numeric == "23":
+                if key_numeric == "19":
+                    key = "teken + totaal bedrag financieel rekeningnummer a"
+                    value = record[87:99]
+                elif key_numeric == "23":
                     key = "gefactureerde maand"
                     value = record[112:114]
+                elif key_numeric == "98":
+                    key = "controlecijfer factuur"
+                    value = record[346:348]
+                elif key_numeric == "99":
+                    key = "controlecijfer record"
+                    value = record[348:350]
                 else:
                     raise Exception(f"Numeric key {key_numeric} not yet mapped for Record90")
 
