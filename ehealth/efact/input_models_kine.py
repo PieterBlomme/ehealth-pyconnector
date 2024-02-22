@@ -7,10 +7,12 @@ logger = logging.getLogger(__name__)
 
 class Header200Kine(BaseModel):
     reference: str
+    version: Optional[str] = "01"
 
     def to_header_200(self) -> Header200:
         return Header200(
-            reference=self.reference
+            reference=self.reference,
+            version=self.version
         )
 
 
@@ -285,6 +287,7 @@ class DetailRecord(BaseModel):
     persoonlijk_aandeel_patient: str
     bedrag_supplement: str
     code_facturering_persoonlijk_aandeel_of_supplement: Optional[str] = 1 # 1 indien patiënt zelf betaald zie https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf p 491
+    nummer_akkoord: Optional[str] = None
 
     def to_record_50(self, 
                      i: int,
@@ -339,6 +342,7 @@ class Message200Kine(BaseModel):
     Now what do we need in general to complete these records
     """
     reference: str
+    version: Optional[str] = "01"
     num_invoice: str
     date_invoice: Optional[datetime.date] = datetime.date.today()
     is_test: Optional[bool] = True
@@ -367,7 +371,8 @@ class Message200Kine(BaseModel):
 
     def to_message200(self) -> Message200:
         header_200 = Header200Kine(
-            reference=self.reference
+            reference=self.reference,
+            version=self.version
         ).to_header_200()
         header_300 = Header300Kine(
             num_invoice=self.num_invoice,
@@ -429,7 +434,7 @@ class Message200Kine(BaseModel):
                 insz_rechthebbende=self.insz_rechthebbende,
                 identificatie_rechthebbende_2=self.identificatie_rechthebbende_2,
                 riziv_nummer=self.nummer_facturerende_instelling,
-                nummer_akkoord=self.nummer_akkoord
+                nummer_akkoord=dr.nummer_akkoord or self.nummer_akkoord
                      ).to_record_52()
             record_52s.append(record_52)
 
