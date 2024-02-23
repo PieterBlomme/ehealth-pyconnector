@@ -629,6 +629,8 @@ class Record10(BaseModel):
                 key = ""
                 error = e[5:7]
                 value = ""
+                if key_numeric == "00":
+                    continue # TODO?
 
                 if key_numeric == "07":
                     key = "zendingsnummer"
@@ -877,12 +879,18 @@ class Record20(BaseModel):
                 key = ""
                 error = e[5:7]
                 value = ""
+                if key_numeric == "00":
+                    continue # TODO?
+
                 if key_numeric == "08":
                     key = "identificatie rechthebbende"
                     value = record[35:47]
                 elif key_numeric == "09":
                     key = "geslacht rechthebbende"
                     value = record[48:49]
+                elif key_numeric == "18":
+                    key = "nummer ziekenfonds van bestemming"
+                    value = record[84:87]
                 elif key_numeric == "99":
                     key = "controlecijfer record"
                     value = record[348:350]
@@ -1128,7 +1136,10 @@ class Record50(BaseModel):
                 if key_numeric == "00":
                     continue # TODO?
 
-                if key_numeric == "08":
+                if key_numeric == "01":
+                    key = "recordtype"
+                    value = record[0:2]
+                elif key_numeric == "08":
                     key = "identificatie rechthebbende"
                     value = record[35:47]
                 elif key_numeric == "19":
@@ -1336,6 +1347,9 @@ class Record51(BaseModel):
                 if key_numeric == "01":
                     key = "recordtype"
                     value = record[0:1]
+                elif key_numeric == "05":
+                    key = "datum verstrekking"
+                    value = record[16:24]
                 elif key_numeric == "08":
                     key = "identificatie rechthebbende"
                     value = record[35:47]
@@ -1348,6 +1362,12 @@ class Record51(BaseModel):
                 elif key_numeric == "28":
                     key = "Reserve"
                     value = record[137:162]
+                elif key_numeric == "27":
+                    key = "Code gerechtigde"
+                    value = record[127:137]
+                elif key_numeric == "55":
+                    key = "Datum mededeling informatie"
+                    value = record[320:328]
                 elif key_numeric == "99":
                     key = "controlecijfer record"
                     value = record[348:350]
@@ -1553,6 +1573,8 @@ class Record80(BaseModel):
                 key = ""
                 error = e[5:7]
                 value = ""
+                if key_numeric == "00":
+                    continue # TODO?
 
                 if key_numeric == "98":
                     key = "Controlecijfer factuur"
@@ -1708,6 +1730,8 @@ class Record90(BaseModel):
                 key = ""
                 error = e[5:7]
                 value = ""
+                if key_numeric == "00":
+                    continue # TODO?
 
                 if key_numeric == "19":
                     key = "teken + totaal bedrag financieel rekeningnummer a"
