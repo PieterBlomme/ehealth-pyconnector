@@ -35,6 +35,9 @@ def calculate_control(text) -> str:
             control_number = 37
         control += control_number
 
+    # commented in production
+    # looks like their testfiles are actually
+    # invalid ...
     # control += 10 # missing blank??
 
     control = control % 97
