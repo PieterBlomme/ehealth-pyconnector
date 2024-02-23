@@ -45,13 +45,23 @@ def calculate_control(text) -> str:
         control = 97
     return str(control).rjust(2, "0")
 
-def calculate_invoice_control(nomenclatures: List[str]) -> str:
+def calculate_invoice_control(nomenclatures) -> str:
     total = [0,0,0,0,0,0,0,]
     for n in nomenclatures:
         assert len(n) == 7
         for i, c in enumerate(n):
             total[i] += int(c)
 
+    print(total)
+    # shift left if > 10
+    for i in (6, 5, 4, 3, 2, 1):
+        if total[i] > 9:
+            remainder = total[i] % 10
+            shift_left = int((total[i] - remainder) / 10)
+            print(f"{i}: {remainder} {shift_left}")
+            total[i] = remainder
+            total[i-1] = total[i-1] + shift_left
+    print(total)
     control = int("".join([str(e) for e in total]))
     control = control % 97
     if control == 0:
