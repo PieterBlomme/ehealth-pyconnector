@@ -12,7 +12,7 @@ from ehealth.efact.input_models import (
     Record51, Record80, Record90, Footer95, Footer96,
     calculate_invoice_control
 )
-from ehealth.efact.input_models_kine import Message200KineNoPractitioner, DetailRecord, Message200Kine
+from ehealth.efact.input_models_kine import Message200KineNoPractitioner, DetailRecord, Message200Kine, Record80Kine
 from ehealth.mda import MDAService
 from ehealth.mda.attribute_query import Facet, Dimension
 from ehealth.sts import STSService
@@ -321,17 +321,33 @@ def test_input_model(sts_service, token, efact_service):
             nummer_facturerende_instelling=practitioner.nihii,
             **input_model.dict()
         )
+
+
+        totaal = 0
+        totaal_persoonlijk_aandeel = 0
+        totaal_supplement = 0
         for dr in message_200.detail_records:
-            record_50 = dr.to_record_50(
-                i=0,
-                nummer_ziekenfonds_rechthebbende=message_200.nummer_ziekenfonds,
-                insz_rechthebbende=message_200.insz_rechthebbende,
-                identificatie_rechthebbende_2=message_200.identificatie_rechthebbende_2,
-                geslacht_rechthebbende=message_200.geslacht_rechthebbende,
-                hospital_care=message_200.hospital_care,
-                identificatie_verstrekker=message_200.nummer_facturerende_instelling,
-                geconventioneerde_verstrekker=message_200.geconventioneerde_verstrekker,
-                norm_verstrekker="1", # meestal 1 https://metadata.aim-ima.be/nl/app/vars/SS00340_Gz
-                     ).to_record_50()
-            for k, v in record_50.dict().items():
-                logger.info(f"{k}: {v}")
+            totaal += int(dr.bedrag_verzekeringstegemoetkoming)
+            totaal_persoonlijk_aandeel += int(dr.persoonlijk_aandeel_patient)
+            totaal_supplement += int(dr.bedrag_supplement)
+
+        record_50 = Record80Kine(
+        num_record=str(4).rjust(6, "0"),
+        nummer_ziekenfonds_aansluiting=message_200.nummer_ziekenfonds,
+        insz_rechthebbende=message_200.insz_rechthebbende,
+        identificatie_rechthebbende_2=message_200.identificatie_rechthebbende_2,
+        geslacht_rechthebbende=message_200.geslacht_rechthebbende,
+        hospital_care=message_200.hospital_care,
+        nummer_facturerende_instelling=message_200.nummer_facturerende_instelling,
+        reden_behandeling="0000", # message_200 ????
+        nummer_ziekenfonds_bestemming=message_200.nummer_ziekenfonds,
+        nummer_individuele_factuur_1=message_200.nummer_individuele_factuur_1,
+        cg1_cg2=message_200.cg1_cg2,
+        referentiegegevens_netwerk_1=message_200.referentiegegevens_netwerk_1,
+        totaal=totaal,
+        totaal_persoonlijk_aandeel=totaal_persoonlijk_aandeel,
+        totaal_supplement=totaal_supplement,
+        control_invoice=calculate_invoice_control([dr.nomenclatuur.rjust(7, "0") for dr in message_200.detail_records])
+        ).to_record_80()
+        for k, v in record_50.dict().items():
+            logger.info(f"{k}: {v}")
