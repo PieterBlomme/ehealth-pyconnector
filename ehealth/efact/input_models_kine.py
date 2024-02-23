@@ -409,6 +409,8 @@ class Message200Kine(BaseModel):
             referentiegegevens_netwerk_1=self.referentiegegevens_netwerk_1
         ).to_record_20()
 
+        invoice_control_inputs = []
+
         i = 2 # starting point
         record_50s = []
         for dr in self.detail_records:
@@ -425,6 +427,7 @@ class Message200Kine(BaseModel):
                 norm_verstrekker="1", # meestal 1 https://metadata.aim-ima.be/nl/app/vars/SS00340_Gz
                      ).to_record_50()
             record_50s.append(record_50)
+            invoice_control_inputs.append(dr.nomenclatuur.rjust(7, "0"))
 
         record_52s = []
         for dr in self.detail_records:
@@ -437,7 +440,7 @@ class Message200Kine(BaseModel):
                 nummer_akkoord=dr.nummer_akkoord or self.nummer_akkoord
                      ).to_record_52()
             record_52s.append(record_52)
-
+            invoice_control_inputs.append(dr.nomenclatuur.rjust(7, "0"))
 
         totaal = 0
         totaal_persoonlijk_aandeel = 0
@@ -464,7 +467,7 @@ class Message200Kine(BaseModel):
             totaal=totaal,
             totaal_persoonlijk_aandeel=totaal_persoonlijk_aandeel,
             totaal_supplement=totaal_supplement,
-            control_invoice=calculate_invoice_control([dr.nomenclatuur.rjust(7, "0") for dr in self.detail_records])
+            control_invoice=calculate_invoice_control(invoice_control_inputs)
         ).to_record_80()
 
         i += 1
@@ -477,21 +480,21 @@ class Message200Kine(BaseModel):
             kbo_number=self.kbo_number,
             bic_bank=self.bic_bank,
             iban_bank=self.iban_bank,
-            control_message=calculate_invoice_control([dr.nomenclatuur.rjust(7, "0") for dr in self.detail_records])
+            control_message=calculate_invoice_control(invoice_control_inputs)
         ).to_record_90()
 
         footer_95 = Footer95Kine(
             nummer_mutualiteit=self.nummer_ziekenfonds,
             totaal=totaal,
             aantal_records=4+len(self.detail_records),
-            controle_nummer_per_mutualiteit=calculate_invoice_control([dr.nomenclatuur.rjust(7, "0") for dr in self.detail_records])
+            controle_nummer_per_mutualiteit=calculate_invoice_control(invoice_control_inputs)
         ).to_footer_95()
 
         footer_96 = Footer96Kine(
             nummer_mutualiteit=self.nummer_ziekenfonds[0] + "99",
             totaal=totaal,
             aantal_records=4+2+len(self.detail_records),
-            controle_nummer_per_mutualiteit=calculate_invoice_control([dr.nomenclatuur.rjust(7, "0") for dr in self.detail_records])
+            controle_nummer_per_mutualiteit=calculate_invoice_control(invoice_control_inputs)
         ).to_footer_96()
 
         return Message200(
