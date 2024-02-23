@@ -35,7 +35,7 @@ def calculate_control(text) -> str:
             control_number = 37
         control += control_number
 
-    control += 10 # missing blank??
+    # control += 10 # missing blank??
 
     control = control % 97
     if control == 0:

@@ -443,12 +443,9 @@ class Message200Kine(BaseModel):
         totaal_persoonlijk_aandeel = 0
         totaal_supplement = 0
         for dr in self.detail_records:
-            totaal += float(dr.bedrag_verzekeringstegemoetkoming)
-            totaal_persoonlijk_aandeel += float(dr.persoonlijk_aandeel_patient)
-            totaal_supplement += float(dr.bedrag_supplement)
-        totaal = int(totaal*100)
-        totaal_persoonlijk_aandeel = int(totaal*100)
-        totaal_supplement = int(totaal*100)
+            totaal += int(dr.bedrag_verzekeringstegemoetkoming)
+            totaal_persoonlijk_aandeel += int(dr.persoonlijk_aandeel_patient)
+            totaal_supplement += int(dr.bedrag_supplement)
 
         i += 1
         record_80 = Record80Kine(
