@@ -12,7 +12,7 @@ from ehealth.efact.input_models import (
     Record51, Record80, Record90, Footer95, Footer96,
     calculate_invoice_control
 )
-from ehealth.efact.input_models_kine import Message200KineNoPractitioner, DetailRecord
+from ehealth.efact.input_models_kine import Message200KineNoPractitioner, DetailRecord, Message200Kine
 from ehealth.mda import MDAService
 from ehealth.mda.attribute_query import Facet, Dimension
 from ehealth.sts import STSService
@@ -273,3 +273,65 @@ def test_load_errors(efact_service, message):
     logger.info(response.message)
     if not message.startswith('931000'):
         assert len(response.message.errors) > 0
+
+
+def test_input_model(sts_service, token, efact_service):
+    in_ = {
+      "reference": "20240220209585",
+      "num_invoice": "184",
+      "date_invoice": "2024-02-20",
+      "is_test": True,
+      "tel_contact": "0487179464",
+      "hospital_care": False,
+      "beroepscode_facturerende_derde": "000",
+      "kbo_number": "0503827601",
+      "bic_bank": "GKCCBEBB",
+      "iban_bank": "BE19063539637812",
+      "nummer_ziekenfonds": "509",
+      "insz_rechthebbende": "96010145781",
+      "identificatie_rechthebbende_2": "6",
+      "geslacht_rechthebbende": "1",
+      "instelling_van_verblijf": "000000000000",
+      "nummer_individuele_factuur_1": "00184",
+      "cg1_cg2": "0000410460",
+      "referentiegegevens_netwerk_1": "",
+      "geconventioneerde_verstrekker": True,
+      "nummer_akkoord": "50914202200000255537",
+      "detail_records": [
+        {
+          "nomenclatuur": "567011",
+          "datum_eerste_verstrekking": "2024-02-15",
+          "bedrag_verzekeringstegemoetkoming": "2375",
+          "datum_voorschrift": "2024-02-07",
+          "persoonlijk_aandeel_patient": "625",
+          "bedrag_supplement": "0",
+          "code_facturering_persoonlijk_aandeel_of_supplement": "1",
+          "nummer_akkoord": None
+        }
+      ]
+    }
+    input_model = Message200KineNoPractitioner(**in_)
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        practitioner = efact_service.set_configuration_from_token(token)
+
+        message_200 = Message200Kine(
+            name_contact=practitioner.surname,
+            first_name_contact=practitioner.givenname,
+            nummer_derdebetalende=practitioner.nihii,
+            nummer_facturerende_instelling=practitioner.nihii,
+            **input_model.dict()
+        )
+        for dr in message_200.detail_records:
+            record_50 = dr.to_record_50(
+                i=0,
+                nummer_ziekenfonds_rechthebbende=message_200.nummer_ziekenfonds,
+                insz_rechthebbende=message_200.insz_rechthebbende,
+                identificatie_rechthebbende_2=message_200.identificatie_rechthebbende_2,
+                geslacht_rechthebbende=message_200.geslacht_rechthebbende,
+                hospital_care=message_200.hospital_care,
+                identificatie_verstrekker=message_200.nummer_facturerende_instelling,
+                geconventioneerde_verstrekker=message_200.geconventioneerde_verstrekker,
+                norm_verstrekker="1", # meestal 1 https://metadata.aim-ima.be/nl/app/vars/SS00340_Gz
+                     ).to_record_50()
+            for k, v in record_50.dict().items():
+                logger.info(f"{k}: {v}")

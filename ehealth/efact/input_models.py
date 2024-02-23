@@ -1550,7 +1550,7 @@ class Record80(BaseModel):
         }
         
         return {
-            "type": "50",
+            "type": "80",
             "key": key,
             "value": value,
             "error_code": error,
