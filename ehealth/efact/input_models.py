@@ -1456,6 +1456,63 @@ class Record52(BaseModel):
     uniek_nummer_medische_beeldvorming: Optional[str] = "0" * 12
     nummer_akkoord: str
 
+    @classmethod
+    def _error_shared(cls, key, error, value, refusal_code) -> Optional[Dict[str, Any]]:
+        if error == "00":
+            return None
+        
+        _ERROR_CONSTANTS = {
+            "01": "Gegeven niet numeriek",
+            "02": "Controlecijfer foutief",
+            "03": "Gegeven niet toegelaten",
+            "09": "Verboden karakters",
+            "20": "Gegeven niet gekend in bestand ziekenfonds",
+        }
+        
+        return {
+            "type": "52",
+            "key": key,
+            "value": value,
+            "error_code": error,
+            "message": _ERROR_CONSTANTS.get(error),
+            "verwerpingsletter": refusal_code
+        }
+    
+    @classmethod
+    def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
+        # I'm only going to bother to map the actual errors
+        result = []
+        for i in range(3):
+            e = record[456+i*7:456+7+i*7]
+            if e[0] == " ":
+                # no more errors
+                break
+            else:
+                # I'm only going to bother with fields that I actually encounter
+                key_numeric = e[3:5]
+                key = ""
+                error = e[5:7]
+                value = ""
+
+                if key_numeric == "00":
+                    continue # TODO?
+
+                if key_numeric == "01":
+                    key = "recordtype"
+                    value = record[0:1]
+                elif key_numeric == "19":
+                    key = "nummer akkoord"
+                    value = record[131:151]
+                elif key_numeric == "99":
+                    key = "controlecijfer record"
+                    value = record[348:350]
+                else:
+                    raise Exception(f"Numeric key {key_numeric} not yet mapped for Record52")
+
+                e_dict = cls._error_shared(key, error, value, e[0])
+            result.append(ErrorMessage(**e_dict))
+        return result
+    
     def __str__(self):
         to_str = ""
         assert len(self.record) == 2

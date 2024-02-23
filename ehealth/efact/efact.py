@@ -223,6 +223,8 @@ class EFactService:
                 errors.extend(Record50.errors_from_str(rec))
             elif rec.startswith("51"):
                 errors.extend(Record51.errors_from_str(rec))
+            elif rec.startswith("52"):
+                errors.extend(Record52.errors_from_str(rec))
             elif rec.startswith("80"):
                 errors.extend(Record80.errors_from_str(rec))
             elif rec.startswith("90"):
