@@ -1909,6 +1909,258 @@ class Record90(BaseModel):
         to_str += control_record
         return to_str
 
+
+class Record91(BaseModel):
+    recordtype: str
+    error_recordtype: str
+    nummer_mutualiteit: str
+    error_nummer_mutualiteit: str
+    nummer_verzamelfactuur: str
+    error_nummer_verzamelfactuur: str
+
+    teken_gevraagd_bedrag_rekening_a: str
+    gevraagd_bedrag_rekening_a: str
+    error_gevraagd_bedrag_rekening_a: str
+
+    teken_gevraagd_bedrag_rekening_b: str
+    gevraagd_bedrag_rekening_b: str
+    error_gevraagd_bedrag_rekening_b: str
+
+    teken_totaal_gevraagd_bedrag_rekening_a_b_c: str
+    totaal_gevraagd_bedrag_rekening_a_b_c: str
+    error_totaal_gevraagd_bedrag_rekening_a_b_c: str
+
+    aantal_records: str
+    error_aantal_records: str
+    controle_nummer_per_mutualiteit: str
+    error_controle_nummer_per_mutualiteit: str
+
+    teken_aanvaard_bedrag_rekening_a: str
+    aanvaard_bedrag_rekening_a: str
+    error_aanvaard_bedrag_rekening_a: str
+    teken_geweigerd_bedrag_rekening_a: str
+    geweigerd_bedrag_rekening_a: str
+    error_geweigerd_bedrag_rekening_a: str
+
+    teken_aanvaard_bedrag_rekening_b: str
+    aanvaard_bedrag_rekening_b: str
+    error_aanvaard_bedrag_rekening_b: str
+    teken_geweigerd_bedrag_rekening_b: str
+    geweigerd_bedrag_rekening_b: str
+    error_geweigerd_bedrag_rekening_b: str
+
+    teken_totaal_aanvaard_bedrag_rekening_a_b_c: str
+    totaal_aanvaard_bedrag_rekening_a_b_c: str
+    error_totaal_aanvaard_bedrag_rekening_a_b_c: str
+    teken_totaal_geweigerd_bedrag_rekening_a_b_c: str
+    totaal_geweigerd_bedrag_rekening_a_b_c: str
+    error_totaal_geweigerd_bedrag_rekening_a_b_c: str
+
+    referentie_betaling_rekening_a: str
+    error_referentie_betaling_rekening_a: str
+    referentie_betaling_rekening_b: str
+    error_referentie_betaling_rekening_b: str
+
+    teken_gevraagd_bedrag_rekening_c: str
+    gevraagd_bedrag_rekening_c: str
+    error_gevraagd_bedrag_rekening_c: str
+    teken_aanvaard_bedrag_rekening_c: str
+    aanvaard_bedrag_rekening_c: str
+    error_aanvaard_bedrag_rekening_c: str
+    teken_geweigerd_bedrag_rekening_c: str
+    geweigerd_bedrag_rekening_c: str
+    error_geweigerd_bedrag_rekening_c: str
+
+    referentie_betaling_rekening_c: str
+    error_referentie_betaling_rekening_c: str
+
+    @classmethod
+    def from_str(cls, msg: str) -> "Record91":
+        assert len(msg) == 800
+        return Record91(
+                recordtype=msg[:2],
+                error_recordtype=msg[2:4],
+                nummer_mutualiteit=msg[4:7],
+                error_nummer_mutualiteit=msg[7:9],
+                nummer_verzamelfactuur=msg[9:21],
+                error_nummer_verzamelfactuur=msg[21:23],
+
+                teken_gevraagd_bedrag_rekening_a=msg[23],
+                gevraagd_bedrag_rekening_a=msg[24:35],
+                error_gevraagd_bedrag_rekening_a=msg[35:37],
+
+                teken_gevraagd_bedrag_rekening_b=msg[37],
+                gevraagd_bedrag_rekening_b=msg[38:49],
+                error_gevraagd_bedrag_rekening_b=msg[49:51],
+
+                teken_totaal_gevraagd_bedrag_rekening_a_b_c=msg[51],
+                totaal_gevraagd_bedrag_rekening_a_b_c=msg[52:63],
+                error_totaal_gevraagd_bedrag_rekening_a_b_c=msg[63:65],
+
+                aantal_records=msg[65:73],
+                error_aantal_records=msg[73:75],
+                controle_nummer_per_mutualiteit=msg[75:77],
+                error_controle_nummer_per_mutualiteit=msg[77:79],
+
+                teken_aanvaard_bedrag_rekening_a=msg[79],
+                aanvaard_bedrag_rekening_a=msg[80:91],
+                error_aanvaard_bedrag_rekening_a=msg[91:93],
+                teken_geweigerd_bedrag_rekening_a=msg[93],
+                geweigerd_bedrag_rekening_a=msg[94:105],
+                error_geweigerd_bedrag_rekening_a=msg[105:107],
+
+                teken_aanvaard_bedrag_rekening_b=msg[107],
+                aanvaard_bedrag_rekening_b=msg[108:119],
+                error_aanvaard_bedrag_rekening_b=msg[119:121],
+                teken_geweigerd_bedrag_rekening_b=msg[121],
+                geweigerd_bedrag_rekening_b=msg[121:133],
+                error_geweigerd_bedrag_rekening_b=msg[133:135],
+
+                teken_totaal_aanvaard_bedrag_rekening_a_b_c=msg[135],
+                totaal_aanvaard_bedrag_rekening_a_b_c=msg[136:147],
+                error_totaal_aanvaard_bedrag_rekening_a_b_c=msg[147:149],
+                teken_totaal_geweigerd_bedrag_rekening_a_b_c=msg[149],
+                totaal_geweigerd_bedrag_rekening_a_b_c=msg[150:161],
+                error_totaal_geweigerd_bedrag_rekening_a_b_c=msg[161:163],
+
+                referentie_betaling_rekening_a=msg[163:185],
+                error_referentie_betaling_rekening_a=msg[185:187],
+                referentie_betaling_rekening_b=msg[187:209],
+                error_referentie_betaling_rekening_b=msg[209:211],
+
+                teken_gevraagd_bedrag_rekening_c=msg[211],
+                gevraagd_bedrag_rekening_c=msg[212:223],
+                error_gevraagd_bedrag_rekening_c=msg[223:225],
+                teken_aanvaard_bedrag_rekening_c=msg[225],
+                aanvaard_bedrag_rekening_c=msg[226:237],
+                error_aanvaard_bedrag_rekening_c=msg[237:239],
+                teken_geweigerd_bedrag_rekening_c=msg[239],
+                geweigerd_bedrag_rekening_c=msg[240:251],
+                error_geweigerd_bedrag_rekening_c=msg[251:253],
+
+                referentie_betaling_rekening_c=msg[253:275],
+                error_referentie_betaling_rekening_c=msg[275:277],
+        )
+    
+    # TODO Errors cf header/footer
+    # and then append them to existing errors
+
+class Record92(BaseModel):
+    recordtype: str
+    error_recordtype: str
+    nummer_mutualiteit: str
+    error_nummer_mutualiteit: str
+    not_used: str
+    error_not_used: str
+
+    teken_totaal_gevraagde_bedragen_rekening_a: str
+    totaal_gevraagde_bedragen_rekening_a: str
+    error_totaal_gevraagde_bedragen_rekening_a: str
+
+    teken_totaal_gevraagde_bedragen_rekening_b: str
+    totaal_gevraagde_bedragen_rekening_b: str
+    error_totaal_gevraagde_bedragen_rekening_b: str
+
+    teken_totaal_gevraagde_bedragen_rekening_a_b_c: str
+    totaal_gevraagde_bedragen_rekening_a_b_c: str
+    error_totaal_gevraagde_bedragen_rekening_a_b_c: str
+
+    aantal_registraties: str
+    error_aantal_registraties: str
+    controle_nummer_zending: str
+    error_controle_nummer_zending: str
+
+    teken_totaal_aanvaarde_bedragen_rekening_a: str
+    totaal_aanvaarde_bedragen_rekening_a: str
+    error_totaal_aanvaarde_bedragen_rekening_a: str
+    teken_totaal_geweigerde_bedragen_rekening_a: str
+    totaal_geweigerde_bedragen_rekening_a: str
+    error_totaal_geweigerde_bedragen_rekening_a: str
+
+    teken_totaal_aanvaarde_bedragen_rekening_b: str
+    totaal_aanvaarde_bedragen_rekening_b: str
+    error_totaal_aanvaarde_bedragen_rekening_b: str
+    teken_totaal_geweigerde_bedragen_rekening_b: str
+    totaal_geweigerde_bedragen_rekening_b: str
+    error_totaal_geweigerde_bedragen_rekening_b: str
+
+    teken_totaal_aanvaarde_bedragen_rekening_a_b_c: str
+    totaal_aanvaarde_bedragen_rekening_a_b_c: str
+    error_totaal_aanvaarde_bedragen_rekening_a_b_c: str
+    teken_totaal_geweigerde_bedragen_rekening_a_b_c: str
+    totaal_geweigerde_bedragen_rekening_a_b_c: str
+    error_totaal_geweigerde_bedragen_rekening_a_b_c: str
+
+    teken_gevraagd_bedrag_rekening_c: str
+    gevraagd_bedrag_rekening_c: str
+    error_gevraagd_bedrag_rekening_c: str
+    teken_aanvaard_bedrag_rekening_c: str
+    aanvaard_bedrag_rekening_c: str
+    error_aanvaard_bedrag_rekening_c: str
+    teken_geweigerd_bedrag_rekening_c: str
+    geweigerd_bedrag_rekening_c: str
+    error_geweigerd_bedrag_rekening_c: str
+
+    @classmethod
+    def from_str(cls, msg: str) -> "Record92":
+        assert len(msg) == 800
+        return Record92(
+                recordtype=msg[:2],
+                error_recordtype=msg[2:4],
+                nummer_mutualiteit=msg[4:7],
+                error_nummer_mutualiteit=msg[7:9],
+                not_used=msg[9:21],
+                error_not_used=msg[21:23],
+
+                teken_totaal_gevraagde_bedragen_rekening_a=msg[23],
+                totaal_gevraagde_bedragen_rekening_a=msg[24:35],
+                error_totaal_gevraagde_bedragen_rekening_a=msg[35:37],
+
+                teken_totaal_gevraagde_bedragen_rekening_b=msg[37],
+                totaal_gevraagde_bedragen_rekening_b=msg[38:49],
+                error_totaal_gevraagde_bedragen_rekening_b=msg[49:51],
+
+                teken_totaal_gevraagde_bedragen_rekening_a_b_c=msg[51],
+                totaal_gevraagde_bedragen_rekening_a_b_c=msg[52:63],
+                error_totaal_gevraagde_bedragen_rekening_a_b_c=msg[63:65],
+
+                aantal_registraties=msg[65:73],
+                error_aantal_registraties=msg[73:75],
+                controle_nummer_zending=msg[75:77],
+                error_controle_nummer_zending=msg[77:79],
+
+                teken_totaal_aanvaarde_bedragen_rekening_a=msg[79],
+                totaal_aanvaarde_bedragen_rekening_a=msg[80:91],
+                error_totaal_aanvaarde_bedragen_rekening_a=msg[91:93],
+                teken_totaal_geweigerde_bedragen_rekening_a=msg[93],
+                totaal_geweigerde_bedragen_rekening_a=msg[94:105],
+                error_totaal_geweigerde_bedragen_rekening_a=msg[105:107],
+
+                teken_totaal_aanvaarde_bedragen_rekening_b=msg[107],
+                totaal_aanvaarde_bedragen_rekening_b=msg[108:119],
+                error_totaal_aanvaarde_bedragen_rekening_b=msg[119:121],
+                teken_totaal_geweigerde_bedragen_rekening_b=msg[121],
+                totaal_geweigerde_bedragen_rekening_b=msg[121:133],
+                error_totaal_geweigerde_bedragen_rekening_b=msg[133:135],
+
+                teken_totaal_aanvaarde_bedragen_rekening_a_b_c=msg[135],
+                totaal_aanvaarde_bedragen_rekening_a_b_c=msg[136:147],
+                error_totaal_aanvaarde_bedragen_rekening_a_b_c=msg[147:149],
+                teken_totaal_geweigerde_bedragen_rekening_a_b_c=msg[149],
+                totaal_geweigerde_bedragen_rekening_a_b_c=msg[150:161],
+                error_totaal_geweigerde_bedragen_rekening_a_b_c=msg[161:163],
+
+                teken_gevraagd_bedrag_rekening_c=msg[163],
+                gevraagd_bedrag_rekening_c=msg[164:175],
+                error_gevraagd_bedrag_rekening_c=msg[175:177],
+                teken_aanvaard_bedrag_rekening_c=msg[177],
+                aanvaard_bedrag_rekening_c=msg[178:189],
+                error_aanvaard_bedrag_rekening_c=msg[189:191],
+                teken_geweigerd_bedrag_rekening_c=msg[191],
+                geweigerd_bedrag_rekening_c=msg[192:2023],
+                error_geweigerd_bedrag_rekening_c=msg[203:205],
+        )
+    
 class Footer95(BaseModel):
     name: Optional[str] = "95"
     error_name: Optional[str] = "00"

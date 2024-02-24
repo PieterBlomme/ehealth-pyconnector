@@ -1,5 +1,5 @@
 from py4j.java_gateway import JavaGateway
-from typing import Any, Optional, List
+from typing import Any, Optional, List, Union
 import base64
 from uuid import uuid4
 from random import randint
@@ -9,7 +9,7 @@ from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from py4j.protocol import Py4JJavaError
-from .input_models import Record80, Header200, Header300, Footer95, Footer96, ErrorMessage, Header300Refusal, Record10, Record90, Record20, Record50, Record52, Record51
+from .input_models import Record80, Header200, Header300, Footer95, Footer96, ErrorMessage, Header300Refusal, Record10, Record90, Record20, Record50, Record52, Record51, Record91, Record92
 from .input_models_kine import Message200KineNoPractitioner, Message200Kine
 import tempfile
 from pydantic import BaseModel
@@ -38,6 +38,7 @@ class Message:
     errors: List[ErrorMessage]
     reden_weigering: Optional[str] = None
     percentage_fouten: Optional[float] = None
+    settlements: Optional[List[Union[Record91, Record92]]] = None
 
 @dataclass(config=Config)
 class Response:
@@ -201,6 +202,7 @@ class EFactService:
         logger.info(len(decoded))
         start_record = 677
         errors = []
+        message.settlements = []
         while True:
             rec = decoded[start_record:start_record+800]
             logger.info(rec[:2])
@@ -230,6 +232,14 @@ class EFactService:
                 errors.extend(Record80.errors_from_str(rec))
             elif rec.startswith("90"):
                 errors.extend(Record90.errors_from_str(rec))
+            elif rec.startswith("91"):
+                settlement = Record91.from_str(rec)
+                message.settlements.append(settlement)
+                logger.info(f"settlement: {settlement}")
+            elif rec.startswith("92"):
+                settlement = Record92.from_str(rec)
+                message.settlements.append(settlement)
+                logger.info(f"settlement: {settlement}")
             else:
                 # TODO map others to responses
                 raise Exception(f"Part of message could not be mapped: {rec}")
@@ -244,7 +254,9 @@ class EFactService:
             )
     
     def message_to_object(self, decoded: str, base64_hash: str) -> Response:
-        if decoded[:6] == "920099":
+        if decoded[:6] in ("920099", "920900"):
+            # note: 920900 is final acceptance
+            # but follows refusal
             return self.message_to_object_refusal(decoded, base64_hash)
         
         errors = []
