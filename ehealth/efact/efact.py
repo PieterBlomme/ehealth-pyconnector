@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from pydantic import Extra
 from pydantic.dataclasses import dataclass
 from unidecode import unidecode
+import sentry_sdk
 
 logger = logging.getLogger(__name__)
 
@@ -277,6 +278,7 @@ class EFactService:
             else:
                 # TODO map others to responses
                 logger.warning(f"Part of message could not be mapped: {rec}")
+                sentry_sdk.capture_message(f"Part of message could not be mapped: {decoded}")
 
         return Response(
                 transaction_request="",
@@ -341,6 +343,7 @@ class EFactService:
                 messages.append(self.message_to_object(decoded, base64_hash))
             except Exception as e:
                 logger.info(f"Failed to convert message with hash {base64_hash}")
+                sentry_sdk.capture_message(f"Part of message could not be mapped: {decoded}")
                 with open(f"{uuid4()}.txt", "w") as f:
                     f.write(decoded)
 
