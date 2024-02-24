@@ -514,6 +514,7 @@ class Message200KineNoPractitioner(BaseModel):
     """
     Now what do we need in general to complete these records
     """
+    version: Optional[str] = "01"
     reference: str
     num_invoice: str
     date_invoice: Optional[datetime.date] = datetime.date.today()
