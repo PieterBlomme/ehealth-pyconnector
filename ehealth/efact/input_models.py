@@ -1359,7 +1359,7 @@ class Record51(BaseModel):
 
                 if key_numeric == "01":
                     key = "recordtype"
-                    value = record[0:1]
+                    value = record[0:2]
                 elif key_numeric == "05":
                     key = "datum verstrekking"
                     value = record[16:24]
@@ -1482,12 +1482,25 @@ class Record52(BaseModel):
             "20": "Gegeven niet gekend in bestand ziekenfonds",
         }
         
+        message = None
+        if key == "19":
+            if error == "02":
+                message = "Nummer akkoord met foutief controlecijfer"
+            elif error == "04":
+                message = "Nummer akkoord ontbreekt terwijl het noodzakelijk is"
+            elif error == "20":
+                message = "Nummer akkoord niet gekend in bestand VI op moment van prestatie"
+            elif error == "21":
+                message = "Nummer akkoord niet gekend in bestand VI"
+            elif error == "22":
+                message = "Nummer akkoord niet gekend in bestand VI voor deze rechthebbende en/of deze nomenclatuurcode"
+        
         return {
             "type": "52",
             "key": key,
             "value": value,
             "error_code": error,
-            "message": _ERROR_CONSTANTS.get(error),
+            "message": message or _ERROR_CONSTANTS.get(error),
             "verwerpingsletter": refusal_code
         }
     
@@ -1512,7 +1525,7 @@ class Record52(BaseModel):
 
                 if key_numeric == "01":
                     key = "recordtype"
-                    value = record[0:1]
+                    value = record[0:2]
                 elif key_numeric == "19":
                     key = "nummer akkoord"
                     value = record[131:151]
