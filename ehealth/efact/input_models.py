@@ -1449,7 +1449,7 @@ class Record51(BaseModel):
         return to_str
 
 class Record52(BaseModel):
-    record: Optional[str] = "52"
+    record: Optional[str] = "51"
     num_record: Optional[str] = "000004"
     reden_manuele_invoering: Optional[str] = "0"
     nomenclatuur: str
