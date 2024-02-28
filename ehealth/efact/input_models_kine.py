@@ -320,7 +320,7 @@ class DetailRecord(BaseModel):
             bedrag_supplement=self.bedrag_supplement,
             code_facturering_persoonlijk_aandeel_of_supplement=self.code_facturering_persoonlijk_aandeel_of_supplement,
             geconventioneerde_verstrekker=geconventioneerde_verstrekker,
-            voorschrijver=self.voorschrijver
+            identificatie_voorschrijver=self.voorschrijver
         )
 
     def to_record_52(self, 
