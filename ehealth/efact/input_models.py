@@ -1161,6 +1161,9 @@ class Record50(BaseModel):
                 elif key_numeric == "24":
                     key = "Identificatie voorschrijver"
                     value = record[114:119]
+                elif key_numeric == "26":
+                    key = "Norm voorschrijver"
+                    value = record[126:127]
                 elif key_numeric == "27":
                     key = "Teken en bedrag persoonlijk aandeel patiënt"
                     value = record[127:137]
