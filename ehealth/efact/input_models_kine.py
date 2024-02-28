@@ -288,7 +288,7 @@ class DetailRecord(BaseModel):
     datum_voorschrift: datetime.date
     persoonlijk_aandeel_patient: str
     bedrag_supplement: str
-    voorschrijver: str
+    voorschrijver: Optional[str] = "0"
     code_facturering_persoonlijk_aandeel_of_supplement: Optional[str] = 1 # 1 indien patiënt zelf betaald zie https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf p 491
     nummer_akkoord: Optional[str] = None
 
