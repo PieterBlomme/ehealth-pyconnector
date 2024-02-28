@@ -1150,8 +1150,10 @@ class Record50(BaseModel):
                     continue # TODO?
 
                 if key_numeric == "01":
-                    key = "recordtype"
-                    value = record[0:2]
+                    # see mail 20240228
+                    # only present to indicate there    
+                    # is an error in this record
+                    continue
                 elif key_numeric == "08":
                     key = "identificatie rechthebbende"
                     value = record[35:47]
@@ -1486,7 +1488,7 @@ class Record52(BaseModel):
         }
         
         message = None
-        if key == "19":
+        if key == "nummer akkoord":
             if error == "02":
                 message = "Nummer akkoord met foutief controlecijfer"
             elif error == "04":
