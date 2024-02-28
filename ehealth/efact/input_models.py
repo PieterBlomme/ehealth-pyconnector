@@ -1080,7 +1080,7 @@ class Record50(BaseModel):
     aantal: int
     afwijking_maximaal_aantal_of_identieke_prestatie: Optional[str] = "00"
     identificatie_voorschrijver: str
-    norm_voorschrijver: Optional[str] = "0"
+    norm_voorschrijver: Optional[str] = "1"
     persoonlijk_aandeel_patient: str
     referentie_instelling: str
     behandelde_tand: Optional[str] = "00"
