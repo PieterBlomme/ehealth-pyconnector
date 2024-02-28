@@ -124,6 +124,7 @@ class Record50Kine(BaseModel):
     bedrag_supplement: str
     code_facturering_persoonlijk_aandeel_of_supplement: Optional[str] = 1 # 1 indien patiënt zelf betaald zie https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf p 491
     geconventioneerde_verstrekker: Optional[bool] = True
+    identificatie_voorschrijver: str
 
     def to_record_50(self) -> Record50:
         datum_eerste_verstrekking = str(self.datum_eerste_verstrekking.year) + str(self.datum_eerste_verstrekking.month).rjust(2, "0") + str(self.datum_eerste_verstrekking.day).rjust(2, "0")
@@ -151,7 +152,8 @@ class Record50Kine(BaseModel):
             referentie_instelling="",
             bedrag_supplement=self.bedrag_supplement,
             code_facturering_persoonlijk_aandeel_of_supplement=self.code_facturering_persoonlijk_aandeel_of_supplement,
-            geconventioneerde_verstrekker="1" if self.geconventioneerde_verstrekker else "9"
+            geconventioneerde_verstrekker="1" if self.geconventioneerde_verstrekker else "9",
+            identificatie_voorschrijver=self.identificatie_voorschrijver
         )
     
 class Record52Kine(BaseModel):
@@ -286,6 +288,7 @@ class DetailRecord(BaseModel):
     datum_voorschrift: datetime.date
     persoonlijk_aandeel_patient: str
     bedrag_supplement: str
+    voorschrijver: str
     code_facturering_persoonlijk_aandeel_of_supplement: Optional[str] = 1 # 1 indien patiënt zelf betaald zie https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf p 491
     nummer_akkoord: Optional[str] = None
 
@@ -316,7 +319,8 @@ class DetailRecord(BaseModel):
             persoonlijk_aandeel_patient=self.persoonlijk_aandeel_patient,
             bedrag_supplement=self.bedrag_supplement,
             code_facturering_persoonlijk_aandeel_of_supplement=self.code_facturering_persoonlijk_aandeel_of_supplement,
-            geconventioneerde_verstrekker=geconventioneerde_verstrekker
+            geconventioneerde_verstrekker=geconventioneerde_verstrekker,
+            voorschrijver=self.voorschrijver
         )
 
     def to_record_52(self, 

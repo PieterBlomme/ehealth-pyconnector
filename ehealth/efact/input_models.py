@@ -1079,7 +1079,7 @@ class Record50(BaseModel):
     datum_voorschrift: str
     aantal: int
     afwijking_maximaal_aantal_of_identieke_prestatie: Optional[str] = "00"
-    identificatie_voorschrijver: Optional[str] = "000000000000"
+    identificatie_voorschrijver: str
     norm_voorschrijver: Optional[str] = "0"
     persoonlijk_aandeel_patient: str
     referentie_instelling: str
@@ -1236,7 +1236,8 @@ class Record50(BaseModel):
         assert len(self.afwijking_maximaal_aantal_of_identieke_prestatie) == 2
         to_str += self.afwijking_maximaal_aantal_of_identieke_prestatie
         assert len(self.identificatie_voorschrijver) == 12
-        to_str += self.identificatie_voorschrijver
+
+        to_str += self.identificatie_voorschrijver.rjust(12, "0")
         assert len(self.norm_voorschrijver) == 1
         to_str += self.norm_voorschrijver
 
