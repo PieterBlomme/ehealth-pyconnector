@@ -1235,7 +1235,6 @@ class Record50(BaseModel):
         to_str += ("+" + str(self.aantal).rjust(4, "0"))
         assert len(self.afwijking_maximaal_aantal_of_identieke_prestatie) == 2
         to_str += self.afwijking_maximaal_aantal_of_identieke_prestatie
-        assert len(self.identificatie_voorschrijver) == 12
 
         to_str += self.identificatie_voorschrijver.rjust(12, "0")
         assert len(self.norm_voorschrijver) == 1
