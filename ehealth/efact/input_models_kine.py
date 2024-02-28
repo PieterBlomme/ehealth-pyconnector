@@ -374,6 +374,11 @@ class Message200Kine(BaseModel):
             reference=self.reference,
             version=self.version
         ).to_header_200()
+
+        if self.nummer_ziekenfonds.startswith("3"):
+            # see mail Brigitte Goossens 20240228
+            self.nummer_ziekenfonds = "300"
+
         header_300 = Header300Kine(
             num_invoice=self.num_invoice,
             date_invoice=self.date_invoice,
