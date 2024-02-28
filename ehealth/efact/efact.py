@@ -272,25 +272,27 @@ class EFactService:
             header_300 = Header300.from_str(decoded[67:227])
             errors.extend(header_300.errors())
 
-        start_record = 227
-        while True:
-            rec = decoded[start_record:start_record+350]
-            start_record += 350
-            if len(rec) == 0:
-                break
-            else:
-                assert len(rec) == 350
+        
+        if decoded[:6] != "920098":
+            start_record = 227
+            while True:
+                rec = decoded[start_record:start_record+350]
+                start_record += 350
+                if len(rec) == 0:
+                    break
+                else:
+                    assert len(rec) == 350, f"len(rec) is {len(rec)}"
 
-            if rec.startswith("95"):
-                footer95 = Footer95.from_str(rec)
-                errors.extend(footer95.errors())
-            elif rec.startswith("96"):
-                footer96 = Footer96.from_str(rec)
-                errors.extend(footer96.errors())
-            else:
-                # TODO map others to responses
-                logger.warning(f"Part of message could not be mapped: {rec}")
-                sentry_sdk.capture_message(f"Part of message could not be mapped: {decoded}")
+                if rec.startswith("95"):
+                    footer95 = Footer95.from_str(rec)
+                    errors.extend(footer95.errors())
+                elif rec.startswith("96"):
+                    footer96 = Footer96.from_str(rec)
+                    errors.extend(footer96.errors())
+                else:
+                    # TODO map others to responses
+                    logger.warning(f"Part of message could not be mapped: {rec}")
+                    sentry_sdk.capture_message(f"Part of message could not be mapped: {decoded}")
 
         return Response(
                 transaction_request="",

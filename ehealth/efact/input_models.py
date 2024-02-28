@@ -1160,6 +1160,9 @@ class Record50(BaseModel):
                 elif key_numeric == "19":
                     key = "Teken en bedrag verzekeringstegemoetkoming"
                     value = record[87:99]
+                elif key_numeric == "20":
+                    key = "Datum voorschrift"
+                    value = record[99:107]
                 elif key_numeric == "24":
                     key = "Identificatie voorschrijver"
                     value = record[114:119]
