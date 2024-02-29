@@ -1549,7 +1549,10 @@ class Record52(BaseModel):
                     raise Exception(f"Numeric key {key_numeric} not yet mapped for Record52")
 
                 e_dict = cls._error_shared(key, error, value, e[0])
-            result.append(ErrorMessage(**e_dict))
+            
+            if e_dict not in [r.dict() for r in result]:
+                # sometimes duplicate errors
+                result.append(ErrorMessage(**e_dict))
         return result
     
     def __str__(self):
