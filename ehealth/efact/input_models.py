@@ -895,7 +895,10 @@ class Record20(BaseModel):
                 if key_numeric == "00":
                     continue # TODO?
 
-                if key_numeric == "08":
+                if key_numeric == "07":
+                    key = "nummer ziekenfonds van aansluiting"
+                    value = record[32:35]
+                elif key_numeric == "08":
                     key = "identificatie rechthebbende"
                     value = record[35:47]
                 elif key_numeric == "09":
