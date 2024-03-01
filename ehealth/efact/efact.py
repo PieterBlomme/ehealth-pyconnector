@@ -272,7 +272,7 @@ class EFactService:
             header_300 = Header300.from_str(decoded[67:227])
             errors.extend(header_300.errors())
 
-        
+        start_record = 227
         while True:
             rec = decoded[start_record:start_record+350]
             start_record += 350
@@ -292,7 +292,7 @@ class EFactService:
                 errors.extend(footer96.errors())
             else:
                 # TODO map others to responses
-                logger.warning(f"Part of message could not be mapped: {rec}")
+                logger.warning(f"Part of message could not be mapped: {rec} for type {decoded[:6]}")
                 sentry_sdk.capture_message(f"Part of message could not be mapped: {decoded}")
 
         return Response(
