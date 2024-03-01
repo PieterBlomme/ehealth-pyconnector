@@ -379,9 +379,8 @@ class Message200Kine(BaseModel):
             version=self.version
         ).to_header_200()
 
-        if self.nummer_ziekenfonds.startswith("3"):
-            # see mail Brigitte Goossens 20240228
-            self.nummer_ziekenfonds = "300"
+        # see mail Brigitte Goossens 20240228
+        ziekenfonds_bestemming = "300" if self.nummer_ziekenfonds.startswith("3") else self.nummer_ziekenfonds
 
         header_300 = Header300Kine(
             num_invoice=self.num_invoice,
@@ -412,7 +411,7 @@ class Message200Kine(BaseModel):
             instelling_van_verblijf=self.instelling_van_verblijf,
             code_stuiten_verjaringstermijn="0",
             reden_behandeling="0000", # TODO ????
-            nummer_ziekenfonds_bestemming=self.nummer_ziekenfonds,
+            nummer_ziekenfonds_bestemming=ziekenfonds_bestemming,
             nummer_individuele_factuur_1=self.nummer_individuele_factuur_1,
             cg1_cg2=self.cg1_cg2,
             referentiegegevens_netwerk_1=self.referentiegegevens_netwerk_1
