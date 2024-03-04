@@ -468,7 +468,7 @@ class Message200Kine(BaseModel):
             hospital_care=self.hospital_care,
             nummer_facturerende_instelling=self.nummer_facturerende_instelling,
             reden_behandeling="0000", # TODO ????
-            nummer_ziekenfonds_bestemming=self.nummer_ziekenfonds,
+            nummer_ziekenfonds_bestemming=ziekenfonds_bestemming,
             nummer_individuele_factuur_1=self.nummer_individuele_factuur_1,
             cg1_cg2=self.cg1_cg2,
             referentiegegevens_netwerk_1=self.referentiegegevens_netwerk_1,
@@ -492,7 +492,7 @@ class Message200Kine(BaseModel):
         ).to_record_90()
 
         footer_95 = Footer95Kine(
-            nummer_mutualiteit=self.nummer_ziekenfonds,
+            nummer_mutualiteit=ziekenfonds_bestemming,
             totaal=totaal,
             aantal_records=4+len(self.detail_records),
             controle_nummer_per_mutualiteit=calculate_invoice_control(invoice_control_inputs)
