@@ -279,7 +279,10 @@ class EFactService:
             if len(rec) == 0:
                 break
             else:
-                assert len(rec) == 350
+                if len(rec) != 350:
+                    sentry_sdk.capture_message(f"Message type {decoded[:6]} has record of length {len(rec)}: rec")
+                    # artificially extend to len 350
+                    rec = rec.ljust(350)
 
             if rec.startswith("95"):
                 footer95 = Footer95.from_str(rec)
@@ -289,7 +292,7 @@ class EFactService:
                 errors.extend(footer96.errors())
             else:
                 # TODO map others to responses
-                logger.warning(f"Part of message could not be mapped: {rec}")
+                logger.warning(f"Part of message could not be mapped: {rec} for type {decoded[:6]}")
                 sentry_sdk.capture_message(f"Part of message could not be mapped: {decoded}")
 
         return Response(

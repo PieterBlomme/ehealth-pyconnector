@@ -124,6 +124,7 @@ class Record50Kine(BaseModel):
     bedrag_supplement: str
     code_facturering_persoonlijk_aandeel_of_supplement: Optional[str] = 1 # 1 indien patiënt zelf betaald zie https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf p 491
     geconventioneerde_verstrekker: Optional[bool] = True
+    identificatie_voorschrijver: str
 
     def to_record_50(self) -> Record50:
         datum_eerste_verstrekking = str(self.datum_eerste_verstrekking.year) + str(self.datum_eerste_verstrekking.month).rjust(2, "0") + str(self.datum_eerste_verstrekking.day).rjust(2, "0")
@@ -151,7 +152,8 @@ class Record50Kine(BaseModel):
             referentie_instelling="",
             bedrag_supplement=self.bedrag_supplement,
             code_facturering_persoonlijk_aandeel_of_supplement=self.code_facturering_persoonlijk_aandeel_of_supplement,
-            geconventioneerde_verstrekker="1" if self.geconventioneerde_verstrekker else "9"
+            geconventioneerde_verstrekker="1" if self.geconventioneerde_verstrekker else "9",
+            identificatie_voorschrijver=self.identificatie_voorschrijver
         )
     
 class Record52Kine(BaseModel):
@@ -286,6 +288,7 @@ class DetailRecord(BaseModel):
     datum_voorschrift: datetime.date
     persoonlijk_aandeel_patient: str
     bedrag_supplement: str
+    voorschrijver: Optional[str] = "0"
     code_facturering_persoonlijk_aandeel_of_supplement: Optional[str] = 1 # 1 indien patiënt zelf betaald zie https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf p 491
     nummer_akkoord: Optional[str] = None
 
@@ -316,7 +319,8 @@ class DetailRecord(BaseModel):
             persoonlijk_aandeel_patient=self.persoonlijk_aandeel_patient,
             bedrag_supplement=self.bedrag_supplement,
             code_facturering_persoonlijk_aandeel_of_supplement=self.code_facturering_persoonlijk_aandeel_of_supplement,
-            geconventioneerde_verstrekker=geconventioneerde_verstrekker
+            geconventioneerde_verstrekker=geconventioneerde_verstrekker,
+            identificatie_voorschrijver=self.voorschrijver
         )
 
     def to_record_52(self, 
@@ -374,6 +378,10 @@ class Message200Kine(BaseModel):
             reference=self.reference,
             version=self.version
         ).to_header_200()
+
+        # see mail Brigitte Goossens 20240228
+        ziekenfonds_bestemming = "300" if self.nummer_ziekenfonds.startswith("3") else self.nummer_ziekenfonds
+
         header_300 = Header300Kine(
             num_invoice=self.num_invoice,
             date_invoice=self.date_invoice,
@@ -403,7 +411,7 @@ class Message200Kine(BaseModel):
             instelling_van_verblijf=self.instelling_van_verblijf,
             code_stuiten_verjaringstermijn="0",
             reden_behandeling="0000", # TODO ????
-            nummer_ziekenfonds_bestemming=self.nummer_ziekenfonds,
+            nummer_ziekenfonds_bestemming=ziekenfonds_bestemming,
             nummer_individuele_factuur_1=self.nummer_individuele_factuur_1,
             cg1_cg2=self.cg1_cg2,
             referentiegegevens_netwerk_1=self.referentiegegevens_netwerk_1
@@ -460,7 +468,7 @@ class Message200Kine(BaseModel):
             hospital_care=self.hospital_care,
             nummer_facturerende_instelling=self.nummer_facturerende_instelling,
             reden_behandeling="0000", # TODO ????
-            nummer_ziekenfonds_bestemming=self.nummer_ziekenfonds,
+            nummer_ziekenfonds_bestemming=ziekenfonds_bestemming,
             nummer_individuele_factuur_1=self.nummer_individuele_factuur_1,
             cg1_cg2=self.cg1_cg2,
             referentiegegevens_netwerk_1=self.referentiegegevens_netwerk_1,
@@ -484,7 +492,7 @@ class Message200Kine(BaseModel):
         ).to_record_90()
 
         footer_95 = Footer95Kine(
-            nummer_mutualiteit=self.nummer_ziekenfonds,
+            nummer_mutualiteit=ziekenfonds_bestemming,
             totaal=totaal,
             aantal_records=4+len(self.detail_records),
             controle_nummer_per_mutualiteit=calculate_invoice_control(invoice_control_inputs)

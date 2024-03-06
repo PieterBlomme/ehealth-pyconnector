@@ -895,7 +895,10 @@ class Record20(BaseModel):
                 if key_numeric == "00":
                     continue # TODO?
 
-                if key_numeric == "08":
+                if key_numeric == "07":
+                    key = "nummer ziekenfonds van aansluiting"
+                    value = record[32:35]
+                elif key_numeric == "08":
                     key = "identificatie rechthebbende"
                     value = record[35:47]
                 elif key_numeric == "09":
@@ -1079,8 +1082,8 @@ class Record50(BaseModel):
     datum_voorschrift: str
     aantal: int
     afwijking_maximaal_aantal_of_identieke_prestatie: Optional[str] = "00"
-    identificatie_voorschrijver: Optional[str] = "000000000000"
-    norm_voorschrijver: Optional[str] = "0"
+    identificatie_voorschrijver: str
+    norm_voorschrijver: Optional[str] = "1"
     persoonlijk_aandeel_patient: str
     referentie_instelling: str
     behandelde_tand: Optional[str] = "00"
@@ -1150,17 +1153,25 @@ class Record50(BaseModel):
                     continue # TODO?
 
                 if key_numeric == "01":
-                    key = "recordtype"
-                    value = record[0:2]
+                    # see mail 20240228
+                    # only present to indicate there    
+                    # is an error in this record
+                    continue
                 elif key_numeric == "08":
                     key = "identificatie rechthebbende"
                     value = record[35:47]
                 elif key_numeric == "19":
                     key = "Teken en bedrag verzekeringstegemoetkoming"
                     value = record[87:99]
+                elif key_numeric == "20":
+                    key = "Datum voorschrift"
+                    value = record[99:107]
                 elif key_numeric == "24":
                     key = "Identificatie voorschrijver"
                     value = record[114:119]
+                elif key_numeric == "26":
+                    key = "Norm voorschrijver"
+                    value = record[126:127]
                 elif key_numeric == "27":
                     key = "Teken en bedrag persoonlijk aandeel patiënt"
                     value = record[127:137]
@@ -1232,8 +1243,8 @@ class Record50(BaseModel):
         to_str += ("+" + str(self.aantal).rjust(4, "0"))
         assert len(self.afwijking_maximaal_aantal_of_identieke_prestatie) == 2
         to_str += self.afwijking_maximaal_aantal_of_identieke_prestatie
-        assert len(self.identificatie_voorschrijver) == 12
-        to_str += self.identificatie_voorschrijver
+
+        to_str += self.identificatie_voorschrijver.rjust(12, "0")
         assert len(self.norm_voorschrijver) == 1
         to_str += self.norm_voorschrijver
 
@@ -1483,7 +1494,7 @@ class Record52(BaseModel):
         }
         
         message = None
-        if key == "19":
+        if key == "nummer akkoord":
             if error == "02":
                 message = "Nummer akkoord met foutief controlecijfer"
             elif error == "04":
@@ -1524,8 +1535,10 @@ class Record52(BaseModel):
                     continue # TODO?
 
                 if key_numeric == "01":
-                    key = "recordtype"
-                    value = record[0:2]
+                    # see mail 20240228
+                    # only present to indicate there    
+                    # is an error in this record
+                    continue
                 elif key_numeric == "19":
                     key = "nummer akkoord"
                     value = record[131:151]
@@ -1536,7 +1549,10 @@ class Record52(BaseModel):
                     raise Exception(f"Numeric key {key_numeric} not yet mapped for Record52")
 
                 e_dict = cls._error_shared(key, error, value, e[0])
-            result.append(ErrorMessage(**e_dict))
+            
+            if e_dict not in [r.dict() for r in result]:
+                # sometimes duplicate errors
+                result.append(ErrorMessage(**e_dict))
         return result
     
     def __str__(self):
