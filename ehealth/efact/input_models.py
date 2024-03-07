@@ -1157,6 +1157,9 @@ class Record50(BaseModel):
                     # only present to indicate there    
                     # is an error in this record
                     continue
+                elif key_numeric == "04":
+                    key = "Nomenclatuurcode"
+                    value = record[9:16]
                 elif key_numeric == "08":
                     key = "identificatie rechthebbende"
                     value = record[35:47]
