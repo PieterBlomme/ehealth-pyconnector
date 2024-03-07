@@ -1539,11 +1539,14 @@ class Record52(BaseModel):
                     # only present to indicate there    
                     # is an error in this record
                     continue
+                elif key_numeric == "04":
+                    key = "Nomenclatuurcode"
+                    value = record[9:16]
                 elif key_numeric == "19":
-                    key = "nummer akkoord"
+                    key = "Nummer akkoord"
                     value = record[131:151]
                 elif key_numeric == "99":
-                    key = "controlecijfer record"
+                    key = "Controlecijfer record"
                     value = record[348:350]
                 else:
                     raise Exception(f"Numeric key {key_numeric} not yet mapped for Record52")
