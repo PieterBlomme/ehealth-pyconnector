@@ -1124,13 +1124,18 @@ class Record50(BaseModel):
             "09": "Verboden karakters",
             "20": "Gegeven niet gekend in bestand ziekenfonds",
         }
+
+        if key == "Nomenclatuurcode":
+            message = "Verstrekking waarvoor akkoord adviserend geneesheer vereist is en een verantwoording ontbreekt."
+        else:
+            message = _ERROR_CONSTANTS.get(error)
         
         return {
             "type": "50",
             "key": key,
             "value": value,
             "error_code": error,
-            "message": _ERROR_CONSTANTS.get(error),
+            "message": message,
             "verwerpingsletter": refusal_code
         }
     

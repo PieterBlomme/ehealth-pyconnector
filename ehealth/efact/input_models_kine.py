@@ -421,6 +421,8 @@ class Message200Kine(BaseModel):
 
         i = 2 # starting point
         record_50s = []
+        record_52s = []
+
         for dr in self.detail_records:
             i += 1
             record_50 = dr.to_record_50(
@@ -437,8 +439,6 @@ class Message200Kine(BaseModel):
             record_50s.append(record_50)
             invoice_control_inputs.append(dr.nomenclatuur.rjust(7, "0"))
 
-        record_52s = []
-        for dr in self.detail_records:
             i += 1
             record_52 = dr.to_record_52(
                 i=i,
