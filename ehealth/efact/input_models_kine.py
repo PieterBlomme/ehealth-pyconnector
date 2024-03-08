@@ -122,7 +122,7 @@ class Record50Kine(BaseModel):
     datum_voorschrift: datetime.date
     persoonlijk_aandeel_patient: str
     bedrag_supplement: str
-    code_facturering_persoonlijk_aandeel_of_supplement: Optional[str] = 1 # 1 indien patiënt zelf betaald zie https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf p 491
+    code_facturering_persoonlijk_aandeel_of_supplement: Optional[str] = 0 # 0 indien patiënt zelf betaald zie https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf p 491
     geconventioneerde_verstrekker: Optional[bool] = True
     identificatie_voorschrijver: str
 
@@ -289,7 +289,7 @@ class DetailRecord(BaseModel):
     persoonlijk_aandeel_patient: str
     bedrag_supplement: str
     voorschrijver: Optional[str] = "0"
-    code_facturering_persoonlijk_aandeel_of_supplement: Optional[str] = 1 # 1 indien patiënt zelf betaald zie https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf p 491
+    code_facturering_persoonlijk_aandeel_of_supplement: Optional[str] = 0 # 0 indien patiënt zelf betaald zie https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf p 491
     nummer_akkoord: Optional[str] = None
 
     def to_record_50(self, 
