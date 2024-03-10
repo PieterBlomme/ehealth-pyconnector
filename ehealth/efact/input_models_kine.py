@@ -420,8 +420,7 @@ class Message200Kine(BaseModel):
         invoice_control_inputs = []
 
         i = 2 # starting point
-        record_50s = []
-        record_52s = []
+        records_50s_and_52s = []
 
         for dr in self.detail_records:
             i += 1
@@ -436,7 +435,7 @@ class Message200Kine(BaseModel):
                 geconventioneerde_verstrekker=self.geconventioneerde_verstrekker,
                 norm_verstrekker="1", # meestal 1 https://metadata.aim-ima.be/nl/app/vars/SS00340_Gz
                      ).to_record_50()
-            record_50s.append(record_50)
+            records_50s_and_52s.append(record_50)
             invoice_control_inputs.append(dr.nomenclatuur.rjust(7, "0"))
 
             i += 1
@@ -447,7 +446,7 @@ class Message200Kine(BaseModel):
                 riziv_nummer=self.nummer_facturerende_instelling,
                 nummer_akkoord=dr.nummer_akkoord or self.nummer_akkoord
                      ).to_record_52()
-            record_52s.append(record_52)
+            records_50s_and_52s.append(record_52)
             invoice_control_inputs.append(dr.nomenclatuur.rjust(7, "0"))
 
         totaal = 0
@@ -510,8 +509,7 @@ class Message200Kine(BaseModel):
             header_300=header_300,
             record_10=record_10,
             record_20=record_20,
-            record_50s=record_50s,
-            record_52s=record_52s,
+            detail_records=records_50s_and_52s,
             record_80=record_80,
             record_90=record_90,
             footer_95=footer_95,
