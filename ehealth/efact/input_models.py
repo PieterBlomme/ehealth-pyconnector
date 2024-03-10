@@ -1,9 +1,8 @@
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 import logging
 from .error_constants import ERROR_CONSTANTS
 from pydantic import BaseModel
-from pydantic import Extra
 
 logger = logging.getLogger(__name__)
 
@@ -1162,6 +1161,9 @@ class Record50(BaseModel):
                     # only present to indicate there    
                     # is an error in this record
                     continue
+                elif key_numeric == "02":
+                    key = "Volgnummer record"
+                    value = record[2:8]
                 elif key_numeric == "04":
                     key = "Nomenclatuurcode"
                     value = record[9:16]
@@ -1547,6 +1549,9 @@ class Record52(BaseModel):
                     # only present to indicate there    
                     # is an error in this record
                     continue
+                elif key_numeric == "02":
+                    key = "Volgnummer record"
+                    value = record[2:8]
                 elif key_numeric == "04":
                     key = "Nomenclatuurcode"
                     value = record[9:16]
@@ -2607,9 +2612,7 @@ class Message200(BaseModel):
     header_300: Header300
     record_10: Record10
     record_20: Record20
-    record_50s: List[Record50]
-    record_51s: Optional[List[Record51]] = []
-    record_52s: Optional[List[Record52]] = []
+    detail_records: List[Union[Record50, Record51, Record52]]
     record_80: Record80
     record_90: Record90
     footer_95: Footer95
@@ -2624,12 +2627,8 @@ class Message200(BaseModel):
         to_str += str(self.record_10)
         to_str += str(self.record_20)
         
-        for a in self.record_50s:
+        for a in self.detail_records:
             to_str += str(a)
-        for b in self.record_51s:
-            to_str += str(b)
-        for c in self.record_52s:
-            to_str += str(c)
         to_str += str(self.record_80)
         to_str += str(self.record_90)
         to_str += str(self.footer_95)
