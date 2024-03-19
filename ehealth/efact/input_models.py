@@ -1507,7 +1507,7 @@ class Record52(BaseModel):
         }
         
         message = None
-        if key == "nummer akkoord":
+        if key == "Nummer akkoord":
             if error == "02":
                 message = "Nummer akkoord met foutief controlecijfer"
             elif error == "04":
