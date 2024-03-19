@@ -195,9 +195,10 @@ class EFactService:
                 )
         if header_300.refusal_type == "01":
             message.reden_weigering = "Blokkerende fouten"
-        else:
+        elif header_300.refusal_type == "02":
             message.reden_weigering = "Aantal fouten > 5%"
-            message.percentage_fouten = int(header_300.percentage_errors) / 100.0
+        
+        message.percentage_fouten = int(header_300.percentage_errors) / 100.0
         
         logger.info(len(decoded))
         start_record = 677
@@ -254,7 +255,7 @@ class EFactService:
             )
     
     def message_to_object(self, decoded: str, base64_hash: str) -> Response:
-        if decoded[:6] in ("920099", "920900"):
+        if decoded[:6] in ("920099", "920900", "920098"):
             # note: 920900 is final acceptance
             # but follows refusal
             return self.message_to_object_refusal(decoded, base64_hash)
@@ -271,7 +272,6 @@ class EFactService:
             # so just skip
             header_300 = Header300.from_str(decoded[67:227])
             errors.extend(header_300.errors())
-
         start_record = 227
         while True:
             rec = decoded[start_record:start_record+350]
