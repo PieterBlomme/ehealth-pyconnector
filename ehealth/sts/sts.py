@@ -49,6 +49,8 @@ class STSService(AbstractSTSService):
         self.config_validator.setProperty("KEYSTORE_DIR", keystore_dir)
         self.config_validator.setProperty("environment", environment)
         self.config_validator.setProperty("endpoint.sts", sts_endpoint)
+        # always disable retry (to avoid constant BCP switch?)
+        self.config_validator.setProperty("be.ehealth.technicalconnector.handler.message.level.retry.activated", "false")
         
     def _build_designators_physiotherapy(self) -> Any:
 
