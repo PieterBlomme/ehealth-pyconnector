@@ -7,6 +7,20 @@ from xsdata.models.datatype import XmlDate, XmlDateTime
 __NAMESPACE__ = "http://hl7.org/fhir"
 
 @dataclass
+class Assigner:
+    class Meta:
+        name = "assigner"
+        namespace = "http://hl7.org/fhir"
+
+    identifier: Optional["Identifier"] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+            "required": True,
+        }
+    )
+
+@dataclass
 class Diagnostics:
     class Meta:
         name = "diagnostics"
@@ -454,7 +468,12 @@ class Identifier:
             "type": "Attribute",
         }
     )
-
+    assigner: Optional[Assigner] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+        }
+    )
 
 @dataclass
 class Insurer:
