@@ -61,6 +61,32 @@ class EAgreementService(AbstractEAgreementService):
         except:
             logger.error(response_string)
             raise
+
+    def template_render(self, template: Any, patient: Patient, id_: str, io_routing: bool):
+        logger.info("Inside custom askAgreement template render")
+        bundle = bytes(template, encoding="utf-8")
+        self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.dump(bundle)
+
+        # TODO figure out how to remove this.  The bundle is already rendered at this point ...
+        patientInfo = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient()
+        if patient.ssin:
+            patientInfo.setInss(patient.ssin)
+        else:
+            patientInfo.setRegNrWithMut(patient.insurancymembership)
+            patientInfo.setMutuality(patient.insurancenumber)
+
+        # input reference and Bundle ID must match
+        inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(id_)
+
+        builder_func = self.GATEWAY.getEncryptedRequestObjectBuilderImplWithRouting().buildAskAgreementRequest
+        return builder_func(
+            self.is_test,
+            io_routing,
+            inputReference, 
+            patientInfo, 
+            self.GATEWAY.jvm.org.joda.time.DateTime(), 
+            bundle
+            )
     
     def ask_agreement(
         self, 
@@ -73,11 +99,11 @@ class EAgreementService(AbstractEAgreementService):
             practitioner=practitioner,
             input_model=input_model
         )
-        request = self.redundant_template_render(
+        request = self.template_render(
             template=template,
             patient=input_model.patient,
             id_=id_,
-            builder_func=self.GATEWAY.getEncryptedRequestObjectBuilderImplWithRouting().buildAskAgreementRequest
+            io_routing=input_model.io_routing
             )
         
         raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(request)
