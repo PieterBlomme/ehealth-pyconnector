@@ -650,12 +650,18 @@ class Record10(BaseModel):
                 elif key_numeric == "14":
                     key = "nummer derdebetalende"
                     value = record[55:67]
+                elif key_numeric == "18":
+                    key = "beroepscode facturerende derde"
+                    value = record[84:87]
                 elif key_numeric == "27":
                     key = "KBO nummer"
                     value = record[127:137]
                 elif key_numeric == "31":
                     key = "BIC Bank"
                     value = record[166:174]
+                elif key_numeric == "36":
+                    key = "IBAN Bank"
+                    value = record[178:212]
                 elif key_numeric == "99":
                     key = "Controlecijfer"
                     value = record[348:350]
