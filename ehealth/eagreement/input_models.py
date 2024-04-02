@@ -47,3 +47,4 @@ class AskAgreementInputModel(BaseModel):
     patient: Patient
     physician: Optional[Practitioner]
     claim: ClaimAsk
+    subjectRouting: Optional[bool] = False

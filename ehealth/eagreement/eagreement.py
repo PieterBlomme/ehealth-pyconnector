@@ -77,7 +77,7 @@ class EAgreementService(AbstractEAgreementService):
             template=template,
             patient=input_model.patient,
             id_=id_,
-            builder_func=self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildAskAgreementRequest
+            builder_func=self.GATEWAY.getEncryptedRequestObjectBuilderImplWithRouting().buildAskAgreementRequest
             )
         
         raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(request)
