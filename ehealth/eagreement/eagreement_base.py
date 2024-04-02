@@ -520,7 +520,7 @@ class AbstractEAgreementService:
         # input reference and Bundle ID must match
         inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(id_)
         return builder_func(
-            self.is_test, 
+            self.is_test,
             inputReference, 
             patientInfo, 
             self.GATEWAY.jvm.org.joda.time.DateTime(), 
