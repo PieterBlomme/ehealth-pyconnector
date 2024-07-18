@@ -3,7 +3,7 @@ import logging
 import datetime
 import tempfile
 import uuid
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Callable
 from pydantic import BaseModel, root_validator
 from io import StringIO
 from ..sts.assertion import Assertion
@@ -12,6 +12,7 @@ from . response import MemberData, Response
 from xsdata.models.datatype import XmlDateTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from xsdata.formats.dataclass.parsers.config import ParserConfig
+from ehealth.utils.callbacks import storage_callback, CallMetadata, CallType, ServiceType
 
 logger = logging.getLogger(__name__)
 
@@ -207,11 +208,22 @@ class MDAService(AbstractMDAService):
         self, 
         token: str, 
         mda_input: MDAInputModel,
+        callback_fn: Optional[Callable] = storage_callback
         ) -> str:
+        timestamp = datetime.datetime.now()
+        meta = CallMetadata(
+            type=ServiceType.MDA,
+            timestamp=timestamp,
+            call_type=CallType.UNENCRYPTED_REQUEST,
+            ssin=mda_input.ssin,
+            registrationNumber=mda_input.registrationNumber,
+            mutuality=mda_input.mutuality,
+        )
 
         nihii = self.set_configuration_from_token(token)
         
         template, id_ = self.render_attribute_query(nihii, mda_input.ssin, mda_input.registrationNumber, mda_input.mutuality, mda_input.notBefore, mda_input.notOnOrAfter, facets=mda_input.facets)
+        callback_fn(template, meta)
 
         with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
             # obviously this is lazy ...
@@ -221,11 +233,30 @@ class MDAService(AbstractMDAService):
         inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(id_)        
         memberDataRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.memberdatacommons.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildConsultationRequest(self.is_test, inputReference, content)
         raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(memberDataRequest)
-        
+        meta = CallMetadata(
+            timestamp=timestamp,
+            type=ServiceType.MDA,
+            call_type=CallType.ENCRYPTED_REQUEST,
+            ssin=mda_input.ssin,
+            registrationNumber=mda_input.registrationNumber,
+            mutuality=mda_input.mutuality,
+        )
+        callback_fn(raw_request, meta)
+
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.memberdatav2.session.MemberDataSessionServiceFactory.getMemberDataSyncService()
         wsResponse = service.consultMemberData(memberDataRequest)
         
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(wsResponse)
+        meta = CallMetadata(
+            timestamp=timestamp,
+            type=ServiceType.MDA,
+            call_type=CallType.ENCRYPTED_RESPONSE,
+            ssin=mda_input.ssin,
+            registrationNumber=mda_input.registrationNumber,
+            mutuality=mda_input.mutuality,
+        )
+        callback_fn(raw_response, meta)
+        
         responseBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.memberdatav2.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder()
         response = responseBuilder.handleConsultationResponse(wsResponse)
         signVerifResult = response.getSignatureVerificationResult()
@@ -235,6 +266,15 @@ class MDAService(AbstractMDAService):
         
         parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         response_string = self.GATEWAY.jvm.java.lang.String(response.getResponse(), "UTF-8")
+        meta = CallMetadata(
+            timestamp=timestamp,
+            type=ServiceType.MDA,
+            call_type=CallType.UNENCRYPTED_RESPONSE,
+            ssin=mda_input.ssin,
+            registrationNumber=mda_input.registrationNumber,
+            mutuality=mda_input.mutuality,
+        )
+        callback_fn(response_string, meta)
         response_pydantic = parser.parse(StringIO(response_string), Response)
         
         return MemberData(
