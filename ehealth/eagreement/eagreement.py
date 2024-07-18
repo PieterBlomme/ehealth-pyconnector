@@ -1,6 +1,7 @@
 import logging
 from io import StringIO
-from typing import Any, Callable, Optional
+from typing import Any, Callable
+from xsdata.formats.dataclass.parsers.config import ParserConfig
 from xsdata_pydantic.bindings import XmlParser
 from .input_models import Patient, AskAgreementInputModel
 from .ask_agreement import Bundle as AskResponseBundle, Response as AskResponse
@@ -54,7 +55,7 @@ class EAgreementService(AbstractEAgreementService):
                     raise ServerSideException("SIGNATURE_NOT_PRESENT, this can usually be solved with a retry ...")
 
     def convert_response_to_pydantic(self, response: any, target_class: Callable):
-        parser = XmlParser()
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
         try:
             return parser.parse(StringIO(response_string), target_class)  

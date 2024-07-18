@@ -2,6 +2,7 @@ import logging
 from io import StringIO
 from typing import Any, Callable, List, Tuple, Union, Dict
 from xsdata_pydantic.bindings import XmlParser
+from xsdata.formats.dataclass.parsers.config import ParserConfig
 from .input_models import Patient, AskAgreementInputModel
 from .ask_agreement import Bundle as AskResponseBundle, Response as AskResponse
 from .consult_agreement import Bundle as ConsultResponseBundle, Response as ConsultResponse
@@ -28,7 +29,7 @@ class FakeEAgreementService(AbstractEAgreementService):
         return self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder()
 
     def convert_response_to_pydantic(self, response_string: str, target_class: Callable):
-        parser = XmlParser()
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         try:
             return parser.parse(StringIO(response_string), target_class)  
         except:
