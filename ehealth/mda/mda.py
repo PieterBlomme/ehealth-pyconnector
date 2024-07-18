@@ -210,8 +210,10 @@ class MDAService(AbstractMDAService):
         mda_input: MDAInputModel,
         callback_fn: Optional[Callable] = storage_callback
         ) -> str:
+        timestamp = datetime.datetime.now()
         meta = CallMetadata(
             type=ServiceType.MDA,
+            timestamp=timestamp,
             call_type=CallType.UNENCRYPTED_REQUEST,
             ssin=mda_input.ssin,
             registrationNumber=mda_input.registrationNumber,
@@ -232,6 +234,7 @@ class MDAService(AbstractMDAService):
         memberDataRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.memberdatacommons.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildConsultationRequest(self.is_test, inputReference, content)
         raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(memberDataRequest)
         meta = CallMetadata(
+            timestamp=timestamp,
             type=ServiceType.MDA,
             call_type=CallType.ENCRYPTED_REQUEST,
             ssin=mda_input.ssin,
@@ -245,6 +248,7 @@ class MDAService(AbstractMDAService):
         
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(wsResponse)
         meta = CallMetadata(
+            timestamp=timestamp,
             type=ServiceType.MDA,
             call_type=CallType.ENCRYPTED_RESPONSE,
             ssin=mda_input.ssin,
@@ -263,6 +267,7 @@ class MDAService(AbstractMDAService):
         parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         response_string = self.GATEWAY.jvm.java.lang.String(response.getResponse(), "UTF-8")
         meta = CallMetadata(
+            timestamp=timestamp,
             type=ServiceType.MDA,
             call_type=CallType.UNENCRYPTED_RESPONSE,
             ssin=mda_input.ssin,

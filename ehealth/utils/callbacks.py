@@ -2,6 +2,7 @@ from typing import Optional
 from pydantic import BaseModel
 from enum import Enum
 import logging
+import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ class CallType(str, Enum):
     ENCRYPTED_RESPONSE = "ENCRYPTED_RESPONSE"
 
 class CallMetadata(BaseModel):
+    timestamp: datetime.datetime
     type: ServiceType
     call_type: CallType
     ssin: Optional[str] = None
