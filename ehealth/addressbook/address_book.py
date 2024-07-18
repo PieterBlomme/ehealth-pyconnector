@@ -3,6 +3,7 @@ import logging
 from typing import Optional
 from io import StringIO
 from xsdata_pydantic.bindings import XmlParser
+from xsdata.formats.dataclass.parsers.config import ParserConfig
 from .get_professional_contact_info_response import GetProfessionalContactInfoResponse
 from . search_professionals_response import SearchProfessionalsResponse
 
@@ -92,7 +93,7 @@ class AddressBookService(AbstractAddressBookService):
 
         
         response_string = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(response)
-        parser = XmlParser()
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         return parser.parse(StringIO(response_string), GetProfessionalContactInfoResponse)
 
     def search(
@@ -110,7 +111,7 @@ class AddressBookService(AbstractAddressBookService):
             service = self.GATEWAY.jvm.be.ehealth.businessconnector.addressbook.session.AddressbookSessionServiceFactory.getAddressbookSessionService()
             response = service.searchProfessionals(request)
             response_string = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(response)
-            parser = XmlParser()
+            parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
             result = parser.parse(StringIO(response_string), SearchProfessionalsResponse)
             if not results:
                 results = result

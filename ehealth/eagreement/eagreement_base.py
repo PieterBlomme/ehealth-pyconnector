@@ -7,8 +7,8 @@ from typing import Optional, Any, Callable
 from io import StringIO
 from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate
-from xsdata_pydantic.bindings import XmlParser
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
+from xsdata.formats.dataclass.parsers.config import ParserConfig
 from pydantic import BaseModel
 from .input_models import Patient, Practitioner, AskAgreementInputModel
 
@@ -51,7 +51,7 @@ class AbstractEAgreementService:
 
     def set_configuration_from_token(self, token: str) -> Practitioner:
         # TODO copy paste from MDA
-        parser = XmlParser()
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         token_pydantic = parser.parse(StringIO(token), Assertion)
         
         surname = None

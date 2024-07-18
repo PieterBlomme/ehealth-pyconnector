@@ -2,12 +2,11 @@ from py4j.java_gateway import JavaGateway
 from typing import Any, Optional, List, Union
 import base64
 from uuid import uuid4
-from random import randint
 import logging
 from io import StringIO
 from ..sts.assertion import Assertion
-from xsdata.models.datatype import XmlDate, XmlTime
-from xsdata_pydantic.bindings import XmlSerializer, XmlParser
+from xsdata.formats.dataclass.parsers.config import ParserConfig
+from xsdata_pydantic.bindings import XmlParser
 from py4j.protocol import Py4JJavaError
 from .input_models import Record80, Header200, Header300, Footer95, Footer96, ErrorMessage, Header300Refusal, Record10, Record90, Record20, Record50, Record52, Record51, Record91, Record92
 from .input_models_kine import Message200KineNoPractitioner, Message200Kine
@@ -80,7 +79,7 @@ class EFactService:
 
     def set_configuration_from_token(self, token: str) -> Practitioner:
         # TODO copy paste from MDA
-        parser = XmlParser()
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         token_pydantic = parser.parse(StringIO(token), Assertion)
         
         surname = None

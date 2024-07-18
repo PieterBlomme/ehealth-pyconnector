@@ -6,6 +6,7 @@ from .input_models import Practitioner, Patient as PatientIn, EAttestInputModel,
 from io import StringIO
 from ..sts.assertion import Assertion
 from xsdata.models.datatype import XmlDate, XmlTime
+from xsdata.formats.dataclass.parsers.config import ParserConfig
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from pydantic import BaseModel
 import tempfile
@@ -62,7 +63,7 @@ class EAttestV3Service:
 
     def set_configuration_from_token(self, token: str) -> Practitioner:
         # TODO copy paste from MDA
-        parser = XmlParser()
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         token_pydantic = parser.parse(StringIO(token), Assertion)
         
         surname = None
@@ -434,7 +435,7 @@ class EAttestV3Service:
         self.verify_result(attestResponse)
         response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
         
-        parser = XmlParser()
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         response_pydantic = parser.parse(StringIO(response_string), SendTransactionResponse)
         
         return EAttestV3(
@@ -485,7 +486,7 @@ class EAttestV3Service:
         self.verify_result(attestResponse)
         response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
         
-        parser = XmlParser()
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         response_pydantic = parser.parse(StringIO(response_string), SendTransactionResponse)
         
         return EAttestV3(

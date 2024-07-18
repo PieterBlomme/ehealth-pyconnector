@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from .base import AbstractSTSService
 from .assertion import Assertion
 from xsdata_pydantic.bindings import XmlParser
+from xsdata.formats.dataclass.parsers.config import ParserConfig
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +139,7 @@ class STSService(AbstractSTSService):
         return self.GATEWAY.jvm.be.ehealth.technicalconnector.service.sts.utils.SAMLConverter.toXMLString(assertion)
 
     def set_configuration_from_token(self, token: str):
-        parser = XmlParser()
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         token_pydantic = parser.parse(StringIO(token), Assertion)
         
         ssin = None

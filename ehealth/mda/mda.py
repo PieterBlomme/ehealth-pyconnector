@@ -11,6 +11,7 @@ from .attribute_query import AttributeQuery, Issuer, Extensions, Subject, Subjec
 from . response import MemberData, Response
 from xsdata.models.datatype import XmlDateTime
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
+from xsdata.formats.dataclass.parsers.config import ParserConfig
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ class AbstractMDAService:
             self.is_test = False
 
     def set_configuration_from_token(self, token: str):
-        parser = XmlParser()
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         token_pydantic = parser.parse(StringIO(token), Assertion)
         
         surname = None
@@ -172,7 +173,7 @@ class FakeMDAService(AbstractMDAService):
 
         template, id_ = self.render_attribute_query(nihii, mda_input.ssin, mda_input.registrationNumber, mda_input.mutuality, mda_input.notBefore, mda_input.notOnOrAfter, facets=mda_input.facets)
         
-        parser = XmlParser()
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         for model, response_string in self.faked:
             if model == mda_input:
                 response_pydantic = parser.parse(StringIO(response_string), Response)
@@ -232,7 +233,7 @@ class MDAService(AbstractMDAService):
             self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
                   entry.getValue().isValid())
         
-        parser = XmlParser()
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         response_string = self.GATEWAY.jvm.java.lang.String(response.getResponse(), "UTF-8")
         response_pydantic = parser.parse(StringIO(response_string), Response)
         
