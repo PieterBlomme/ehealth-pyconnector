@@ -23,10 +23,18 @@ class CallMetadata(BaseModel):
     registrationNumber: Optional[str] = None
     mutuality: Optional[str] = None
 
+    def set_call_type(self, value: CallType):
+        d = self.dict()
+        d["call_type"] = value
+        return CallMetadata(
+            **d
+        )
+
 def storage_callback(
     content: str,
     meta: CallMetadata
 ):
     # This is a dummy implementation
+    logger.info(type(content))
     logger.info(f"Received content: {content}")
     logger.info(f"Received metadata: {meta.json()}")
