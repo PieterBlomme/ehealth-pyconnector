@@ -276,9 +276,9 @@ class EAgreementService(AbstractEAgreementService):
             type=ServiceType.CONSULT_EAGREEMENT,
             timestamp=timestamp,
             call_type=CallType.UNENCRYPTED_REQUEST,
-            ssin=input_model.patient.ssin,
-            registrationNumber=input_model.patient.insurancenumber,
-            mutuality=input_model.patient.insurancymembership,
+            ssin=input_model.ssin,
+            registrationNumber=input_model.insurancenumber,
+            mutuality=input_model.insurancymembership,
         )
 
         practitioner = self.set_configuration_from_token(token)
