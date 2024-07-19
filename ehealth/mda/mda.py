@@ -239,7 +239,7 @@ class MDAService(AbstractMDAService):
         wsResponse = service.consultMemberData(memberDataRequest)
         
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(wsResponse)
-        callback_fn(raw_request, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
+        callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
         
         responseBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.memberdatav2.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder()
         response = responseBuilder.handleConsultationResponse(wsResponse)
@@ -250,7 +250,7 @@ class MDAService(AbstractMDAService):
         
         parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         response_string = self.GATEWAY.jvm.java.lang.String(response.getResponse(), "UTF-8")
-        callback_fn(raw_request, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
+        callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
         response_pydantic = parser.parse(StringIO(response_string), Response)
         
         return MemberData(

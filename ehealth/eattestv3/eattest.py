@@ -1,5 +1,5 @@
 from py4j.java_gateway import JavaGateway
-from typing import Any
+from typing import Any, Optional, Callable
 import datetime
 import logging
 from .input_models import Practitioner, Patient as PatientIn, EAttestInputModel, CancelEAttestInputModel, Transaction as TransactionIn
@@ -9,6 +9,7 @@ from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata.formats.dataclass.parsers.config import ParserConfig
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from pydantic import BaseModel
+from ehealth.utils.callbacks import storage_callback, CallMetadata, CallType, ServiceType
 import tempfile
 from .send_transaction_request import (
     SendTransactionRequest,
@@ -386,7 +387,18 @@ class EAttestV3Service:
         }
         return serializer.render(bundle, ns_map)
     
-    def send_attestation(self, token: str, input_model: EAttestInputModel):
+    def send_attestation(self, token: str, input_model: EAttestInputModel,
+                         callback_fn: Optional[Callable] = storage_callback):
+        timestamp = datetime.datetime.now()
+        meta = CallMetadata(
+            type=ServiceType.EATTEST,
+            timestamp=timestamp,
+            call_type=CallType.UNENCRYPTED_REQUEST,
+            ssin=input_model.patient.ssin,
+            registrationNumber=input_model.patient.insurance_number,
+            mutuality=input_model.patient.insurance_io,
+        )
+
         now = datetime.datetime.now().replace(microsecond=0)
         practitioner = self.set_configuration_from_token(token)
         kmehrmessage_pydantic = SendTransactionRequest(
@@ -394,6 +406,8 @@ class EAttestV3Service:
             kmehrmessage=self.render_message(practitioner, now, input_model)
         )
         template = self.serialize_template(kmehrmessage_pydantic).replace('xmlns:xmlns="http://www.ehealth.fgov.be/messageservices/protocol/v1"', 'xmlns="http://www.ehealth.fgov.be/messageservices/protocol/v1"')
+        callback_fn(template, meta)
+
         # obviously this is lazy ...
         with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
             tmp.write(template)
@@ -423,6 +437,7 @@ class EAttestV3Service:
         attestBuilderRequest = attestBuilder.getSendAttestationRequest()
         
         raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(attestBuilderRequest)
+        callback_fn(raw_request, meta.set_call_type(CallType.ENCRYPTED_REQUEST))
 
         try:
             sendAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().sendAttestation(attestBuilderRequest)
@@ -430,11 +445,13 @@ class EAttestV3Service:
             logger.info(template)
             raise
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(sendAttestationResponse)
+        callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
 
         attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilder)
         self.verify_result(attestResponse)
         response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
-        
+        callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
+
         parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         response_pydantic = parser.parse(StringIO(response_string), SendTransactionResponse)
         
@@ -447,7 +464,18 @@ class EAttestV3Service:
         )
 
 
-    def cancel_attestation(self, token: str, input_model: CancelEAttestInputModel):
+    def cancel_attestation(self, token: str, input_model: CancelEAttestInputModel,
+                           callback_fn: Optional[Callable] = storage_callback):
+        timestamp = datetime.datetime.now()
+        meta = CallMetadata(
+            type=ServiceType.CANCEL_EATTEST,
+            timestamp=timestamp,
+            call_type=CallType.UNENCRYPTED_REQUEST,
+            ssin=input_model.patient.ssin,
+            registrationNumber=input_model.patient.insurance_number,
+            mutuality=input_model.patient.insurance_io,
+        )
+
         now = datetime.datetime.now().replace(microsecond=0)
         practitioner = self.set_configuration_from_token(token)
         kmehrmessage_pydantic = SendTransactionRequest(
@@ -455,6 +483,8 @@ class EAttestV3Service:
             kmehrmessage=self.render_cancel_message(practitioner, now, input_model)
         )
         template = self.serialize_template(kmehrmessage_pydantic).replace('xmlns:xmlns="http://www.ehealth.fgov.be/messageservices/protocol/v1"', 'xmlns="http://www.ehealth.fgov.be/messageservices/protocol/v1"')
+        callback_fn(template, meta)
+        
         # obviously this is lazy ...
         with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
             tmp.write(template)
@@ -481,11 +511,13 @@ class EAttestV3Service:
         cancelAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().cancelAttestation(cancelAttestationRequest)
         
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(cancelAttestationResponse)
-        
+        callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
+
         attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleCancelAttestationResponse(cancelAttestationResponse, cancelAttestationRequest)
         self.verify_result(attestResponse)
         response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
-        
+        callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
+
         parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         response_pydantic = parser.parse(StringIO(response_string), SendTransactionResponse)
         

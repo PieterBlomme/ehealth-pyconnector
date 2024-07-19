@@ -8,6 +8,16 @@ logger = logging.getLogger(__name__)
 
 class ServiceType(str, Enum):
     MDA = "mda"
+    ASK_EAGREEMENT = "ask_eagreement"
+    ARGUE_EAGREEMENT = "argue_eagreement"
+    CANCEL_EAGREEMENT = "cancel_eagreement"
+    CONSULT_EAGREEMENT = "consult_eagreement"
+    ASYNC_MESSAGES_EAGREEMENT = "async_messages_eagreement"
+    EATTEST = "eattest"
+    EFACT = "efact"
+    CANCEL_EATTEST = "cancel_eattest"
+    ASYNC_MESSAGES_EFACT = "async_messages_efact"
+
 
 class CallType(str, Enum):
     UNENCRYPTED_REQUEST = "UNENCRYPTED_REQUEST"
