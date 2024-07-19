@@ -1,5 +1,6 @@
 from py4j.java_gateway import JavaGateway
-from typing import Any, Optional, List, Union
+from typing import Any, Optional, List, Union, Callable
+import datetime
 import base64
 from uuid import uuid4
 import logging
@@ -16,6 +17,7 @@ from pydantic import Extra
 from pydantic.dataclasses import dataclass
 from unidecode import unidecode
 import sentry_sdk
+from ehealth.utils.callbacks import storage_callback, CallMetadata, CallType, ServiceType
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +120,18 @@ class EFactService:
             self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
                 entry.getValue().isValid())
 
-    def send_efact(self, token: str, input_model: Message200KineNoPractitioner) -> Response:
+    def send_efact(self, token: str, input_model: Message200KineNoPractitioner,
+                   callback_fn: Optional[Callable] = storage_callback
+                   ) -> Response:
+        timestamp = datetime.datetime.now()
+        meta = CallMetadata(
+            type=ServiceType.EFACT,
+            timestamp=timestamp,
+            call_type=CallType.UNENCRYPTED_REQUEST,
+            ssin=input_model.insz_rechthebbende,
+            mutuality=input_model.nummer_ziekenfonds,
+        )
+
         practitioner = self.set_configuration_from_token(token)
 
         message_200 = Message200Kine(
@@ -130,6 +143,8 @@ class EFactService:
         )
 
         template = str(message_200.to_message200())
+        callback_fn(template, meta)
+
         # Sending unicode characters will mess up
         # the character count, ofcourse ...
         template = unidecode(template)
@@ -170,6 +185,8 @@ class EFactService:
 
         responsePost = service.postRequest(post, header)
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(responsePost)
+        callback_fn(raw_response, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
+
         logger.info(raw_response)
         logger.info("Call of handler for the post operation")
         self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getResponseObjectBuilder().handlePostResponse(responsePost)
@@ -181,7 +198,7 @@ class EFactService:
             soap_response=raw_response
         )
     
-    def message_to_object_refusal(self, decoded: str, base64_hash: str) -> Response:
+    def message_to_object_refusal(self, decoded: str, base64_hash: str,) -> Response:
         logger.info("mapping refusal")
         # this is a super weird mapping ...
         header_200 = Header200.from_str(decoded[:67])
@@ -306,7 +323,7 @@ class EFactService:
                 )
             )
 
-    def get_messages(self, token: str):
+    def get_messages(self, token: str, callback_fn: Optional[Callable] = storage_callback):
         self.set_configuration_from_token(token)
         logger.info("Creation of the get")
         msgQuery = self.EHEALTH_JVM.newMsgQuery()
@@ -353,6 +370,16 @@ class EFactService:
             mappedBlob = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.mapper.DomainBlobMapper.mapToBlob(detail)
             unwrappedMessageByteArray = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.BlobBuilderFactory.getBlobBuilder(PROJECT_NAME).checkAndRetrieveContent(mappedBlob)
             decoded = unwrappedMessageByteArray.decode("utf-8")
+
+            # separate timestamp per request
+            timestamp = datetime.datetime.now()
+            meta = CallMetadata(
+                type=ServiceType.ASYNC_MESSAGES_EFACT,
+                timestamp=timestamp,
+                call_type=CallType.UNENCRYPTED_RESPONSE,
+            )
+            callback_fn(decoded, meta)
+
             try:
                 messages.append(self.message_to_object(decoded, base64_hash))
             except Exception as e:

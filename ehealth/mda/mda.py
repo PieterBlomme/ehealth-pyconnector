@@ -233,29 +233,13 @@ class MDAService(AbstractMDAService):
         inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(id_)        
         memberDataRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.memberdatacommons.builders.RequestObjectBuilderFactory.getEncryptedRequestObjectBuilder().buildConsultationRequest(self.is_test, inputReference, content)
         raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(memberDataRequest)
-        meta = CallMetadata(
-            timestamp=timestamp,
-            type=ServiceType.MDA,
-            call_type=CallType.ENCRYPTED_REQUEST,
-            ssin=mda_input.ssin,
-            registrationNumber=mda_input.registrationNumber,
-            mutuality=mda_input.mutuality,
-        )
-        callback_fn(raw_request, meta)
+        callback_fn(raw_request, meta.set_call_type(CallType.ENCRYPTED_REQUEST))
 
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.memberdatav2.session.MemberDataSessionServiceFactory.getMemberDataSyncService()
         wsResponse = service.consultMemberData(memberDataRequest)
         
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(wsResponse)
-        meta = CallMetadata(
-            timestamp=timestamp,
-            type=ServiceType.MDA,
-            call_type=CallType.ENCRYPTED_RESPONSE,
-            ssin=mda_input.ssin,
-            registrationNumber=mda_input.registrationNumber,
-            mutuality=mda_input.mutuality,
-        )
-        callback_fn(raw_response, meta)
+        callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
         
         responseBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.memberdatav2.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder()
         response = responseBuilder.handleConsultationResponse(wsResponse)
@@ -266,15 +250,7 @@ class MDAService(AbstractMDAService):
         
         parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         response_string = self.GATEWAY.jvm.java.lang.String(response.getResponse(), "UTF-8")
-        meta = CallMetadata(
-            timestamp=timestamp,
-            type=ServiceType.MDA,
-            call_type=CallType.UNENCRYPTED_RESPONSE,
-            ssin=mda_input.ssin,
-            registrationNumber=mda_input.registrationNumber,
-            mutuality=mda_input.mutuality,
-        )
-        callback_fn(response_string, meta)
+        callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
         response_pydantic = parser.parse(StringIO(response_string), Response)
         
         return MemberData(
