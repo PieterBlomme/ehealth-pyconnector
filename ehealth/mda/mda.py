@@ -169,6 +169,7 @@ class FakeMDAService(AbstractMDAService):
         self, 
         token: str, 
         mda_input: MDAInputModel,
+        callback_fn: Optional[Callable] = storage_callback
         ) -> str:
         nihii = self.set_configuration_from_token(token)
 
