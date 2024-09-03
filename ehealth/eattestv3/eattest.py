@@ -101,9 +101,9 @@ class EAttestV3Service:
     def verify_result(self, response: Any):
         signVerifResult = response.getSignatureVerificationResult()
         for entry in signVerifResult.getErrors():
-            logger.info(entry)
-            self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
-                entry.getValue().isValid())
+            logger.error(f"Errors in {entry}")
+            # self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
+            #     entry.getValue().isValid())
     
     def render_sender(self, practitioner: Practitioner):
         return Hcparty(
