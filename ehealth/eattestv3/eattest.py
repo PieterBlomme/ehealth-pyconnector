@@ -102,6 +102,7 @@ class EAttestV3Service:
         signVerifResult = response.getSignatureVerificationResult()
         for entry in signVerifResult.getErrors():
             logger.error(f"Errors in {entry}")
+            raise Exception(f"Errors in {entry}")
             # self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
             #     entry.getValue().isValid())
     
