@@ -1,6 +1,7 @@
 from py4j.java_gateway import JavaGateway
 from typing import Any, Optional, Callable
 import datetime
+import pytz
 import logging
 from .input_models import Practitioner, Patient as PatientIn, EAttestInputModel, CancelEAttestInputModel, Transaction as TransactionIn
 from io import StringIO
@@ -400,7 +401,7 @@ class EAttestV3Service:
             mutuality=input_model.patient.insurance_io,
         )
 
-        now = datetime.datetime.now().replace(microsecond=0)
+        now = datetime.datetime.now(pytz.timezone("Europe/Brussels"))
         practitioner = self.set_configuration_from_token(token)
         kmehrmessage_pydantic = SendTransactionRequest(
             request=self.render_request(practitioner, now),
