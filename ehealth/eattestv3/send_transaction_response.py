@@ -635,7 +635,7 @@ class Item:
         default=None,
         metadata={
             "type": "Element",
-            "required": True,
+            "required": False,
         }
     )
 
