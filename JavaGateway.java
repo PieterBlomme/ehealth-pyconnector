@@ -155,14 +155,11 @@ public class JavaGateway {
       return confirmResponse;
   }
 
-  public List commonInputAttributes() {
-    return Arrays.asList(Attribute.builder()
-                .key("urn:be:cin:nippin:purpose")
-                .value("some purpose")
-                .build(),
+  public List commonInputAttributes(int attemptNbr) {
+    return Arrays.asList(
         Attribute.builder()
                 .key("urn:be:cin:nippin:attemptNbr")
-                .value(1)
+                .value(attemptNbr)
                 .build());
   }
 

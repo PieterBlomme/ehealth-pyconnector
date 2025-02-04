@@ -431,7 +431,7 @@ class EAttestV3Service:
                                 .referenceDate(self.GATEWAY.jvm.java.time.LocalDateTime.now())
                                 .messageVersion("3.0")
                                 .issuer("some issuer")
-                                .commonInputAttributes(self.EHEALTH_JVM.commonInputAttributes()) # TODO probably also needs some updates still
+                                .commonInputAttributes(self.EHEALTH_JVM.commonInputAttributes(1)) # TODO probably also needs some updates still
                                 .build())       
         attestBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.RequestObjectBuilderFactory.getRequestObjectBuilder().buildSendAttestationRequest(
             send_attest_request
@@ -501,7 +501,7 @@ class EAttestV3Service:
                                .kmehrmessage(self.EHEALTH_JVM.getBytesFromFile(tmp.name))
                                 .messageVersion("3.0")
                                 .issuer("some issuer")
-                                .commonInputAttributes(self.EHEALTH_JVM.commonInputAttributes()) # TODO probably also needs some updates still
+                                .commonInputAttributes(self.EHEALTH_JVM.commonInputAttributes(1)) # TODO probably also needs some updates still
                                 .build())       
         
         cancelAttestationRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.RequestObjectBuilderFactory.getRequestObjectBuilder().buildCancelAttestationRequest(
