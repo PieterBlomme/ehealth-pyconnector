@@ -6,6 +6,7 @@ from pathlib import Path
 from ehealth.sts import STSService
 from ehealth.eattestv3.eattest import EAttestV3Service
 from ehealth.eattestv3.input_models import EAttestInputModel, Patient, Transaction, CGDItem, Requestor, Location
+from ehealth.eattestv3.exceptions import EAttestRetryableAttempt, TechnicalEAttestException
 from ehealth.utils.callbacks import storage_callback, file_callback
 
 from .conftest import MYCARENET_PWD, MYCARENET_USER
@@ -536,3 +537,50 @@ def test_4_2_5(sts_service, token, eattest_service):
     assert cgd_1.item[2].cost.decimal == 28.0
 
     # no information returned about the supplement, so can't doublecheck
+
+
+def test_retryable(sts_service, token, eattest_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        with pytest.raises(TechnicalEAttestException) as exc_info:
+            response = eattest_service.send_attestation(
+                token, 
+                input_model=EAttestInputModel(
+                    patient=Patient(
+                        givenname="John",
+                        surname="Doe",
+                        gender="male",
+                        ssin="71020203354"
+                    ),
+                    transaction=Transaction(
+                        kbo_number="0635769870",
+                        decisionreference="10020000000003100613",
+                        cgds=[
+                            CGDItem(
+                                claim="560652",
+                                decisionreference="10020000000003100613",
+                                encounterdatetime=datetime.date.today().isoformat(),
+                                amount=38.86,
+                                requestor=Requestor(
+                                    givenname="Marie",
+                                    surname="Nolet de Brauwere van Steeland",
+                                    nihii="19733263004",
+                                    date_prescription=datetime.date.fromisoformat('2023-12-01')
+                                ),
+                            ),
+                        ]
+                    ),
+                    force_retryable=True
+                ),
+                callback_fn=file_callback
+            )
+    
+        retryable = exc_info.value.retryable
+        response = eattest_service.retry_send_attestation(
+            token=token,
+            input_model=retryable,
+            callback_fn=file_callback
+        )
+    acknowledge = response.response.acknowledge
+    assert acknowledge.error is not None
+    assert acknowledge.error.cd.value == 269
+    logger.info(acknowledge.error.cd.value)

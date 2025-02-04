@@ -12,6 +12,7 @@ from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from pydantic import BaseModel
 from ehealth.utils.callbacks import storage_callback, CallMetadata, CallType, ServiceType
 import tempfile
+from .exceptions import EAttestRetryableAttempt, TechnicalEAttestException
 from .send_transaction_request import (
     SendTransactionRequest,
     Request,
@@ -389,6 +390,28 @@ class EAttestV3Service:
         }
         return serializer.render(bundle, ns_map)
     
+    def handle_send_attestation_response(self, attestBuilder: Any, template: str, raw_request: str, sendAttestationResponse: Any, meta: CallMetadata, callback_fn: Optional[Callable] = storage_callback) -> EAttestV3:
+        raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(sendAttestationResponse)
+        callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
+
+        attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilder)
+        self.verify_result(attestResponse)
+        response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
+        callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
+        xades_response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getXadesT(), "UTF-8")
+        callback_fn(xades_response_string, meta.set_call_type(CallType.XADES_RESPONSE))
+
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
+        response_pydantic = parser.parse(StringIO(response_string), SendTransactionResponse)
+        
+        return EAttestV3(
+            response=response_pydantic,
+            transaction_request=template,
+            transaction_response=response_string.replace('ns:', ''),
+            soap_request=raw_request,
+            soap_response=raw_response
+        )
+    
     def send_attestation(self, token: str, input_model: EAttestInputModel,
                          callback_fn: Optional[Callable] = storage_callback):
         timestamp = datetime.datetime.now()
@@ -443,29 +466,86 @@ class EAttestV3Service:
 
         try:
             sendAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().sendAttestation(attestBuilderRequest)
+            if input_model.force_retryable:
+                raise Exception("Force technical exception to test Duplicate service")
         except Exception as e:
-            logger.info(template)
-            raise
-        raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(sendAttestationResponse)
-        callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
-
-        attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilder)
-        self.verify_result(attestResponse)
-        response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
-        callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
-        xades_response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getXadesT(), "UTF-8")
-        callback_fn(xades_response_string, meta.set_call_type(CallType.XADES_RESPONSE))
-
-        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
-        response_pydantic = parser.parse(StringIO(response_string), SendTransactionResponse)
+            retryable = EAttestRetryableAttempt(
+                input_reference_str=input_reference_str,
+                template=template,
+                ssin=ssin,
+                attemptNumber=1
+            )
+            raise TechnicalEAttestException(
+                message=str(e),
+                retryable=retryable
+            )
         
-        return EAttestV3(
-            response=response_pydantic,
-            transaction_request=template,
-            transaction_response=response_string.replace('ns:', ''),
-            soap_request=raw_request,
-            soap_response=raw_response
+        return self.handle_send_attestation_response(
+            attestBuilder=attestBuilder,
+            template=template,
+            raw_request=raw_request,
+            sendAttestationResponse=sendAttestationResponse,
+            meta=meta,
+            callback_fn=callback_fn
+            )
+    
+    def retry_send_attestation(self, token: str, input_model: EAttestRetryableAttempt,
+                         callback_fn: Optional[Callable] = storage_callback):
+        # increment attempt number
+        input_model.attemptNumber += 1
+
+        timestamp = datetime.datetime.now()
+        meta = CallMetadata(
+            type=ServiceType.EATTEST,
+            timestamp=timestamp,
+            call_type=CallType.UNENCRYPTED_REQUEST,
+            ssin=input_model.ssin,
+            registrationNumber=None,
+            mutuality=None,
         )
+            
+        # obviously this is lazy ...
+        with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
+            tmp.write(input_model.template)
+
+        inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(input_model.input_reference_str)
+        
+        send_attest_request = (self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.SendAttestationRequestInput
+                               .builder()
+                               .isTest(self.is_test)
+                               .inputReference(inputReference)
+                               .kmehrmessage(self.EHEALTH_JVM.getBytesFromFile(tmp.name))
+                                .patientSsin(self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.Ssin(input_model.ssin))
+                                .referenceDate(self.GATEWAY.jvm.java.time.LocalDateTime.now())
+                                .messageVersion("3.0")
+                                .issuer("some issuer")
+                                .commonInputAttributes(self.EHEALTH_JVM.commonInputAttributes(input_model.attemptNumber)) # TODO probably also needs some updates still
+                                .build())       
+        attestBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.RequestObjectBuilderFactory.getRequestObjectBuilder().buildSendAttestationRequest(
+            send_attest_request
+        )
+        
+        attestBuilderRequest = attestBuilder.getSendAttestationRequest()
+        
+        raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(attestBuilderRequest)
+        callback_fn(raw_request, meta.set_call_type(CallType.ENCRYPTED_REQUEST))
+
+        try:
+            sendAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().sendAttestation(attestBuilderRequest)
+        except Exception as e:
+            raise TechnicalEAttestException(
+                message=str(e),
+                retryable=input_model
+            )
+        
+        return self.handle_send_attestation_response(
+            attestBuilder=attestBuilder,
+            template=input_model.template,
+            raw_request=raw_request,
+            sendAttestationResponse=sendAttestationResponse,
+            meta=meta,
+            callback_fn=callback_fn
+            )
 
 
     def cancel_attestation(self, token: str, input_model: CancelEAttestInputModel,
@@ -505,15 +585,31 @@ class EAttestV3Service:
                                 .issuer("some issuer")
                                 .commonInputAttributes(self.EHEALTH_JVM.commonInputAttributes(1)) # TODO probably also needs some updates still
                                 .build())       
-        
+
+
         cancelAttestationRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.RequestObjectBuilderFactory.getRequestObjectBuilder().buildCancelAttestationRequest(
             send_cancel_attest_request
         )
+        raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(cancelAttestationRequest)
+        callback_fn(raw_request, meta.set_call_type(CallType.ENCRYPTED_REQUEST))
         
-        raw_request = "" # unable to create but not important
-        
-        cancelAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().cancelAttestation(cancelAttestationRequest)
-        
+        try:
+            cancelAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().cancelAttestation(cancelAttestationRequest)
+            if input_model.force_retryable:
+                raise Exception("Force technical exception to test Duplicate service")
+        except Exception as e:
+            retryable = EAttestRetryableAttempt(
+                input_reference_str=input_reference_str,
+                template=template,
+                ssin=input_model.patient.ssin,
+                attemptNumber=1
+            )
+            raise TechnicalEAttestException(
+                message=str(e),
+                retryable=retryable
+            )
+
+
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(cancelAttestationResponse)
         callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
 
@@ -523,13 +619,83 @@ class EAttestV3Service:
         callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
         xades_response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getXadesT(), "UTF-8")
         callback_fn(xades_response_string, meta.set_call_type(CallType.XADES_RESPONSE))
-        
+
         parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         response_pydantic = parser.parse(StringIO(response_string), SendTransactionResponse)
         
         return EAttestV3(
             response=response_pydantic,
             transaction_request=template,
+            transaction_response=response_string.replace('ns:', ''),
+            soap_request=raw_request,
+            soap_response=raw_response
+        )
+
+    def retry_cancel_attestation(self, token: str, input_model: EAttestRetryableAttempt,
+                           callback_fn: Optional[Callable] = storage_callback):
+        # increment attempt number
+        input_model.attemptNumber += 1
+
+        timestamp = datetime.datetime.now()
+        meta = CallMetadata(
+            type=ServiceType.CANCEL_EATTEST,
+            timestamp=timestamp,
+            call_type=CallType.UNENCRYPTED_REQUEST,
+            ssin=input_model.ssin,
+            registrationNumber=None,
+            mutuality=None
+        )
+
+        callback_fn(input_model.template, meta)
+        
+        # obviously this is lazy ...
+        with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
+            tmp.write(input_model.template)
+
+        inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(input_model.input_reference_str)
+
+        send_cancel_attest_request = (self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.CancelAttestationRequestInput
+                               .builder()
+                               .isTest(self.is_test)
+                               .inputReference(inputReference)
+                               .kmehrmessage(self.EHEALTH_JVM.getBytesFromFile(tmp.name))
+                                .messageVersion("3.0")
+                                .issuer("some issuer")
+                                .commonInputAttributes(self.EHEALTH_JVM.commonInputAttributes(input_model.attemptNumber)) # TODO probably also needs some updates still
+                                .build())       
+        
+        cancelAttestationRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.RequestObjectBuilderFactory.getRequestObjectBuilder().buildCancelAttestationRequest(
+            send_cancel_attest_request
+        )
+        
+        raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(cancelAttestationRequest)
+        callback_fn(raw_request, meta.set_call_type(CallType.ENCRYPTED_REQUEST))
+                
+        try:
+            cancelAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().cancelAttestation(cancelAttestationRequest)
+        except Exception as e:
+            raise TechnicalEAttestException(
+                message=str(e),
+                retryable=input_model
+            )
+
+
+        raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(cancelAttestationResponse)
+        callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
+
+        attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleCancelAttestationResponse(cancelAttestationResponse, cancelAttestationRequest)
+        self.verify_result(attestResponse)
+        response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
+        callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
+        xades_response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getXadesT(), "UTF-8")
+        callback_fn(xades_response_string, meta.set_call_type(CallType.XADES_RESPONSE))
+
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
+        response_pydantic = parser.parse(StringIO(response_string), SendTransactionResponse)
+        
+        return EAttestV3(
+            response=response_pydantic,
+            transaction_request=input_model.template,
             transaction_response=response_string.replace('ns:', ''),
             soap_request=raw_request,
             soap_response=raw_response
