@@ -265,16 +265,11 @@ def test_4_2_1(sts_service, token, eattest_service):
                             decisionreference="10020000000002569234",
                             encounterdatetime=datetime.date.today().isoformat(),
                             amount=8.,
-                            requestor=Requestor(
-                                givenname="Marie",
-                                surname="Nolet de Brauwere van Steeland",
-                                nihii="19733263004",
-                                date_prescription=datetime.date.fromisoformat('2023-09-02')
-                            ),
                         ),
                     ]
                 )
-            )
+            ),
+            callback_fn=file_callback
         )
     
     acknowledge = response.response.acknowledge

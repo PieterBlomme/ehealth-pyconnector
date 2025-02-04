@@ -32,7 +32,7 @@ class CGDItem(BaseModel):
     decisionreference: str
     encounterdatetime: datetime.date
     amount: float
-    requestor: Requestor
+    requestor: Optional[Requestor]
     location: Optional[Location] = None
     supplement: Optional[float] = None
 
