@@ -453,6 +453,8 @@ class EAttestV3Service:
         self.verify_result(attestResponse)
         response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
         callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
+        xades_response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getXadesT(), "UTF-8")
+        callback_fn(xades_response_string, meta.set_call_type(CallType.XADES_RESPONSE))
 
         parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         response_pydantic = parser.parse(StringIO(response_string), SendTransactionResponse)
@@ -519,7 +521,9 @@ class EAttestV3Service:
         self.verify_result(attestResponse)
         response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
         callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
-
+        xades_response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getXadesT(), "UTF-8")
+        callback_fn(xades_response_string, meta.set_call_type(CallType.XADES_RESPONSE))
+        
         parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         response_pydantic = parser.parse(StringIO(response_string), SendTransactionResponse)
         

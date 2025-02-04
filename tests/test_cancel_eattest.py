@@ -6,6 +6,7 @@ from pathlib import Path
 from ehealth.sts import STSService
 from ehealth.eattestv3.eattest import EAttestV3Service
 from ehealth.eattestv3.input_models import CancelEAttestInputModel, Patient, Transaction, CGDItem, Requestor, Location
+from ehealth.utils.callbacks import file_callback
 from .conftest import MYCARENET_PWD, MYCARENET_USER
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,8 @@ def test_4_1_1(sts_service, token, eattest_service):
                 ),
                 invoice_number="940-1-240130-0000001-84",
                 reason="C"
-            )
+            ),
+            callback_fn=file_callback
         )
     
     logger.info(response.soap_request)

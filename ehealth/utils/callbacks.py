@@ -24,6 +24,7 @@ class CallType(str, Enum):
     ENCRYPTED_REQUEST = "ENCRYPTED_REQUEST"
     UNENCRYPTED_RESPONSE = "UNENCRYPTED_RESPONSE"
     ENCRYPTED_RESPONSE = "ENCRYPTED_RESPONSE"
+    XADES_RESPONSE = "XADES_RESPONSE"
 
 class CallMetadata(BaseModel):
     timestamp: datetime.datetime
@@ -48,3 +49,10 @@ def storage_callback(
     logger.info(type(content))
     logger.info(f"Received content: {content}")
     logger.info(f"Received metadata: {meta.json()}")
+
+def file_callback(
+    content: str,
+    meta: CallMetadata
+):
+    with open(f"{meta.ssin}_{meta.registrationNumber}_{meta.type}_{meta.call_type}.xml", "w") as f:
+        f.write(content)

@@ -6,6 +6,8 @@ from pathlib import Path
 from ehealth.sts import STSService
 from ehealth.eattestv3.eattest import EAttestV3Service
 from ehealth.eattestv3.input_models import EAttestInputModel, Patient, Transaction, CGDItem, Requestor, Location
+from ehealth.utils.callbacks import storage_callback, file_callback
+
 from .conftest import MYCARENET_PWD, MYCARENET_USER
 
 logger = logging.getLogger(__name__)
@@ -15,6 +17,7 @@ KEYSTORE_SSIN = "90121320026"
 KEYSTORE_PATH = "valid-eattest.acc-p12"
 DATA_FOLDER = Path(__file__).parent.joinpath("data/faked_eagreement")
 
+    
 @pytest.fixture
 def sts_service():
     return STSService()
@@ -59,7 +62,8 @@ def test_4_1_1(sts_service, token, eattest_service):
                         ),
                     ]
                 )
-            )
+            ),
+            callback_fn=file_callback
         )
     
     acknowledge = response.response.acknowledge
