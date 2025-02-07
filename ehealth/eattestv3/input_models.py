@@ -32,7 +32,7 @@ class CGDItem(BaseModel):
     decisionreference: str
     encounterdatetime: datetime.date
     amount: float
-    requestor: Requestor
+    requestor: Optional[Requestor]
     location: Optional[Location] = None
     supplement: Optional[float] = None
 
@@ -44,8 +44,10 @@ class Transaction(BaseModel):
 class EAttestInputModel(BaseModel):
     patient: Patient
     transaction: Transaction
+    force_retryable: Optional[bool] = False
 
 class CancelEAttestInputModel(BaseModel):
     patient: Patient
     invoice_number: str
     reason: str
+    force_retryable: Optional[bool] = False

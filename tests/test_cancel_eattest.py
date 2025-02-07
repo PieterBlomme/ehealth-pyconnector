@@ -6,6 +6,8 @@ from pathlib import Path
 from ehealth.sts import STSService
 from ehealth.eattestv3.eattest import EAttestV3Service
 from ehealth.eattestv3.input_models import CancelEAttestInputModel, Patient, Transaction, CGDItem, Requestor, Location
+from ehealth.utils.callbacks import file_callback
+from ehealth.eattestv3.exceptions import EAttestRetryableAttempt, TechnicalEAttestException
 from .conftest import MYCARENET_PWD, MYCARENET_USER
 
 logger = logging.getLogger(__name__)
@@ -43,7 +45,35 @@ def test_4_1_1(sts_service, token, eattest_service):
                 ),
                 invoice_number="940-1-240130-0000001-84",
                 reason="C"
-            )
+            ),
+            callback_fn=file_callback
         )
     
+    logger.info(response.soap_request)
+
+def test_retryable(sts_service, token, eattest_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        with pytest.raises(TechnicalEAttestException) as exc_info:
+            response = eattest_service.cancel_attestation(
+                token, 
+                input_model=CancelEAttestInputModel(
+                    patient=Patient(
+                        givenname="John",
+                        surname="Doe",
+                        gender="male",
+                        ssin="68042000773"
+                    ),
+                    invoice_number="940-1-240130-0000001-84",
+                    reason="C",
+                    force_retryable=True
+                ),
+                callback_fn=file_callback,
+            )
+
+        retryable = exc_info.value.retryable
+        response = eattest_service.retry_cancel_attestation(
+            token=token,
+            input_model=retryable,
+            callback_fn=file_callback
+        )
     logger.info(response.soap_request)
