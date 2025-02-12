@@ -636,6 +636,8 @@ class EAttestV3Service:
         # increment attempt number
         input_model.attemptNumber += 1
 
+        self.set_configuration_from_token(token)
+
         timestamp = datetime.datetime.now()
         meta = CallMetadata(
             type=ServiceType.CANCEL_EATTEST,
