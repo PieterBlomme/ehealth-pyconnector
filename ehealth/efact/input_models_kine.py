@@ -399,7 +399,8 @@ class Message200Kine(BaseModel):
             date_creation=self.date_invoice,
             kbo_number=self.kbo_number,
             bic_bank=self.bic_bank,
-            iban_bank=self.iban_bank
+            iban_bank=self.iban_bank,
+            beroepscode_facturerende_derde=self.beroepscode_facturerende_derde
         ).to_record_10()
         record_20 = Record20Kine(
             nummer_ziekenfonds_aansluiting=self.nummer_ziekenfonds,
