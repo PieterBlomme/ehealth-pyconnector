@@ -364,6 +364,9 @@ class EFactService:
         messages = []
 
         for msgResponse in responseGet.getReturn().getMsgResponses():
+            # separate timestamp per request
+            timestamp = datetime.datetime.now()
+            
             xades = msgResponse.getXadesT().getValue()
             meta = CallMetadata(
                 type=ServiceType.ASYNC_MESSAGES_EFACT,
@@ -379,12 +382,7 @@ class EFactService:
             mappedBlob = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.mapper.DomainBlobMapper.mapToBlob(detail)
             unwrappedMessageByteArray = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.BlobBuilderFactory.getBlobBuilder(PROJECT_NAME).checkAndRetrieveContent(mappedBlob)
             decoded = unwrappedMessageByteArray.decode("utf-8")
-
-            # separate timestamp per request
-            timestamp = datetime.datetime.now()
-
-
-
+            
             try:
                 message_object = self.message_to_object(decoded, base64_hash)
                 messages.append(message_object)
@@ -408,6 +406,9 @@ class EFactService:
 
         logger.info("getTAckResponses")
         for tackResponse in responseGet.getReturn().getTAckResponses():
+            # separate timestamp per request
+            timestamp = datetime.datetime.now()
+            
             xades = msgResponse.getXadesT().getValue()
             meta = CallMetadata(
                 type=ServiceType.ASYNC_MESSAGES_EFACT,
@@ -420,7 +421,6 @@ class EFactService:
             base64_hash = base64.b64encode(tackResponseBytes).decode('utf8')
             logger.info(f"hash tack {base64_hash}")
 
-            timestamp = datetime.datetime.now()
             meta = CallMetadata(
                 type=ServiceType.ASYNC_MESSAGES_EFACT_TACK,
                 timestamp=timestamp,
