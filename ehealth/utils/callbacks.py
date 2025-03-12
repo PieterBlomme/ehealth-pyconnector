@@ -17,6 +17,7 @@ class ServiceType(str, Enum):
     EFACT = "efact"
     CANCEL_EATTEST = "cancel_eattest"
     ASYNC_MESSAGES_EFACT = "async_messages_efact"
+    ASYNC_MESSAGES_EFACT_TACK = "async_messages_efact_tack"
 
 
 class CallType(str, Enum):
@@ -33,6 +34,7 @@ class CallMetadata(BaseModel):
     ssin: Optional[str] = None
     registrationNumber: Optional[str] = None
     mutuality: Optional[str] = None
+    efact_reference: Optional[str] = None
 
     def set_call_type(self, value: CallType):
         d = self.dict()

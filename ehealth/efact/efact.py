@@ -124,7 +124,6 @@ class EFactService:
                    callback_fn: Optional[Callable] = storage_callback
                    ) -> Response:
         timestamp = datetime.datetime.now()
-
         ssin = input_model.insz_rechthebbende + input_model.identificatie_rechthebbende_2
         meta = CallMetadata(
             type=ServiceType.EFACT,
@@ -359,12 +358,21 @@ class EFactService:
                 raise e
             
         #  validate the get responses ( including check on xades if present)
-        # self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getResponseObjectBuilder().handleGetResponse(responseGet)
+        logger.info(dir(responseGet))
+        self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getResponseObjectBuilder().handleGetResponse(responseGet)
         logger.info("getMsgResponses")
 
         messages = []
 
         for msgResponse in responseGet.getReturn().getMsgResponses():
+            xades = msgResponse.getXadesT().getValue()
+            meta = CallMetadata(
+                type=ServiceType.ASYNC_MESSAGES_EFACT,
+                timestamp=timestamp,
+                call_type=CallType.XADES_RESPONSE,
+            )
+            callback_fn(xades, meta)
+
             detail = msgResponse.getDetail()
             hash = detail.getHashValue()
             base64_hash = base64.b64encode(hash).decode('utf8')
@@ -375,27 +383,52 @@ class EFactService:
 
             # separate timestamp per request
             timestamp = datetime.datetime.now()
-            meta = CallMetadata(
-                type=ServiceType.ASYNC_MESSAGES_EFACT,
-                timestamp=timestamp,
-                call_type=CallType.UNENCRYPTED_RESPONSE,
-            )
-            callback_fn(decoded, meta)
+
+
 
             try:
-                messages.append(self.message_to_object(decoded, base64_hash))
+                message_object = self.message_to_object(decoded, base64_hash)
+                messages.append(message_object)
+                meta = CallMetadata(
+                    type=ServiceType.ASYNC_MESSAGES_EFACT,
+                    timestamp=timestamp,
+                    call_type=CallType.UNENCRYPTED_RESPONSE,
+                    efact_reference=message_object.message.reference
+                )
             except Exception as e:
                 logger.info(f"Failed to convert message with hash {base64_hash}")
                 sentry_sdk.capture_message(f"Part of message could not be mapped: {decoded}")
                 with open(f"{uuid4()}.txt", "w") as f:
                     f.write(decoded)
+                meta = CallMetadata(
+                    type=ServiceType.ASYNC_MESSAGES_EFACT,
+                    timestamp=timestamp,
+                    call_type=CallType.UNENCRYPTED_RESPONSE,
+                )
+            callback_fn(decoded, meta)
 
         logger.info("getTAckResponses")
         for tackResponse in responseGet.getReturn().getTAckResponses():
+            xades = msgResponse.getXadesT().getValue()
+            meta = CallMetadata(
+                type=ServiceType.ASYNC_MESSAGES_EFACT,
+                timestamp=timestamp,
+                call_type=CallType.XADES_RESPONSE,
+            )
+            callback_fn(xades, meta)
             # just always confirm TAck messages, I guess
             tackResponseBytes = tackResponse.getTAck().getValue()
             base64_hash = base64.b64encode(tackResponseBytes).decode('utf8')
-            logger.info(f"hash: {base64_hash}")
+            logger.info(f"hash tack {base64_hash}")
+
+            timestamp = datetime.datetime.now()
+            meta = CallMetadata(
+                type=ServiceType.ASYNC_MESSAGES_EFACT_TACK,
+                timestamp=timestamp,
+                call_type=CallType.UNENCRYPTED_RESPONSE,
+            )
+            callback_fn(tackResponseBytes, meta)
+
             self.confirm_message(token, base64_hash, tack=True)
         return messages
 
