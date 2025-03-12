@@ -124,11 +124,13 @@ class EFactService:
                    callback_fn: Optional[Callable] = storage_callback
                    ) -> Response:
         timestamp = datetime.datetime.now()
+
+        ssin = input_model.insz_rechthebbende + input_model.identificatie_rechthebbende_2
         meta = CallMetadata(
             type=ServiceType.EFACT,
             timestamp=timestamp,
             call_type=CallType.UNENCRYPTED_REQUEST,
-            ssin=input_model.insz_rechthebbende,
+            ssin=ssin,
             mutuality=input_model.nummer_ziekenfonds,
         )
 
