@@ -358,8 +358,7 @@ class EFactService:
                 raise e
             
         #  validate the get responses ( including check on xades if present)
-        logger.info(dir(responseGet))
-        self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getResponseObjectBuilder().handleGetResponse(responseGet)
+        # self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getResponseObjectBuilder().handleGetResponse(responseGet)
         logger.info("getMsgResponses")
 
         messages = []
