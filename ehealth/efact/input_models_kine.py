@@ -155,7 +155,7 @@ class Record50Kine(BaseModel):
             code_facturering_persoonlijk_aandeel_of_supplement=self.code_facturering_persoonlijk_aandeel_of_supplement,
             geconventioneerde_verstrekker="1" if self.geconventioneerde_verstrekker else "9",
             identificatie_voorschrijver=self.identificatie_voorschrijver,
-            norm_voorschrijver=self.voorschrijver
+            norm_voorschrijver=self.norm_voorschrijver
         )
     
 class Record52Kine(BaseModel):
