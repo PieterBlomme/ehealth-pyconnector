@@ -144,7 +144,7 @@ class EFactService:
         )
 
         template = str(message_200.to_message200())
-        callback_fn(template, meta)
+        callback_fn(template.encode("utf-8"), meta)
 
         # Sending unicode characters will mess up
         # the character count, ofcourse ...
@@ -180,6 +180,10 @@ class EFactService:
         post = self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getRequestObjectBuilder(PROJECT_NAME).buildPostRequest(ci, det, xades)
 
         logger.info("Send of the post request")
+
+        raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(post).encode("utf-8")
+        callback_fn(raw_request, meta.set_call_type(CallType.ENCRYPTED_REQUEST))
+
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.session.GenAsyncSessionServiceFactory.getGenAsyncService(PROJECT_NAME)
 
         header = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.util.WsAddressingUtil.createHeader(mutuality, "urn:be:cin:nip:async:generic:post:msg")
@@ -347,8 +351,17 @@ class EFactService:
         responseGetHeader = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.util.WsAddressingUtil.createHeader(None, "urn:be:cin:nip:async:generic:get:query")
         
         try:
+            get_request = self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getRequestObjectBuilder(PROJECT_NAME).buildGetRequest(origin, msgQuery, tackQuery)
+            raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(get_request).encode("utf-8")
+            meta = CallMetadata(
+                type=ServiceType.ASYNC_MESSAGES_EFACT,
+                timestamp=datetime.datetime.now(),
+                call_type=CallType.UNENCRYPTED_REQUEST,
+            )
+            callback_fn(raw_request, meta)
+
             responseGet = service.getRequest(
-                self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getRequestObjectBuilder(PROJECT_NAME).buildGetRequest(origin, msgQuery, tackQuery), 
+                get_request,
                 responseGetHeader
                 )
         except Py4JJavaError as e:
@@ -356,7 +369,7 @@ class EFactService:
                 raise TooManyRequestsException
             else:
                 raise e
-            
+        
         #  validate the get responses ( including check on xades if present)
         # self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getResponseObjectBuilder().handleGetResponse(responseGet)
         logger.info("getMsgResponses")
@@ -402,7 +415,7 @@ class EFactService:
                     timestamp=timestamp,
                     call_type=CallType.UNENCRYPTED_RESPONSE,
                 )
-            callback_fn(decoded, meta)
+            callback_fn(unwrappedMessageByteArray, meta)
 
         logger.info("getTAckResponses")
         for tackResponse in responseGet.getReturn().getTAckResponses():

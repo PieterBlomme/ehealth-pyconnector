@@ -5,6 +5,7 @@ import time
 import random
 import logging
 from pathlib import Path
+from typing import Any
 from ehealth.efact.efact import EFactService
 from .conftest import MYCARENET_PWD, MYCARENET_USER
 from ehealth.efact.input_models import (
@@ -171,6 +172,23 @@ def test_dummy(sts_service, token, efact_service):
         )
 
 
+
+def storage_callback(
+    content: bytes,
+    meta: Any,
+):
+    if meta.ssin:
+        identification = meta.ssin
+    elif meta.efact_reference:
+        identification = meta.efact_reference
+    else:
+        identification = f"{meta.registrationNumber}@{meta.mutuality}"
+    filename = f"{meta.timestamp}_{str(meta.type.value)}_{str(meta.call_type.value)}_{identification}.xml"
+    # This is a dummy implementation
+    logger.info(f"Received content: {content} to be stored with filename {filename}")
+    with open(filename, "wb") as f:
+        f.write(content)
+
 def test_efact_refusal_1(sts_service, token, efact_service, mda_service):
     # lets do manual MDA completion for now
     ssin = "58112129084" # TODO needs an update
@@ -184,9 +202,9 @@ def test_efact_refusal_1(sts_service, token, efact_service, mda_service):
     detail_record = DetailRecord(
         nomenclatuur="567011",
         datum_eerste_verstrekking=datetime.date.today() - datetime.timedelta(days=2),
-        bedrag_verzekeringstegemoetkoming="22.35",
+        bedrag_verzekeringstegemoetkoming="2235",
         datum_voorschrift=datetime.date.today() - datetime.timedelta(days=5),
-        persoonlijk_aandeel_patient="6.25",
+        persoonlijk_aandeel_patient="625",
         bedrag_supplement="0",
     )
 
@@ -196,37 +214,38 @@ def test_efact_refusal_1(sts_service, token, efact_service, mda_service):
     reference = f"{today_numeric}{random_id}"
     logger.info(reference)
 
-    # input_model_kine = Message200KineNoPractitioner(
-    #     reference=reference,
-    #     num_invoice="001",
-    #     tel_contact="0487179464",
-    #     hospital_care=False,
-    #     zendingsnummer="500",
-    #     bic_bank="GKCCBEBB",
-    #     iban_bank="BE19063539637812",
-    #     nummer_individuele_factuur_1="00001",
-    #     geconventioneerde_verstrekker=True,
-    #     insz_rechthebbende=ssin,
-    #     geslacht_rechthebbende="1" if (gender == "male") else "2",
-    #     nummer_ziekenfonds=nummer_mutualiteit,
-    #     identificatie_rechthebbende_2="6" if (gender == "male") else "2", # no idea ...
-    #     cg1_cg2=f"{cg1}{cg2}".rjust(10, "0"),
-    #     referentiegegevens_netwerk_1=akkoord_derdebetalers,
-    #     nummer_akkoord=nummer_akkoord,
-    #     detail_records=[detail_record]
-    # )
+    input_model_kine = Message200KineNoPractitioner(
+        reference=reference,
+        kbo_number="1234567890",
+        num_invoice="001",
+        tel_contact="0487179464",
+        hospital_care=False,
+        zendingsnummer="500",
+        bic_bank="GKCCBEBB",
+        iban_bank="BE19063539637812",
+        nummer_individuele_factuur_1="00001",
+        geconventioneerde_verstrekker=True,
+        insz_rechthebbende=ssin,
+        geslacht_rechthebbende="1" if (gender == "male") else "2",
+        nummer_ziekenfonds=nummer_mutualiteit,
+        identificatie_rechthebbende_2="6" if (gender == "male") else "2", # no idea ...
+        cg1_cg2=f"{cg1}{cg2}".rjust(10, "0"),
+        referentiegegevens_netwerk_1=akkoord_derdebetalers,
+        nummer_akkoord=nummer_akkoord,
+        detail_records=[detail_record]
+    )
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         # NOTE waiting on result of message 20240202860044
-        # efact_service.send_efact(
-        #     token, input_model_kine
-        # )
-        messages = efact_service.get_messages(token)
-        logger.info(f"num messages: {len(messages)}")
+        efact_service.send_efact(
+            token, input_model_kine, callback_fn=storage_callback
+        )
+        # messages = efact_service.get_messages(token)
+        # logger.info(f"num messages: {len(messages)}")
 
-        for m in messages:
-            logger.info(m.message.reference)
-            # logger.info(m.message.base64_hash)
-            logger.info(m.transaction_response[:10])
+        # for m in messages:
+        #     logger.info(m.message.reference)
+        #     # logger.info(m.message.base64_hash)
+        #     logger.info(m.transaction_response[:10])
 
 
     
@@ -237,10 +256,11 @@ def test_confirm_message(sts_service, token, efact_service):
         logger.info(f"num messages: {len(messages)}")
         for m in messages:
             logger.info(m.message.base64_hash)
+            logger.info(m.message.reference)
             # efact_service.confirm_message(token, m.message.base64_hash)
-        time.sleep(60)
-        messages = efact_service.get_messages(token)
-        logger.info(f"num messages: {len(messages)}")
+        # time.sleep(5)
+        # messages = efact_service.get_messages(token)
+        # logger.info(f"num messages: {len(messages)}")
 
 @pytest.mark.parametrize("message", [
     # 920999 refusals
