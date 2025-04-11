@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Union
 import logging
 import datetime
 from .input_models import Header200, Header300, Record10, Record20, Record50, Record52, Record80, Record90, Footer95, Footer96, Message200, calculate_invoice_control
@@ -344,68 +344,26 @@ class DetailRecord(BaseModel):
             riziv_nummer=riziv_nummer,
             nummer_akkoord=nummer_akkoord            
         )
-    
-class Message200Kine(BaseModel):
-    """
-    Now what do we need in general to complete these records
-    """
-    reference: str
-    version: Optional[str] = "01"
-    num_invoice: str
-    date_invoice: Optional[datetime.date] = datetime.date.today()
-    is_test: Optional[bool] = True
-    name_contact: str
-    first_name_contact: str
-    tel_contact: str
-    hospital_care: Optional[bool] = False
-    nummer_derdebetalende: str # riziv nummer facturerende derde (maw riziv kine ...)
-    beroepscode_facturerende_derde: str = "000" # TODO verplicht vanaf april! zie https://www.riziv.fgov.be/SiteCollectionDocuments/bevoegdheidscodes_kinesitherapeuten.pdf
-    kbo_number: str
-    bic_bank: str
-    iban_bank: str
-    nummer_ziekenfonds: str
-    insz_rechthebbende: str
-    identificatie_rechthebbende_2: str # hoe wordt dit opgevuld
-    geslacht_rechthebbende: str # 1 of 2
-    nummer_facturerende_instelling: str # riziv kine
-    instelling_van_verblijf: Optional[str] = "000000000000" # indien hospitalisatie ...
-    nummer_individuele_factuur_1: str # eigen volgnummer
-    cg1_cg2: str # op te halen uit MDA denk ik?
-    referentiegegevens_netwerk_1: Optional[str] = "" # nummer verbintenis, zie MDA niet zeker of ik enkel _1 nodig heb
-    geconventioneerde_verstrekker: bool
-    nummer_akkoord: str
+
+class PatientBlock(BaseModel):
+    hospital_care: Optional[bool] = False # YES
+    nummer_ziekenfonds: str # YES
+    insz_rechthebbende: str # YES
+    identificatie_rechthebbende_2: str # hoe wordt dit opgevuld # YES
+    geslacht_rechthebbende: str # 1 of 2 # YES
+    nummer_facturerende_instelling: str # riziv kine # YES
+    instelling_van_verblijf: Optional[str] = "000000000000" # indien hospitalisatie ... # YES
+    nummer_individuele_factuur_1: str # eigen volgnummer # YES
+    cg1_cg2: str # op te halen uit MDA denk ik? # YES
+    referentiegegevens_netwerk_1: Optional[str] = "" # nummer verbintenis, zie MDA niet zeker of ik enkel _1 nodig heb # YES
+    geconventioneerde_verstrekker: bool # YES
+    nummer_akkoord: str # YES
 
     detail_records: List[DetailRecord]
 
-    def to_message200(self) -> Message200:
-        header_200 = Header200Kine(
-            reference=self.reference,
-            version=self.version
-        ).to_header_200()
-
-        # see mail Brigitte Goossens 20240228
+    def to_patient_records(self, i_start) -> List[Union[Record20Kine, Record50Kine, Record52Kine, Record80Kine]]:
         ziekenfonds_bestemming = "300" if self.nummer_ziekenfonds.startswith("3") else self.nummer_ziekenfonds
-
-        header_300 = Header300Kine(
-            num_invoice=self.num_invoice,
-            date_invoice=self.date_invoice,
-            is_test=self.is_test,
-            name_contact=self.name_contact,
-            first_name_contact=self.first_name_contact,
-            tel_contact=self.tel_contact,
-            hospital_care=self.hospital_care,
-            type_invoicing="01"
-        ).to_header_300()
-        record_10 = Record10Kine(
-            is_test=self.is_test,
-            zendingsnummer=self.num_invoice,
-            nummer_derdebetalende=self.nummer_derdebetalende,
-            date_creation=self.date_invoice,
-            kbo_number=self.kbo_number,
-            bic_bank=self.bic_bank,
-            iban_bank=self.iban_bank,
-            beroepscode_facturerende_derde=self.beroepscode_facturerende_derde
-        ).to_record_10()
+         
         record_20 = Record20Kine(
             nummer_ziekenfonds_aansluiting=self.nummer_ziekenfonds,
             insz_rechthebbende=self.insz_rechthebbende,
@@ -424,7 +382,7 @@ class Message200Kine(BaseModel):
 
         invoice_control_inputs = []
 
-        i = 2 # starting point
+        i = i_start # starting point
         records_50s_and_52s = []
 
         for dr in self.detail_records:
@@ -482,6 +440,76 @@ class Message200Kine(BaseModel):
             control_invoice=calculate_invoice_control(invoice_control_inputs)
         ).to_record_80()
 
+        return [record_20, *records_50s_and_52s, record_80], invoice_control_inputs, totaal
+
+
+class Message200KineNoPractitioner(BaseModel):
+    """
+    Now what do we need in general to complete these records
+    """
+    version: Optional[str] = "01" # YES
+    reference: str # YES
+    num_invoice: str # YES
+    date_invoice: Optional[datetime.date] = datetime.date.today() # YES
+    is_test: Optional[bool] = True # YES
+    tel_contact: str # YES
+    hospital_care: Optional[bool] = False # YES
+    beroepscode_facturerende_derde: str = "000" # TODO verplicht vanaf april! zie https://www.riziv.fgov.be/SiteCollectionDocuments/bevoegdheidscodes_kinesitherapeuten.pdf  # YES
+    kbo_number: str  # YES
+    bic_bank: str  # YES
+    iban_bank: str  # YES
+    nummer_ziekenfonds: str # YES
+    patient_blocks: List[PatientBlock]
+    
+class Message200Kine(Message200KineNoPractitioner):
+    name_contact: str
+    first_name_contact: str
+    nummer_derdebetalende: str # riziv nummer facturerende derde (maw riziv kine ...)
+    nummer_facturerende_instelling: str # riziv kine
+    
+    def to_message200(self) -> Message200:
+        header_200 = Header200Kine(
+            reference=self.reference,
+            version=self.version
+        ).to_header_200()
+
+        # see mail Brigitte Goossens 20240228
+        ziekenfonds_bestemming = "300" if self.nummer_ziekenfonds.startswith("3") else self.nummer_ziekenfonds
+
+        i = 1
+        header_300 = Header300Kine(
+            num_invoice=self.num_invoice,
+            date_invoice=self.date_invoice,
+            is_test=self.is_test,
+            name_contact=self.name_contact,
+            first_name_contact=self.first_name_contact,
+            tel_contact=self.tel_contact,
+            hospital_care=self.hospital_care,
+            type_invoicing="01"
+        ).to_header_300()
+        
+        i += 1
+        record_10 = Record10Kine(
+            is_test=self.is_test,
+            zendingsnummer=self.num_invoice,
+            nummer_derdebetalende=self.nummer_derdebetalende,
+            date_creation=self.date_invoice,
+            kbo_number=self.kbo_number,
+            bic_bank=self.bic_bank,
+            iban_bank=self.iban_bank,
+            beroepscode_facturerende_derde=self.beroepscode_facturerende_derde
+        ).to_record_10()
+        
+        records = []
+        invoice_control_inputs = []
+        totaal = 0
+        for pb in self.patient_blocks:
+            patient_records, patient_invoice_control_inputs, patient_totaal = pb.to_patient_records(i_start=i)
+            records.extend(patient_records)
+            invoice_control_inputs.extend(patient_invoice_control_inputs)
+            i += len(patient_records)
+            totaal += patient_totaal
+            
         i += 1
         record_90 = Record90Kine(
             num_record=str(i).rjust(6, "0"),
@@ -513,38 +541,8 @@ class Message200Kine(BaseModel):
             header_200=header_200,
             header_300=header_300,
             record_10=record_10,
-            record_20=record_20,
-            detail_records=records_50s_and_52s,
-            record_80=record_80,
+            records=records,
             record_90=record_90,
             footer_95=footer_95,
             footer_96=footer_96
         )
-
-class Message200KineNoPractitioner(BaseModel):
-    """
-    Now what do we need in general to complete these records
-    """
-    version: Optional[str] = "01"
-    reference: str
-    num_invoice: str
-    date_invoice: Optional[datetime.date] = datetime.date.today()
-    is_test: Optional[bool] = True
-    tel_contact: str
-    hospital_care: Optional[bool] = False
-    beroepscode_facturerende_derde: str = "000" # TODO verplicht vanaf april! zie https://www.riziv.fgov.be/SiteCollectionDocuments/bevoegdheidscodes_kinesitherapeuten.pdf
-    kbo_number: str
-    bic_bank: str
-    iban_bank: str
-    nummer_ziekenfonds: str
-    insz_rechthebbende: str
-    identificatie_rechthebbende_2: str # hoe wordt dit opgevuld
-    geslacht_rechthebbende: str # 1 of 2
-    instelling_van_verblijf: Optional[str] = "000000000000" # indien hospitalisatie ...
-    nummer_individuele_factuur_1: str # eigen volgnummer
-    cg1_cg2: str # op te halen uit MDA denk ik?
-    referentiegegevens_netwerk_1: Optional[str] = "" # nummer verbintenis, zie MDA niet zeker of ik enkel _1 nodig heb
-    geconventioneerde_verstrekker: bool
-    nummer_akkoord: str
-
-    detail_records: List[DetailRecord]
