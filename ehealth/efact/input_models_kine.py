@@ -70,6 +70,7 @@ class Record10Kine(BaseModel):
         )
 
 class Record20Kine(BaseModel):
+    num_record: str
     nummer_ziekenfonds_aansluiting: str
     insz_rechthebbende: str
     identificatie_rechthebbende_2: str # hoe wordt dit opgevuld
@@ -86,7 +87,7 @@ class Record20Kine(BaseModel):
 
     def to_record_20(self) -> Record20:
         return Record20(
-            num_record="000002",
+            num_record=self.num_record,
             nummer_ziekenfonds_aansluiting=self.nummer_ziekenfonds_aansluiting,
             identificatie_rechthebbende_1=self.insz_rechthebbende.rjust(12, "0"),
             identificatie_rechthebbende_2=self.identificatie_rechthebbende_2,
@@ -351,7 +352,7 @@ class PatientBlock(BaseModel):
     insz_rechthebbende: str # YES
     identificatie_rechthebbende_2: str # hoe wordt dit opgevuld # YES
     geslacht_rechthebbende: str # 1 of 2 # YES
-    nummer_facturerende_instelling: str # riziv kine # YES
+    nummer_facturerende_instelling: Optional[str] = "" # riziv kine # YES
     instelling_van_verblijf: Optional[str] = "000000000000" # indien hospitalisatie ... # YES
     nummer_individuele_factuur_1: str # eigen volgnummer # YES
     cg1_cg2: str # op te halen uit MDA denk ik? # YES
@@ -363,8 +364,9 @@ class PatientBlock(BaseModel):
 
     def to_patient_records(self, i_start) -> List[Union[Record20Kine, Record50Kine, Record52Kine, Record80Kine]]:
         ziekenfonds_bestemming = "300" if self.nummer_ziekenfonds.startswith("3") else self.nummer_ziekenfonds
-         
+        i = i_start # starting point
         record_20 = Record20Kine(
+            num_record=str(i).rjust(6, "0"),
             nummer_ziekenfonds_aansluiting=self.nummer_ziekenfonds,
             insz_rechthebbende=self.insz_rechthebbende,
             identificatie_rechthebbende_2=self.identificatie_rechthebbende_2,
@@ -382,9 +384,12 @@ class PatientBlock(BaseModel):
 
         invoice_control_inputs = []
 
-        i = i_start # starting point
         records_50s_and_52s = []
 
+
+        totaal = 0
+        totaal_persoonlijk_aandeel = 0
+        totaal_supplement = 0
         for dr in self.detail_records:
             i += 1
             record_50 = dr.to_record_50(
@@ -412,10 +417,6 @@ class PatientBlock(BaseModel):
             records_50s_and_52s.append(record_52)
             invoice_control_inputs.append(dr.nomenclatuur.rjust(7, "0"))
 
-        totaal = 0
-        totaal_persoonlijk_aandeel = 0
-        totaal_supplement = 0
-        for dr in self.detail_records:
             totaal += int(dr.bedrag_verzekeringstegemoetkoming)
             totaal_persoonlijk_aandeel += int(dr.persoonlijk_aandeel_patient)
             totaal_supplement += int(dr.bedrag_supplement)
@@ -439,8 +440,9 @@ class PatientBlock(BaseModel):
             totaal_supplement=totaal_supplement,
             control_invoice=calculate_invoice_control(invoice_control_inputs)
         ).to_record_80()
+        logger.info(f"Totaal voor Record 80: {totaal}")
 
-        return [record_20, *records_50s_and_52s, record_80], invoice_control_inputs, totaal
+        return [record_20, *records_50s_and_52s, record_80], invoice_control_inputs, totaal, totaal_persoonlijk_aandeel, totaal_supplement
 
 
 class Message200KineNoPractitioner(BaseModel):
@@ -504,13 +506,12 @@ class Message200Kine(Message200KineNoPractitioner):
         invoice_control_inputs = []
         totaal = 0
         for pb in self.patient_blocks:
-            patient_records, patient_invoice_control_inputs, patient_totaal = pb.to_patient_records(i_start=i)
+            patient_records, patient_invoice_control_inputs, patient_totaal, _, _ = pb.to_patient_records(i_start=i)
             records.extend(patient_records)
             invoice_control_inputs.extend(patient_invoice_control_inputs)
             i += len(patient_records)
             totaal += patient_totaal
             
-        i += 1
         record_90 = Record90Kine(
             num_record=str(i).rjust(6, "0"),
             zendingsnummer=self.num_invoice,
@@ -522,18 +523,25 @@ class Message200Kine(Message200KineNoPractitioner):
             iban_bank=self.iban_bank,
             control_message=calculate_invoice_control(invoice_control_inputs)
         ).to_record_90()
+        logger.info(f"Totaal voor Record 90: {totaal}")
+
+
+        aantal_records_95 = 4
+        for block in self.patient_blocks:
+            aantal_records_95 += len(block.detail_records)
 
         footer_95 = Footer95Kine(
             nummer_mutualiteit=ziekenfonds_bestemming,
             totaal=totaal,
-            aantal_records=4+len(self.detail_records),
+            aantal_records=aantal_records_95,
             controle_nummer_per_mutualiteit=calculate_invoice_control(invoice_control_inputs)
         ).to_footer_95()
 
+        aantal_records_95 +=  2
         footer_96 = Footer96Kine(
             nummer_mutualiteit=self.nummer_ziekenfonds[0] + "99",
             totaal=totaal,
-            aantal_records=4+2+len(self.detail_records),
+            aantal_records=aantal_records_95,
             controle_nummer_per_mutualiteit=calculate_invoice_control(invoice_control_inputs)
         ).to_footer_96()
 

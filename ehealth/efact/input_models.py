@@ -899,8 +899,11 @@ class Record20(BaseModel):
                 value = ""
                 if key_numeric == "00":
                     continue # TODO?
-
-                if key_numeric == "07":
+                
+                if key_numeric == "02":
+                    key = "volgnummer record"
+                    value = record[2:8]
+                elif key_numeric == "07":
                     key = "nummer ziekenfonds van aansluiting"
                     value = record[32:35]
                 elif key_numeric == "08":
@@ -1857,7 +1860,10 @@ class Record90(BaseModel):
                 if key_numeric == "00":
                     continue # TODO?
 
-                if key_numeric == "19":
+                if key_numeric == "02":
+                    key = "volgnummer record"
+                    value = record[2:8]
+                elif key_numeric == "19":
                     key = "teken + totaal bedrag financieel rekeningnummer a"
                     value = record[87:99]
                 elif key_numeric == "23":
