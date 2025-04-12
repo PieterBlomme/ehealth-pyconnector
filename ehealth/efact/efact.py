@@ -2,6 +2,7 @@ from py4j.java_gateway import JavaGateway
 from typing import Any, Optional, List, Union, Callable
 import datetime
 import base64
+import re
 from uuid import uuid4
 import logging
 from io import StringIO
@@ -32,17 +33,26 @@ class TooManyRequestsException(Exception):
 class Config:
     extra = Extra.forbid
 
+class TACK(BaseModel):
+    base64_hash: str
+    reference: str
+    type: Optional[str] = "Tack"
+    value: Optional[bool] = True
+
 @dataclass(config=Config)
 class Message:
     reference: str
     base64_hash: str
+    raw: str
     errors: List[ErrorMessage]
     reden_weigering: Optional[str] = None
     percentage_fouten: Optional[float] = None
     settlements: Optional[List[Union[Record91, Record92]]] = None
+    type: Optional[str] = "message"
 
 @dataclass(config=Config)
 class Response:
+    inputReference: str
     transaction_request: str
     transaction_response: str
     soap_request: str
@@ -124,13 +134,12 @@ class EFactService:
                    callback_fn: Optional[Callable] = storage_callback
                    ) -> Response:
         timestamp = datetime.datetime.now()
-        ssin = input_model.insz_rechthebbende + input_model.identificatie_rechthebbende_2
         meta = CallMetadata(
             type=ServiceType.EFACT,
             timestamp=timestamp,
             call_type=CallType.UNENCRYPTED_REQUEST,
-            ssin=ssin,
             mutuality=input_model.nummer_ziekenfonds,
+            efact_reference=input_model.reference
         )
 
         practitioner = self.set_configuration_from_token(token)
@@ -142,6 +151,8 @@ class EFactService:
             nummer_facturerende_instelling=practitioner.nihii,
             **input_model.dict()
         )
+        for patient_block in message_200.patient_blocks:
+            patient_block.nummer_facturerende_instelling = message_200.nummer_facturerende_instelling
 
         template = str(message_200.to_message200())
         callback_fn(template.encode("utf-8"), meta)
@@ -163,13 +174,12 @@ class EFactService:
         blob = bbuilder.build(contentBytes)
         blob.setMessageName("HCPFAC")
 
-        inputReference = self.GATEWAY.jvm.be.ehealth.technicalconnector.idgenerator.IdGeneratorFactory.getIdGenerator().generateId()
         ci = (self.GATEWAY.getCommontInputMapper()
               .map(
                   self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.RequestBuilderFactory
                   .getCommonBuilder("invoicing")
                   .createCommonInput(
-                      self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.util.McnConfigUtil.retrievePackageInfo("genericasync." + "invoicing"), self.is_test, inputReference)
+                      self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.util.McnConfigUtil.retrievePackageInfo("genericasync." + "invoicing"), self.is_test, input_model.reference)
                   )
         )
 
@@ -182,6 +192,9 @@ class EFactService:
         logger.info("Send of the post request")
 
         raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(post).encode("utf-8")
+        inputReference = re.search('<InputReference>(.*)</InputReference>', raw_request.decode("utf-8")).group(1)
+        logger.info(f"inputReference: {inputReference}")
+
         callback_fn(raw_request, meta.set_call_type(CallType.ENCRYPTED_REQUEST))
 
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.session.GenAsyncSessionServiceFactory.getGenAsyncService(PROJECT_NAME)
@@ -192,7 +205,6 @@ class EFactService:
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(responsePost)
         callback_fn(raw_response, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
 
-        logger.info(raw_response)
         logger.info("Call of handler for the post operation")
         self.GATEWAY.jvm.be.ehealth.businessconnector.genericasync.builders.BuilderFactory.getResponseObjectBuilder().handlePostResponse(responsePost)
 
@@ -200,16 +212,18 @@ class EFactService:
             transaction_request=template,
             transaction_response="",
             soap_request="",
-            soap_response=raw_response
+            soap_response=raw_response,
+            inputReference=inputReference
         )
     
-    def message_to_object_refusal(self, decoded: str, base64_hash: str,) -> Response:
+    def message_to_object_refusal(self, decoded: str, base64_hash: str,) -> Message:
         logger.info("mapping refusal")
         # this is a super weird mapping ...
         header_200 = Header200.from_str(decoded[:67])
         header_300 = Header300Refusal.from_str(decoded[67:677])
         logger.info(header_200.reference)
         message = Message(
+                    raw=decoded,
                     reference=header_200.reference,
                     base64_hash=base64_hash,
                     errors=[],
@@ -267,15 +281,9 @@ class EFactService:
                 raise Exception(f"Part of message could not be mapped: {rec}")
 
         message.errors = errors
-        return Response(
-                transaction_request="",
-                transaction_response=decoded,
-                soap_request="",
-                soap_response="",
-                message=message
-            )
+        return message
     
-    def message_to_object(self, decoded: str, base64_hash: str) -> Response:
+    def message_to_object(self, decoded: str, base64_hash: str, reference: str) -> Message:
         if decoded[:6] in ("920099", "920900", "920098"):
             # note: 920900 is final acceptance
             # but follows refusal
@@ -316,17 +324,12 @@ class EFactService:
                 logger.warning(f"Part of message could not be mapped: {rec} for type {decoded[:6]}")
                 sentry_sdk.capture_message(f"Part of message could not be mapped: {decoded}")
 
-        return Response(
-                transaction_request="",
-                transaction_response=decoded,
-                soap_request="",
-                soap_response="",
-                message=Message(
-                    reference=header_200.reference,
+        return Message(
+                    raw=decoded,
+                    reference=reference,
                     base64_hash=base64_hash,
                     errors=errors
                 )
-            )
 
     def get_messages(self, token: str, callback_fn: Optional[Callable] = storage_callback):
         self.set_configuration_from_token(token)
@@ -377,9 +380,12 @@ class EFactService:
         messages = []
 
         for msgResponse in responseGet.getReturn().getMsgResponses():
+            raw_message = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(msgResponse)
+            reference = re.search('<InputReference>(.*)</InputReference>', raw_message).group(1)
+            logger.info(f"Received message with reference: {reference}")
+
             # separate timestamp per request
-            timestamp = datetime.datetime.now()
-            
+            timestamp = datetime.datetime.now()            
             xades = msgResponse.getXadesT().getValue()
             meta = CallMetadata(
                 type=ServiceType.ASYNC_MESSAGES_EFACT,
@@ -391,21 +397,21 @@ class EFactService:
             detail = msgResponse.getDetail()
             hash = detail.getHashValue()
             base64_hash = base64.b64encode(hash).decode('utf8')
-            logger.info(f"hash: {base64_hash}")
             mappedBlob = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.mapper.DomainBlobMapper.mapToBlob(detail)
             unwrappedMessageByteArray = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.builders.BlobBuilderFactory.getBlobBuilder(PROJECT_NAME).checkAndRetrieveContent(mappedBlob)
             decoded = unwrappedMessageByteArray.decode("utf-8")
             
             try:
-                message_object = self.message_to_object(decoded, base64_hash)
+                message_object = self.message_to_object(decoded, base64_hash, reference)
                 messages.append(message_object)
                 meta = CallMetadata(
                     type=ServiceType.ASYNC_MESSAGES_EFACT,
                     timestamp=timestamp,
                     call_type=CallType.UNENCRYPTED_RESPONSE,
-                    efact_reference=message_object.message.reference
+                    efact_reference=message_object.reference
                 )
             except Exception as e:
+                logger.exception(e)
                 logger.info(f"Failed to convert message with hash {base64_hash}")
                 sentry_sdk.capture_message(f"Part of message could not be mapped: {decoded}")
                 with open(f"{uuid4()}.txt", "w") as f:
@@ -419,10 +425,11 @@ class EFactService:
 
         logger.info("getTAckResponses")
         for tackResponse in responseGet.getReturn().getTAckResponses():
+
             # separate timestamp per request
             timestamp = datetime.datetime.now()
             
-            xades = msgResponse.getXadesT().getValue()
+            xades = tackResponse.getXadesT().getValue()
             meta = CallMetadata(
                 type=ServiceType.ASYNC_MESSAGES_EFACT,
                 timestamp=timestamp,
@@ -430,9 +437,18 @@ class EFactService:
             )
             callback_fn(xades, meta)
             # just always confirm TAck messages, I guess
-            tackResponseBytes = tackResponse.getTAck().getValue()
+            tack = tackResponse.getTAck()
+            tackAppliesTo = tack.getAppliesTo()
+            tackReference = tackAppliesTo.replace("urn:nip:reference:input:", "")
+            tackResponseBytes = tack.getValue()
+            logger.info(f"Received Tack message with reference: {tackReference}")
+
             base64_hash = base64.b64encode(tackResponseBytes).decode('utf8')
-            logger.info(f"hash tack {base64_hash}")
+            
+            messages.append(TACK(
+                reference=tackReference,
+                base64_hash=base64_hash
+            ))
 
             meta = CallMetadata(
                 type=ServiceType.ASYNC_MESSAGES_EFACT_TACK,
@@ -441,7 +457,7 @@ class EFactService:
             )
             callback_fn(tackResponseBytes, meta)
 
-            self.confirm_message(token, base64_hash, tack=True)
+            # self.confirm_message(token, base64_hash, tack=True)
         return messages
 
 

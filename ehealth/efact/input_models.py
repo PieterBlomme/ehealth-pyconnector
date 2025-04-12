@@ -899,8 +899,11 @@ class Record20(BaseModel):
                 value = ""
                 if key_numeric == "00":
                     continue # TODO?
-
-                if key_numeric == "07":
+                
+                if key_numeric == "02":
+                    key = "volgnummer record"
+                    value = record[2:8]
+                elif key_numeric == "07":
                     key = "nummer ziekenfonds van aansluiting"
                     value = record[32:35]
                 elif key_numeric == "08":
@@ -1857,7 +1860,10 @@ class Record90(BaseModel):
                 if key_numeric == "00":
                     continue # TODO?
 
-                if key_numeric == "19":
+                if key_numeric == "02":
+                    key = "volgnummer record"
+                    value = record[2:8]
+                elif key_numeric == "19":
                     key = "teken + totaal bedrag financieel rekeningnummer a"
                     value = record[87:99]
                 elif key_numeric == "23":
@@ -2620,9 +2626,7 @@ class Message200(BaseModel):
     header_200: Header200
     header_300: Header300
     record_10: Record10
-    record_20: Record20
-    detail_records: List[Union[Record50, Record51, Record52]]
-    record_80: Record80
+    records: List[Union[Record20, Record50, Record51, Record52, Record80]]
     record_90: Record90
     footer_95: Footer95
     footer_96: Footer96
@@ -2634,11 +2638,9 @@ class Message200(BaseModel):
         # add assertions
         to_str = f'{str(self.header_200)}{str(self.header_300)}'
         to_str += str(self.record_10)
-        to_str += str(self.record_20)
         
-        for a in self.detail_records:
+        for a in self.records:
             to_str += str(a)
-        to_str += str(self.record_80)
         to_str += str(self.record_90)
         to_str += str(self.footer_95)
         to_str += str(self.footer_96)

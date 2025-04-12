@@ -48,9 +48,9 @@ def storage_callback(
     meta: CallMetadata
 ):
     # This is a dummy implementation
-    logger.info(type(content))
-    logger.info(f"Received content: {content}")
-    logger.info(f"Received metadata: {meta.json()}")
+    logger.debug(type(content))
+    logger.debug(f"Received content: {content}")
+    logger.debug(f"Received metadata: {meta.json()}")
 
 def file_callback(
     content: str,
