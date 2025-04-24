@@ -1152,6 +1152,9 @@ class Record50(BaseModel):
     def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
         # I'm only going to bother to map the actual errors
         result = []
+
+        num_record = int(record[2:8])
+
         for i in range(3):
             e = record[456+i*7:456+7+i*7]
             if e[0] == " ":
@@ -1211,7 +1214,7 @@ class Record50(BaseModel):
                     raise Exception(f"Numeric key {key_numeric} not yet mapped for Record50 {e}")
 
                 e_dict = cls._error_shared(key, error, value, e[0])
-            result.append(ErrorMessage(**e_dict))
+            result.append(ErrorMessage(**e_dict, num_record=num_record))
         return result
     
     def __str__(self):
@@ -1374,6 +1377,8 @@ class Record51(BaseModel):
     
     @classmethod
     def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
+        num_record = int(record[2:8])
+
         # I'm only going to bother to map the actual errors
         result = []
         for i in range(3):
@@ -1422,7 +1427,7 @@ class Record51(BaseModel):
                     raise Exception(f"Numeric key {key_numeric} not yet mapped for Record51")
 
                 e_dict = cls._error_shared(key, error, value, e[0])
-            result.append(ErrorMessage(**e_dict))
+            result.append(ErrorMessage(**e_dict, num_record=num_record))
         return result
     
     def __str__(self):
@@ -1540,6 +1545,8 @@ class Record52(BaseModel):
     
     @classmethod
     def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
+        num_record = int(record[2:8])
+
         # I'm only going to bother to map the actual errors
         result = []
         for i in range(3):
@@ -1581,7 +1588,7 @@ class Record52(BaseModel):
             
             if e_dict not in [r.dict() for r in result]:
                 # sometimes duplicate errors
-                result.append(ErrorMessage(**e_dict))
+                result.append(ErrorMessage(**e_dict, num_record=num_record))
         return result
     
     def __str__(self):

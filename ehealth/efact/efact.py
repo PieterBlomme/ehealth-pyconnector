@@ -241,7 +241,6 @@ class EFactService:
         errors = []
         message.settlements = []
 
-        num_record = 0
         while True:
             rec = decoded[start_record:start_record+800]
             logger.info(rec[:2])
@@ -262,23 +261,11 @@ class EFactService:
             elif rec.startswith("20"):
                 errors.extend(Record20.errors_from_str(rec))
             elif rec.startswith("50"):
-                record_errors = Record50.errors_from_str(rec)
-                for err in record_errors:
-                    err.num_record = num_record
-                errors.extend(record_errors)
-                num_record +=1
+                errors.extend(Record50.errors_from_str(rec))
             elif rec.startswith("51"):
-                record_errors = Record51.errors_from_str(rec)
-                for err in record_errors:
-                    err.num_record = num_record
-                errors.extend(record_errors)
-                num_record +=1
+                errors.extend(Record51.errors_from_str(rec))
             elif rec.startswith("52"):
-                record_errors = Record52.errors_from_str(rec)
-                for err in record_errors:
-                    err.num_record = num_record
-                errors.extend(record_errors)
-                num_record +=1
+                errors.extend(Record52.errors_from_str(rec))
             elif rec.startswith("80"):
                 errors.extend(Record80.errors_from_str(rec))
             elif rec.startswith("90"):
