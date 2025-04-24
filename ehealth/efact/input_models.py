@@ -13,6 +13,7 @@ class ErrorMessage(BaseModel):
     message: Optional[str] = None
     type: Optional[str] = None
     verwerpingsletter: Optional[str] = None
+    num_record: Optional[int] = None
 
 def calculate_control(text) -> str:
     assert len(text) == 348, len(text) # always?? to check

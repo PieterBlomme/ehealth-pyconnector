@@ -216,7 +216,8 @@ class EFactService:
             inputReference=inputReference
         )
     
-    def message_to_object_refusal(self, decoded: str, base64_hash: str,) -> Message:
+    @classmethod
+    def message_to_object_refusal(cls, decoded: str, base64_hash: str,) -> Message:
         logger.info("mapping refusal")
         # this is a super weird mapping ...
         header_200 = Header200.from_str(decoded[:67])
@@ -239,6 +240,8 @@ class EFactService:
         start_record = 677
         errors = []
         message.settlements = []
+
+        num_record = 0
         while True:
             rec = decoded[start_record:start_record+800]
             logger.info(rec[:2])
@@ -259,11 +262,23 @@ class EFactService:
             elif rec.startswith("20"):
                 errors.extend(Record20.errors_from_str(rec))
             elif rec.startswith("50"):
-                errors.extend(Record50.errors_from_str(rec))
+                record_errors = Record50.errors_from_str(rec)
+                for err in record_errors:
+                    err.num_record = num_record
+                errors.extend(record_errors)
+                num_record +=1
             elif rec.startswith("51"):
-                errors.extend(Record51.errors_from_str(rec))
+                record_errors = Record51.errors_from_str(rec)
+                for err in record_errors:
+                    err.num_record = num_record
+                errors.extend(record_errors)
+                num_record +=1
             elif rec.startswith("52"):
-                errors.extend(Record52.errors_from_str(rec))
+                record_errors = Record52.errors_from_str(rec)
+                for err in record_errors:
+                    err.num_record = num_record
+                errors.extend(record_errors)
+                num_record +=1
             elif rec.startswith("80"):
                 errors.extend(Record80.errors_from_str(rec))
             elif rec.startswith("90"):
@@ -283,11 +298,12 @@ class EFactService:
         message.errors = errors
         return message
     
-    def message_to_object(self, decoded: str, base64_hash: str, reference: str) -> Message:
+    @classmethod
+    def message_to_object(cls, decoded: str, base64_hash: str, reference: str) -> Message:
         if decoded[:6] in ("920099", "920900", "920098"):
             # note: 920900 is final acceptance
             # but follows refusal
-            return self.message_to_object_refusal(decoded, base64_hash)
+            return cls.message_to_object_refusal(decoded, base64_hash)
         
         errors = []
         logger.info(f"Length decoded: {len(decoded)}")
