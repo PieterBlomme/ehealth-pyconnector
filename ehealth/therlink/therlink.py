@@ -124,6 +124,43 @@ class TherLinkService:
     #     proof = self.addSignature(therapeuticlink, proof)
     #     return proof
 
+    def has_therlink(self, token, patient_in: Patient):
+        hcparty = self.set_configuration_from_token(token)
+        print(f"hcparty: {hcparty}")
+        commonBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.builders.RequestObjectBuilderFactory.getCommonBuilder()
+        requestObjectBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.builders.RequestObjectBuilderFactory.getRequestObjectBuilder()
+        requestObjectMapper = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.mappers.MapperFactory.getRequestObjectMapper()
+        samlToken = self.GATEWAY.jvm.be.ehealth.technicalconnector.session.Session.getInstance().getSession().getSAMLToken()
+        responseObjectMapper = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.mappers.MapperFactory.getResponseObjectMapper()
+        therLinkService = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.service.ServiceFactory.getTherLinkService()
+
+        kmehrId = commonBuilder.createKmehrID()
+        print(f"kmehrId: {kmehrId}")
+        author = commonBuilder.createAuthor(requestObjectBuilder.getAuthorHcParties())
+        print(f"author: {author}")
+        start = self.GATEWAY.jvm.org.joda.time.DateTime()
+        end = (self.GATEWAY.jvm.org.joda.time.DateTime()).plusMonths(6)
+        patient = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient.Builder().withFamilyName(patient_in.lastname).withFirstName(patient_in.firstname).withInss(patient_in.ssin).build()
+        print(f"patient: {patient}")
+        therapeuticLink = commonBuilder.createTherapeuticLink(start, end, patient, "persphysiotherapist", None, None, hcparty)
+
+        request = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.requests.HasTherapeuticLinkRequest(self.GATEWAY.jvm.org.joda.time.DateTime(), kmehrId, author, therapeuticLink)
+        print(f"request: {request}")
+
+        mappedRequest = requestObjectMapper.mapHasTherapeuticLinkRequest(request)
+
+        hasTherapeuticLink = therLinkService.hasTherapeuticLink(samlToken, mappedRequest)
+        print(f"hasTherapeuticLink: {hasTherapeuticLink.isValue()}")
+        print(self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(hasTherapeuticLink))
+
+        response = responseObjectMapper.mapJaxbToHasTherapeuticLinkResponse(hasTherapeuticLink)
+        print(f"response: {response}")
+        print(f"acknowledge: {response.getAcknowledge()}")
+        ack = response.getAcknowledge()
+        print(ack.getListOfErrors())
+
+        return hasTherapeuticLink.isValue()
+    
     def create_therlink_content(self, token: str, patient_in: Patient) -> str:
         hcparty = self.set_configuration_from_token(token)
         print(f"hcparty: {hcparty}")
@@ -155,16 +192,14 @@ class TherLinkService:
         linkType = "consultation"
         
         requestObjectBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.builders.RequestObjectBuilderFactory.getRequestObjectBuilder()
-        print(requestObjectBuilder.getAuthorHcParties)
+        
         request = requestObjectBuilder.createPutTherapeuticLinkRequest(patient, hcparty, linkType, proof)
-
         print(f"request: {request}")
 
         mapPutTherapeuticLinkRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.mappers.MapperFactory.getRequestObjectMapper().mapPutTherapeuticLinkRequest(request)
         print(mapPutTherapeuticLinkRequest)
 
         samlToken = self.GATEWAY.jvm.be.ehealth.technicalconnector.session.Session.getInstance().getSession().getSAMLToken()
-        print(f"samlToken: {samlToken}")
         putTherapeuticLink = therLinkService.putTherapeuticLink(samlToken, mapPutTherapeuticLinkRequest)
         print(f"putTherapeuticLink: {putTherapeuticLink}")
         response = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.mappers.MapperFactory.getResponseObjectMapper().mapJaxbToPutTherapeuticLinkResponse(putTherapeuticLink)
