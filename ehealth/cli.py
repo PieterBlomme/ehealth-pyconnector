@@ -28,7 +28,7 @@ def remove_from_zip(zipfname, *filenames):
 
 def download_packages():
     # installing the Java bridge
-    DOWNLOAD_URL = "https://repo.ehealth.fgov.be/artifactory/maven2/be/fgov/ehealth/connector/connector-packaging-persphysiotherapist/4.6.0/connector-packaging-persphysiotherapist-4.6.0-java.zip"
+    DOWNLOAD_URL = "https://repo.ehealth.fgov.be/artifactory/maven2/be/fgov/ehealth/connector/connector-packaging-persphysiotherapist/4.7.3/connector-packaging-persphysiotherapist-4.7.3-java.zip"
 
     url = urllib.request.urlopen(DOWNLOAD_URL)
 
