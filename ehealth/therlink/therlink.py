@@ -1,8 +1,8 @@
 from py4j.java_gateway import JavaGateway
 from pydantic import BaseModel
 import base64
-import requests
 import logging
+from typing import Optional
 from io import StringIO
 from ..sts.assertion import Assertion
 from xsdata.formats.dataclass.parsers.config import ParserConfig
@@ -11,10 +11,12 @@ from ehealth.efact.efact import Practitioner
 
 logger = logging.getLogger(__name__)
 
-class Patient(BaseModel):
+class TherLinkPatient(BaseModel):
     ssin: str
     firstname: str
     lastname: str
+    eidnumber: Optional[str]
+    signed_encoded: Optional[bytes]
 
 
 class TherLinkService:
@@ -124,7 +126,7 @@ class TherLinkService:
     #     proof = self.addSignature(therapeuticlink, proof)
     #     return proof
 
-    def has_therlink(self, token, patient_in: Patient):
+    def has_therlink(self, token, patient_in: TherLinkPatient) -> bool:
         hcparty = self.set_configuration_from_token(token)
         print(f"hcparty: {hcparty}")
         commonBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.builders.RequestObjectBuilderFactory.getCommonBuilder()
@@ -157,28 +159,46 @@ class TherLinkService:
         print(f"response: {response}")
         print(f"acknowledge: {response.getAcknowledge()}")
         ack = response.getAcknowledge()
-        print(ack.getListOfErrors())
+        print(f"errors: {ack.getListOfErrors()} of len {len(ack.getListOfErrors())}")
+        if len(ack.getListOfErrors()) > 1:
+            raise Exception([err.getErrorDescription() for err in ack.getListOfErrors()])
+        elif len(ack.getListOfErrors()) == 1:
+            raise Exception(ack.getListOfErrors()[0].getErrorDescription())
 
         return hasTherapeuticLink.isValue()
     
-    def create_therlink_content(self, token: str, patient_in: Patient) -> str:
+    def create_therlink_content(self, token: str, patient_in: TherLinkPatient) -> str:
         hcparty = self.set_configuration_from_token(token)
         print(f"hcparty: {hcparty}")
         patient = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient.Builder().withFamilyName(patient_in.lastname).withFirstName(patient_in.firstname).withInss(patient_in.ssin).build()
         therapeuticlink = self.createMandateTherapeuticLinkForProof(patient, hcparty)
         return self.create_signature_content(therapeuticlink)
 
-    def post_therlink(self, token: str, patient_in: Patient, signed_encoded: bytes) -> str:
+    def post_therlink(self, token: str, patient_in: TherLinkPatient) -> None:
         hcparty = self.set_configuration_from_token(token)
         print(f"hcparty: {hcparty}")
-        patient = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient.Builder().withFamilyName(patient_in.lastname).withFirstName(patient_in.firstname).withInss(patient_in.ssin).build()
 
         therLinkService = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.service.ServiceFactory.getTherLinkService()
-        proof = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.Proof(self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.ProofTypeValues.EIDSIGNING.getValue())
-        print(f"proof: {proof}")
-        signatureBytes = base64.b64decode(signed_encoded)
-        binaryProof = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.requests.BinaryProof("CMS", signatureBytes)
-        proof.setBinaryProof(binaryProof)
+
+        if patient_in.eidnumber:
+            patient = (
+                self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient.Builder()
+                .withFamilyName(patient_in.lastname)
+                .withFirstName(patient_in.firstname)
+                .withEid(patient_in.eidnumber)
+                .withInss(patient_in.ssin).build()
+            )
+            print(f"patient: {patient}")
+            proof = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.Proof(self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.ProofTypeValues.EIDREADING.getValue())
+            print(f"proof: {proof}")
+        else:
+            patient = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient.Builder().withFamilyName(patient_in.lastname).withFirstName(patient_in.firstname).withInss(patient_in.ssin).build()
+            print(f"patient: {patient}")
+            proof = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.Proof(self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.ProofTypeValues.EIDSIGNING.getValue())
+            print(f"proof: {proof}")
+            signatureBytes = base64.b64decode(patient_in.signed_encoded)
+            binaryProof = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.requests.BinaryProof("CMS", signatureBytes)
+            proof.setBinaryProof(binaryProof)
 
     # def post_therlink(self, token: str,
     #                ):
@@ -204,5 +224,9 @@ class TherLinkService:
         print(f"putTherapeuticLink: {putTherapeuticLink}")
         response = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.mappers.MapperFactory.getResponseObjectMapper().mapJaxbToPutTherapeuticLinkResponse(putTherapeuticLink)
         print(f"response: {response}")
-        print(f"acknowledge: {response.acknowledge}")
-        return self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(response)
+        ack = response.getAcknowledge()
+        print(f"errors: {ack.getListOfErrors()} of len {len(ack.getListOfErrors())}")
+        if len(ack.getListOfErrors()) > 1:
+            raise Exception([err.getErrorDescription() for err in ack.getListOfErrors()])
+        elif len(ack.getListOfErrors()) == 1:
+            raise Exception(ack.getListOfErrors()[0].getErrorDescription())
