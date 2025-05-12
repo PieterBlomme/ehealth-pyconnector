@@ -35,7 +35,7 @@ class EAgreementService(AbstractEAgreementService):
         if environment == "acc":
             self.config_validator.setProperty("endpoint.genericasync.eagreement.v1", "https://pilot.mycarenet.be:9443/mcn/bed/ehealth/GenAsync/eagreement")
         else:
-            self.config_validator.setProperty("endpoint.genericasync.eagreement.v1", "https://services.ehealth.fgov.be/MyCareNet/eAgreement/v1")
+            self.config_validator.setProperty("endpoint.genericasync.eagreement.v1", "https://prod.mycarenet.be:9443/mcn/bed/ehealth/GenAsync/eagreement")
             
     
     def get_service(self):
