@@ -86,7 +86,7 @@ class EFactService:
             self.config_validator.setProperty("endpoint.genericasync.invoicing.v1", "https://pilot.mycarenet.be:9443/mycarenet-ws/async/generic/hcpfac")
         else:
             # TODO double check in production
-            self.config_validator.setProperty("endpoint.genericasync.invoicing.v1", "https://services.ehealth.fgov.be/MyCareNet/hcpfac/v1")
+            self.config_validator.setProperty("endpoint.genericasync.invoicing.v1", "https://services.ehealth.fgov.be/MyCareNet/async/generic/hcpfac/v1")
 
 
     def set_configuration_from_token(self, token: str) -> Practitioner:
