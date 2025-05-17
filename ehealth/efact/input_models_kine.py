@@ -8,11 +8,13 @@ logger = logging.getLogger(__name__)
 class Header200Kine(BaseModel):
     reference: str
     version: Optional[str] = "01"
+    type: Optional[str] = "92" # 92 for test, 12 for prd
 
     def to_header_200(self) -> Header200:
         return Header200(
             reference=self.reference,
-            version=self.version
+            version=self.version,
+            type=self.type
         )
 
 
@@ -472,7 +474,8 @@ class Message200Kine(Message200KineNoPractitioner):
     def to_message200(self) -> Message200:
         header_200 = Header200Kine(
             reference=self.reference,
-            version=self.version
+            version=self.version,
+            type="92" if self.is_test else "12"
         ).to_header_200()
 
         # see mail Brigitte Goossens 20240228
