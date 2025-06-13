@@ -479,7 +479,9 @@ class Message200Kine(Message200KineNoPractitioner):
         ).to_header_200()
 
         # see mail Brigitte Goossens 20240228
-        ziekenfonds_bestemming = "300" if self.nummer_ziekenfonds.startswith("3") else self.nummer_ziekenfonds
+        if self.nummer_ziekenfonds.startswith("3") and not self.nummer_ziekenfonds.startswith("306"):
+            ziekenfonds_bestemming = "300"
+        else self.nummer_ziekenfonds
 
         i = 1
         header_300 = Header300Kine(
