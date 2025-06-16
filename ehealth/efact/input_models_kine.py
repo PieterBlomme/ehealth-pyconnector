@@ -482,7 +482,7 @@ class Message200Kine(Message200KineNoPractitioner):
         if self.nummer_ziekenfonds.startswith("3") and not self.nummer_ziekenfonds.startswith("306"):
             ziekenfonds_bestemming = "300"
         else:
-            ziekenfonds_bestemming = self.numer_ziekenfonds
+            ziekenfonds_bestemming = self.nummer_ziekenfonds
 
         i = 1
         header_300 = Header300Kine(
