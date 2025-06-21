@@ -1136,6 +1136,8 @@ class Record50(BaseModel):
 
         if key == "Nomenclatuurcode":
             message = "Verstrekking waarvoor akkoord adviserend geneesheer vereist is en een verantwoording ontbreekt."
+        elif key == "Datum eerste verrichte verstrekking" and error == "55":
+            message = "Datum eerste verrichte verstrekking groter dan datum van opstelling"
         else:
             message = _ERROR_CONSTANTS.get(error)
         
@@ -1180,6 +1182,9 @@ class Record50(BaseModel):
                 elif key_numeric == "04":
                     key = "Nomenclatuurcode"
                     value = record[9:16]
+                elif key_numeric == "05":
+                    key = "Datum eerste verrichte verstrekking"
+                    value = record[16:24]
                 elif key_numeric == "08":
                     key = "identificatie rechthebbende"
                     value = record[35:47]
