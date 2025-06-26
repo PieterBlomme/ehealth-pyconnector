@@ -238,7 +238,7 @@ class Address:
             "required": True,
         }
     )
-    house_number: Optional[int] = field(
+    house_number: Optional[str] = field(
         default=None,
         metadata={
             "name": "HouseNumber",
