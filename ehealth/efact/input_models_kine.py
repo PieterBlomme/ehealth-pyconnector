@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Any
 import logging
 import datetime
 from .input_models import Header200, Header300, Record10, Record20, Record50, Record52, Record80, Record90, Footer95, Footer96, Message200, calculate_invoice_control
@@ -297,6 +297,7 @@ class DetailRecord(BaseModel):
     norm_voorschrijver: Optional[str] = "1"
     code_facturering_persoonlijk_aandeel_of_supplement: Optional[str] = 0 # 0 indien patiënt zelf betaald zie https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf p 491
     nummer_akkoord: Optional[str] = None
+    errors: Any
 
     def to_record_50(self, 
                      i: int,
