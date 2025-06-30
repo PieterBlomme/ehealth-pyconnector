@@ -46,9 +46,6 @@ class EAgreementService(AbstractEAgreementService):
     def get_response_builder(self):
         return self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder()
     
-    def get_response_builder_v2(self):
-        return self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreementv2.builders.ResponseObjectBuilderFactory.getResponseObjectBuilderV2()
-    
     def verify_result(self, response: Any):
         signVerifResult = response.getSignatureVerificationResult()
         for entry in signVerifResult.getErrors():
@@ -307,15 +304,15 @@ class EAgreementService(AbstractEAgreementService):
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
         callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
         
-        response_builder = self.get_response_builder_v2()
         try:
-            response = response_builder.handleConsultAgreementResponse(serviceResponse, request)
+            response = self.get_response_builder().handleConsultAgreementResponse(serviceResponse, request)
         except Py4JJavaError as e:
             if "SEND_TO_IO_EXCEPTION" in str(e.java_exception):
                 raise ServerSideException(str(e.java_exception))
             if "Error while trying to (un)seal" in str(e.java_exception):
                 raise DecryptionException()
             raise e
+        # self.verify_result(response)
 
         response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
         callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
