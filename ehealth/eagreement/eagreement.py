@@ -33,6 +33,8 @@ class EAgreementService(AbstractEAgreementService):
         self.config_validator.setProperty("mycarenet.licence.username", mycarenet_license_username)
         self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
         self.config_validator.setProperty("endpoint.etk", etk_endpoint)
+        self.config_validator.setProperty("security.incoming.message.timestamp.created.ttl.eagreement.v1", "1000")
+        self.config_validator.setProperty("security.incoming.message.timestamp.expires.ttl.eagreement.v1", "1000")
         self.config_validator.setProperty("endpoint.agreement", "$uddi{uddi:ehealth-fgov-be:business:mycareneteagreement:v1}")
         if environment == "acc":
             self.config_validator.setProperty("endpoint.genericasync.eagreement.v1", "https://pilot.mycarenet.be:9443/mcn/bed/ehealth/GenAsync/eagreement")
