@@ -1,6 +1,7 @@
 import logging
 import datetime
 from io import StringIO
+from py4j.protocol import Py4JJavaError
 from typing import Any, Callable, Optional
 from xsdata.formats.dataclass.parsers.config import ParserConfig
 from xsdata_pydantic.bindings import XmlParser
@@ -10,6 +11,7 @@ from .consult_agreement import Bundle as ConsultResponseBundle, Response as Cons
 from .async_messages import Bundle as AsyncBundle, Response as AsyncResponse
 from .eagreement_base import AbstractEAgreementService
 from ehealth.utils.callbacks import storage_callback, CallMetadata, CallType, ServiceType
+from ehealth.exceptions import DecryptionException
 
 logger = logging.getLogger(__name__)
 
@@ -301,8 +303,15 @@ class EAgreementService(AbstractEAgreementService):
         serviceResponse = self.get_service().consultAgreement(request.getRequest())
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
         callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
-
-        response = self.get_response_builder().handleConsultAgreementResponse(serviceResponse, request)
+        
+        try:
+            response = self.get_response_builder().handleConsultAgreementResponse(serviceResponse, request)
+        except Py4JJavaError as e:
+            if "SEND_TO_IO_EXCEPTION" in str(e.java_exception):
+                raise ServerSideException(str(e.java_exception))
+            if "Error while trying to (un)seal" in str(e.java_exception):
+                raise DecryptionException()
+            raise e
         # self.verify_result(response)
 
         response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
