@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Any
 import logging
 import datetime
 from .input_models import Header200, Header300, Record10, Record20, Record50, Record52, Record80, Record90, Footer95, Footer96, Message200, calculate_invoice_control
@@ -122,7 +122,7 @@ class Record50Kine(BaseModel):
     betrekkelijke_verstrekking_1: Optional[str] = "0000" # always 0 seems fine to me
     betrekkelijke_verstrekking_2: Optional[str] = "000" # always 0 seems fine to me
     bedrag_verzekeringstegemoetkoming: str
-    datum_voorschrift: datetime.date
+    datum_voorschrift: Optional[datetime.date]
     persoonlijk_aandeel_patient: str
     bedrag_supplement: str
     code_facturering_persoonlijk_aandeel_of_supplement: Optional[str] = 0 # 0 indien patiënt zelf betaald zie https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf p 491
@@ -132,7 +132,10 @@ class Record50Kine(BaseModel):
 
     def to_record_50(self) -> Record50:
         datum_eerste_verstrekking = str(self.datum_eerste_verstrekking.year) + str(self.datum_eerste_verstrekking.month).rjust(2, "0") + str(self.datum_eerste_verstrekking.day).rjust(2, "0")
-        datum_voorschrift = str(self.datum_voorschrift.year) + str(self.datum_voorschrift.month).rjust(2, "0") + str(self.datum_voorschrift.day).rjust(2, "0")
+        if self.datum_voorschrift:
+            datum_voorschrift = str(self.datum_voorschrift.year) + str(self.datum_voorschrift.month).rjust(2, "0") + str(self.datum_voorschrift.day).rjust(2, "0")
+        else:
+            datum_voorschrift = "00000000"
 
         return Record50(
             num_record=self.num_record,
@@ -290,13 +293,14 @@ class DetailRecord(BaseModel):
     nomenclatuur: str
     datum_eerste_verstrekking: datetime.date
     bedrag_verzekeringstegemoetkoming: str
-    datum_voorschrift: datetime.date
+    datum_voorschrift: Optional[datetime.date]
     persoonlijk_aandeel_patient: str
     bedrag_supplement: str
     voorschrijver: Optional[str] = "0"
     norm_voorschrijver: Optional[str] = "1"
     code_facturering_persoonlijk_aandeel_of_supplement: Optional[str] = 0 # 0 indien patiënt zelf betaald zie https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf p 491
     nummer_akkoord: Optional[str] = None
+    errors: Any
 
     def to_record_50(self, 
                      i: int,
