@@ -1138,6 +1138,8 @@ class Record50(BaseModel):
             message = "Verstrekking waarvoor akkoord adviserend geneesheer vereist is en een verantwoording ontbreekt."
         elif key == "Datum eerste verrichte verstrekking" and error == "55":
             message = "Datum eerste verrichte verstrekking groter dan datum van opstelling"
+        elif key == "Datum laatste verrichte verstrekking" and error == "40":
+            message = "Rechthebbende niet in regel op datum laatste verrichte verstrekking."
         else:
             message = _ERROR_CONSTANTS.get(error)
         
@@ -1185,6 +1187,9 @@ class Record50(BaseModel):
                 elif key_numeric == "05":
                     key = "Datum eerste verrichte verstrekking"
                     value = record[16:24]
+                elif key_numeric == "06":
+                    key = "Datum laatste verrichte verstrekking"
+                    value = record[24:32]
                 elif key_numeric == "08":
                     key = "identificatie rechthebbende"
                     value = record[35:47]
