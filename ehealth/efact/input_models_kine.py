@@ -369,7 +369,11 @@ class PatientBlock(BaseModel):
     detail_records: List[DetailRecord]
 
     def to_patient_records(self, i_start) -> List[Union[Record20Kine, Record50Kine, Record52Kine, Record80Kine]]:
-        ziekenfonds_bestemming = "300" if self.nummer_ziekenfonds.startswith("3") else self.nummer_ziekenfonds
+        # see https://www.riziv.fgov.be/SiteCollectionDocuments/instructies_elektronische_facturatiegegevens.pdf p14
+        if self.nummer_ziekenfonds.startswith("3") and not self.nummer_ziekenfonds.startswith("306"):
+            ziekenfonds_bestemming = "300"
+        else:
+            ziekenfonds_bestemming = self.nummer_ziekenfonds
         i = i_start # starting point
         record_20 = Record20Kine(
             num_record=str(i).rjust(6, "0"),
