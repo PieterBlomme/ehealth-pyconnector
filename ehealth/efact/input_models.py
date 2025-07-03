@@ -1140,6 +1140,8 @@ class Record50(BaseModel):
             message = "Datum eerste verrichte verstrekking groter dan datum van opstelling"
         elif key == "Datum laatste verrichte verstrekking" and error == "40":
             message = "Rechthebbende niet in regel op datum laatste verrichte verstrekking."
+        elif key == "Nummer ziekenfonds van aansluiting" and error == "42":
+            message = "Rechthebbende niet gekend in ziekenfonds van aansluiting"
         else:
             message = _ERROR_CONSTANTS.get(error)
         
@@ -1190,6 +1192,8 @@ class Record50(BaseModel):
                 elif key_numeric == "06":
                     key = "Datum laatste verrichte verstrekking"
                     value = record[24:32]
+                elif key_numeric == "07":
+                    key = "Nummer ziekenfonds van aansluiting"
                 elif key_numeric == "08":
                     key = "identificatie rechthebbende"
                     value = record[35:47]
