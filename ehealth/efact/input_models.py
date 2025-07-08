@@ -616,9 +616,9 @@ class Record10(BaseModel):
             "03": "Gegeven niet toegelaten",
             "09": "Verboden karakters",
             "20": "Gegeven niet gekend in bestand ziekenfonds",
-        }
+        }            
         
-        return {
+        result = {
             "type": "10",
             "key": key,
             "value": value,
@@ -626,6 +626,11 @@ class Record10(BaseModel):
             "message": _ERROR_CONSTANTS.get(error),
             "verwerpingsletter": refusal_code
         }
+
+        if error == "24" and key == "07":
+            result["message"] = "Meer dan één facturatiebestand per dag is niet toegelaten"
+        
+        return result
     
     @classmethod
     def errors_from_str(cls, record: str) -> List[Dict[str, Any]]:
