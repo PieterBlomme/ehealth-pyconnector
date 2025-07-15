@@ -50,6 +50,8 @@ class STSService(AbstractSTSService):
         self.config_validator.setProperty("KEYSTORE_DIR", keystore_dir)
         self.config_validator.setProperty("environment", environment)
         self.config_validator.setProperty("endpoint.sts", sts_endpoint)
+        self.config_validator.setProperty("service.sts.class", "sophia.ehealth.SophiaSTSService")
+        self.config_validator.setProperty("crypto.classname", "sophia.ehealth.SophiaCrypto")
         # always disable retry (to avoid constant BCP switch?)
         self.config_validator.setProperty("be.ehealth.technicalconnector.handler.message.level.retry.activated", "false")
         

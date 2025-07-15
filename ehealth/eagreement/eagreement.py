@@ -18,6 +18,13 @@ logger = logging.getLogger(__name__)
 class ServerSideException(Exception):
     pass
 
+class EAgreementException(Exception):
+    """Base class for exceptions in the EAgreement service."""
+    def __init__(self, message: str, stack_trace: Optional[str] = None):
+        super().__init__(message)
+        self.message = message
+        self.stack_trace = stack_trace
+
 
 class EAgreementService(AbstractEAgreementService):
     def __init__(
@@ -301,19 +308,18 @@ class EAgreementService(AbstractEAgreementService):
         
         raw_request = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(request)
         callback_fn(raw_request, meta.set_call_type(CallType.ENCRYPTED_REQUEST))
-
-        serviceResponse = self.get_service().consultAgreement(request.getRequest())
-        raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
-        callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
-        
         try:
+            serviceResponse = self.get_service().consultAgreement(request.getRequest())
+            raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
+            callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
             response = self.get_response_builder().handleConsultAgreementResponse(serviceResponse, request)
         except Py4JJavaError as e:
             if "SEND_TO_IO_EXCEPTION" in str(e.java_exception):
                 raise ServerSideException(str(e.java_exception))
             if "Error while trying to (un)seal" in str(e.java_exception):
                 raise DecryptionException()
-            raise e
+            logger.exception(e)
+            raise EAgreementException(e.java_exception.getMessage(), stack_trace=str(e))
         # self.verify_result(response)
 
         response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")

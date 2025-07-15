@@ -23,7 +23,11 @@ def eagreement_service():
 
 def test__consult_with_io(sts_service, token, eagreement_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        response = eagreement_service.consult_agreement(token,
-            Patient(ssin=None, insurancymembership='0812814934608', insurancenumber='509', givenname='Fadel', surname='Farwi', gender='male')
-        )
-        logger.info(response)
+        try:
+            response = eagreement_service.consult_agreement(token,
+                Patient(ssin=None, insurancymembership='0812814934608', insurancenumber='509', givenname='Fadel', surname='Farwi', gender='male')
+            )
+            logger.info(response)
+        except Exception as e:
+            logger.info(f"Exception: {e} of type {type(e)}, stack trace: {e.stack_trace if hasattr(e, 'stack_trace') else 'N/A'}")
+            raise e

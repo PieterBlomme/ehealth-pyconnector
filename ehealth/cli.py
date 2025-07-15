@@ -64,6 +64,13 @@ def move_py4j_jar():
 def compile_bridge():
     CLASSPATH = get_classpath()
     move_py4j_jar()
+    cmd = f"javac -cp '{CLASSPATH}' {PACKAGE_ROOT}/sophia/ehealth/SophiaSTSService.java"
+    print(cmd)
+    os.system(cmd)
+    cmd = f"jar cf sophia-ehealth.jar -C . sophia/ehealth"
+    print(cmd)
+    os.system(cmd)
+    shutil.copy(f"{PACKAGE_ROOT}/sophia-ehealth.jar", f"{PACKAGE_ROOT}/java/lib/sophia-ehealth.jar")
     cmd = f"javac -cp '{CLASSPATH}' {PACKAGE_ROOT}/JavaGateway.java"
     print(cmd)
     os.system(cmd)
