@@ -3,6 +3,7 @@ from typing import Optional, List, Dict, Any, Union
 import logging
 from .error_constants import ERROR_CONSTANTS
 from pydantic import BaseModel
+from .error_mappings import ERROR_DICT
 
 logger = logging.getLogger(__name__)
 
@@ -1111,7 +1112,7 @@ class Record50(BaseModel):
     nummer_attest_van_toediening: Optional[str] = "0" * 12
     nummer_afleveringsbon: Optional[str] = "0" * 12
     code_implant: Optional[str] = "0" * 12
-    omschrijving_product: Optional[str] = "+" * 30
+    omschrijving_product: Optional[str] = " " * 30
     norm_plafond: Optional[str] = "0"
     basiswaarde_verstrekking: Optional[str] = "0" * 8
     transplantatie: Optional[str] = "0"
@@ -1226,6 +1227,8 @@ class Record50(BaseModel):
                 elif key_numeric == "30":
                     key = "Teken en bedrag persoonlijk supplement"
                     value = record[164:174]
+                elif key_numeric == "44":
+                    key = "Omschrijving product"
                 elif key_numeric == "99":
                     key = "controlecijfer record"
                     value = record[348:350]
@@ -1233,6 +1236,10 @@ class Record50(BaseModel):
                     raise Exception(f"Numeric key {key_numeric} not yet mapped for Record50 {e}")
 
                 e_dict = cls._error_shared(key, error, value, e[0])
+                
+                if ERROR_DICT.get(e[1:]):
+                    e_dict["message"] = ERROR_DICT.get(e[1:])
+                
             result.append(ErrorMessage(**e_dict, num_record=num_record))
         return result
     
@@ -1604,6 +1611,9 @@ class Record52(BaseModel):
                     raise Exception(f"Numeric key {key_numeric} not yet mapped for Record52")
 
                 e_dict = cls._error_shared(key, error, value, e[0])
+                
+                if ERROR_DICT.get(e[1:]):
+                    e_dict["message"] = ERROR_DICT.get(e[1:])
             
             if e_dict not in [r.dict() for r in result]:
                 # sometimes duplicate errors
