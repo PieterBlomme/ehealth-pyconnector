@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 def get_exception_message(e: Exception) -> str:
     exception_str = str(e.java_exception.getMessage())
     if "SOA-" in exception_str:
-        exception_str = "Fout eHealth: " + exception_str.split("javax.xml.ws.soap.SOAPFaultException:")[1].strip()
+        exception_str = "Fout eHealth: " + exception_str
     return exception_str
 
 class ServerSideException(Exception):
