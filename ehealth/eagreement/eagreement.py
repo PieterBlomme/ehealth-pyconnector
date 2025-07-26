@@ -3,7 +3,7 @@ import datetime
 from io import StringIO
 from py4j.protocol import Py4JJavaError
 from typing import Any, Callable, Optional
-from xsdata.formats.dataclass.parsers.config import ParserConfig
+sfrom xsdata.formats.dataclass.parsers.config import ParserConfig
 from xsdata_pydantic.bindings import XmlParser
 from .input_models import Patient, AskAgreementInputModel
 from .ask_agreement import Bundle as AskResponseBundle, Response as AskResponse
@@ -139,6 +139,9 @@ class EAgreementService(AbstractEAgreementService):
         try:
             serviceResponse = self.get_service().askAgreement(request.getRequest())
         except Exception as e:
+            exception_str = str(e.java_exception)
+            if "javax.xml.ws.soap.SOAPFaultException:" in exception_str:
+                exception_str = exception_str.split("javax.xml.ws.soap.SOAPFaultException:")[1].strip()
             if "SEND_TO_IO_EXCEPTION" in str(e.java_exception):
                 raise ServerSideException(str(e.java_exception))
             raise Exception(str(e.java_exception))
