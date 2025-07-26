@@ -19,6 +19,9 @@ def get_exception_message(e: Exception) -> str:
     exception_str = str(e.java_exception.getMessage())
     if "SOA-" in exception_str:
         exception_str = "Fout eHealth: " + exception_str
+    if "SEND_TO_IM_EXCEPTION: Read timed out" in exception_str:
+        exception_str = "Fout eHealth: service ziekenfonds tijdelijk niet bereikbaar"
+
     return exception_str
 
 class ServerSideException(Exception):
