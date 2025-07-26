@@ -3,7 +3,7 @@ import datetime
 from io import StringIO
 from py4j.protocol import Py4JJavaError
 from typing import Any, Callable, Optional
-sfrom xsdata.formats.dataclass.parsers.config import ParserConfig
+from xsdata.formats.dataclass.parsers.config import ParserConfig
 from xsdata_pydantic.bindings import XmlParser
 from .input_models import Patient, AskAgreementInputModel
 from .ask_agreement import Bundle as AskResponseBundle, Response as AskResponse
