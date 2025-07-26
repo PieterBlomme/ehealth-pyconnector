@@ -15,6 +15,12 @@ from ehealth.exceptions import DecryptionException
 
 logger = logging.getLogger(__name__)
 
+def get_exception_message(e: Exception) -> str:
+    exception_str = str(e.java_exception.getMessage())
+    if "javax.xml.ws.soap.SOAPFaultException:" in exception_str:
+        exception_str = exception_str.split("javax.xml.ws.soap.SOAPFaultException:")[1].strip()
+    return exception_str
+
 class ServerSideException(Exception):
     pass
 
@@ -139,12 +145,10 @@ class EAgreementService(AbstractEAgreementService):
         try:
             serviceResponse = self.get_service().askAgreement(request.getRequest())
         except Exception as e:
-            exception_str = str(e.java_exception)
-            if "javax.xml.ws.soap.SOAPFaultException:" in exception_str:
-                exception_str = exception_str.split("javax.xml.ws.soap.SOAPFaultException:")[1].strip()
-            if "SEND_TO_IO_EXCEPTION" in str(e.java_exception):
-                raise ServerSideException(str(e.java_exception))
-            raise Exception(str(e.java_exception))
+            exception_str = get_exception_message(e)
+            if "SEND_TO_IO_EXCEPTION" in exception_str:
+                raise ServerSideException(exception_str)
+            raise Exception(exception_str)
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
         callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
 
@@ -199,9 +203,10 @@ class EAgreementService(AbstractEAgreementService):
         try:
             serviceResponse = self.get_service().askAgreement(request.getRequest())
         except Exception as e:
-            if "SEND_TO_IO_EXCEPTION" in str(e.java_exception):
-                raise ServerSideException(str(e.java_exception))
-            raise e
+            exception_str = get_exception_message(e)
+            if "SEND_TO_IO_EXCEPTION" in exception_str:
+                raise ServerSideException(exception_str)
+            raise Exception(exception_str)
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
         callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
 
@@ -258,9 +263,10 @@ class EAgreementService(AbstractEAgreementService):
         try:
             serviceResponse = self.get_service().askAgreement(request.getRequest())
         except Exception as e:
-            if "SEND_TO_IO_EXCEPTION" in str(e.java_exception):
-                raise ServerSideException(str(e.java_exception))
-            raise e
+            exception_str = get_exception_message(e)
+            if "SEND_TO_IO_EXCEPTION" in exception_str:
+                raise ServerSideException(exception_str)
+            raise Exception(exception_str)
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(serviceResponse)
         callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
 
@@ -317,12 +323,13 @@ class EAgreementService(AbstractEAgreementService):
             callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
             response = self.get_response_builder().handleConsultAgreementResponse(serviceResponse, request)
         except Py4JJavaError as e:
-            if "SEND_TO_IO_EXCEPTION" in str(e.java_exception):
-                raise ServerSideException(str(e.java_exception))
-            if "Error while trying to (un)seal" in str(e.java_exception):
+            exception_str = get_exception_message(e)
+            if "SEND_TO_IO_EXCEPTION" in exception_str:
+                raise ServerSideException(exception_str)
+            if "Error while trying to (un)seal" in exception_str:
                 raise DecryptionException()
             logger.exception(e)
-            raise EAgreementException(e.java_exception.getMessage(), stack_trace=str(e))
+            raise EAgreementException(exception_str, stack_trace=str(e))
         # self.verify_result(response)
 
         response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
