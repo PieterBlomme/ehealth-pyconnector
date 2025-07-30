@@ -63,18 +63,6 @@ class EAgreementService(AbstractEAgreementService):
     
     def get_response_builder(self):
         return self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder()
-    
-    def verify_result(self, response: Any):
-        signVerifResult = response.getSignatureVerificationResult()
-        for entry in signVerifResult.getErrors():
-            try:
-                self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
-                    entry.getValue().isValid())
-            except Exception as e:
-                logger.exception(e)
-                logger.error(entry)
-                if "SIGNATURE_NOT_PRESENT" in str(entry):
-                    raise ServerSideException("SIGNATURE_NOT_PRESENT, this can usually be solved with a retry ...")
 
     def convert_response_to_pydantic(self, response: any, target_class: Callable):
         parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
@@ -156,8 +144,6 @@ class EAgreementService(AbstractEAgreementService):
         callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
 
         response = self.get_response_builder().handleAskAgreementResponse(serviceResponse, request)
-        self.verify_result(response)
-
         response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
         callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
 
@@ -214,8 +200,6 @@ class EAgreementService(AbstractEAgreementService):
         callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
 
         response = self.get_response_builder().handleAskAgreementResponse(serviceResponse, request)
-        self.verify_result(response)
-
         response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
         callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
 
@@ -274,8 +258,6 @@ class EAgreementService(AbstractEAgreementService):
         callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
 
         response = self.get_response_builder().handleAskAgreementResponse(serviceResponse, request)
-        self.verify_result(response)
-
         response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
         callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
 
@@ -333,8 +315,6 @@ class EAgreementService(AbstractEAgreementService):
                 raise DecryptionException()
             logger.exception(e)
             raise EAgreementException(exception_str, stack_trace=str(e))
-        # self.verify_result(response)
-
         response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
         callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
 
