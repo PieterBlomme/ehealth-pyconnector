@@ -16,6 +16,7 @@ class TherLinkPatient(BaseModel):
     firstname: str
     lastname: str
     eidnumber: Optional[str]
+    isinumber: Optional[str]
     signed_encoded: Optional[bytes]
 
 
@@ -190,6 +191,17 @@ class TherLinkService:
             )
             print(f"patient: {patient}")
             proof = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.Proof(self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.ProofTypeValues.EIDREADING.getValue())
+            print(f"proof: {proof}")
+        elif patient_in.isinumber:
+            patient = (
+                self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient.Builder()
+                .withFamilyName(patient_in.lastname)
+                .withFirstName(patient_in.firstname)
+                .withIsiPlus(patient_in.isinumber)
+                .withInss(patient_in.ssin).build()
+            )
+            print(f"patient: {patient}")
+            proof = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.Proof(self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.ProofTypeValues.ISIREADING.getValue())
             print(f"proof: {proof}")
         else:
             patient = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient.Builder().withFamilyName(patient_in.lastname).withFirstName(patient_in.firstname).withInss(patient_in.ssin).build()
