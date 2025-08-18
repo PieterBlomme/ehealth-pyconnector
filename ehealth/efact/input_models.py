@@ -1743,6 +1743,9 @@ class Record80(BaseModel):
                 if key_numeric == "98":
                     key = "Controlecijfer factuur"
                     value = record[346:348]
+                elif key_numeric == "18":
+                    key = "nummer ziekenfonds van bestemming"
+                    value = record[84:87]
                 elif key_numeric == "19":
                     key = "teken + bedrag financieel rekeningnummer a"
                     value = record[87:99]
