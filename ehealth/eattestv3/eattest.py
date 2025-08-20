@@ -395,7 +395,7 @@ class EAttestV3Service:
         callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
 
         attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilder)
-        self.verify_result(attestResponse)
+        # self.verify_result(attestResponse)
         response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
         callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
         xades_response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getXadesT(), "UTF-8")
@@ -614,7 +614,7 @@ class EAttestV3Service:
         callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
 
         attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleCancelAttestationResponse(cancelAttestationResponse, cancelAttestationRequest)
-        self.verify_result(attestResponse)
+        # verify_result(attestResponse)
         response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
         callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
         xades_response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getXadesT(), "UTF-8")
@@ -686,7 +686,7 @@ class EAttestV3Service:
         callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
 
         attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleCancelAttestationResponse(cancelAttestationResponse, cancelAttestationRequest)
-        self.verify_result(attestResponse)
+        # self.verify_result(attestResponse)
         response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
         callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
         xades_response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getXadesT(), "UTF-8")
