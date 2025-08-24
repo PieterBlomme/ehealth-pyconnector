@@ -94,7 +94,7 @@ class Attribute:
             "type": "Attribute",
         }
     )
-    attribute_value: Optional[Union[bool, str, int]] = field(
+    attribute_value: Optional[Union[bool, str]] = field(
         default=None,
         metadata={
             "name": "AttributeValue",
