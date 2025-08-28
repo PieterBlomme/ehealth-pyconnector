@@ -1227,6 +1227,9 @@ class Record50(BaseModel):
                 elif key_numeric == "30":
                     key = "Teken en bedrag persoonlijk supplement"
                     value = record[164:174]
+                elif key_numeric == "35":
+                    key = "Geconventioneerde verstrekker"
+                    value = record[177:178]
                 elif key_numeric == "44":
                     key = "Omschrijving product"
                 elif key_numeric == "99":
