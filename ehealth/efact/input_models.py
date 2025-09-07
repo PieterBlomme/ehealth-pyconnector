@@ -651,7 +651,13 @@ class Record10(BaseModel):
                 if key_numeric == "00":
                     continue # TODO?
 
-                if key_numeric == "07":
+                if key_numeric == "05":
+                    key = "financieel rekeningnummer a (deel 1)"
+                    value = record[16:24]
+                elif key_numeric == "06":
+                    key = "financieel rekeningnummer a (deel 2)"
+                    value = record[24:28]
+                elif key_numeric == "07":
                     key = "zendingsnummer"
                     value = record[32:35]
                 elif key_numeric == "14":
