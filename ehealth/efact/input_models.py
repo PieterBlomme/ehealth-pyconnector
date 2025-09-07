@@ -609,6 +609,7 @@ class Record10(BaseModel):
     @classmethod
     def _error_shared(cls, key, error, value, refusal_code) -> Optional[Dict[str, Any]]:
         if error == "00":
+            logger.info("Error == 00")
             return None
         
         _ERROR_CONSTANTS = {
@@ -682,7 +683,8 @@ class Record10(BaseModel):
                     raise Exception(f"Numeric key {key_numeric} not yet mapped for Record10")
 
                 e_dict = cls._error_shared(key, error, value, e[0])
-            result.append(ErrorMessage(**e_dict))
+            if e_dict:
+                result.append(ErrorMessage(**e_dict))
         return result
     
     def __str__(self):
