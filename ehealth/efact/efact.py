@@ -143,9 +143,20 @@ class EFactService:
 
         practitioner = self.set_configuration_from_token(token)
 
+        # name_contact should be max 45 characters
+        name_contact = practitioner.surname
+        if len(name_contact) > 45:
+            logger.warning(f"Name contact {name_contact} is longer than 45 characters")
+            name_contact = name_contact[:45]
+        # first name should be max 24 characters
+        first_name_contact = practitioner.givenname
+        if len(first_name_contact) > 24:
+            logger.warning(f"First name contact {first_name_contact} is longer than 24 characters")
+            first_name_contact = first_name_contact[:24]
+
         message_200 = Message200Kine(
-            name_contact=practitioner.surname,
-            first_name_contact=practitioner.givenname,
+            name_contact=name_contact,
+            first_name_contact=first_name_contact,
             nummer_derdebetalende=practitioner.nihii,
             nummer_facturerende_instelling=practitioner.nihii,
             **input_model.dict()
