@@ -1570,7 +1570,12 @@ class Record52(BaseModel):
                 message = "Nummer akkoord niet gekend in bestand VI"
             elif error == "22":
                 message = "Nummer akkoord niet gekend in bestand VI voor deze rechthebbende en/of deze nomenclatuurcode"
-        
+        if key == "Type van drager van identiteitsdocument":
+            if error == "03":
+                message = "Type van drager van elektronisch identiteitsdocument niet toegelaten"
+            elif error == "04":
+                message = "Type van drager van elektronisch identiteitsdocument ontbreekt terwijl het noodzakelijk is"
+                
         return {
             "type": "52",
             "key": key,
@@ -1611,6 +1616,9 @@ class Record52(BaseModel):
                     value = record[2:8]
                 elif key_numeric == "04":
                     key = "Nomenclatuurcode"
+                    value = record[9:16]
+                elif key_numeric == "10":
+                    key = "Type van drager van identiteitsdocument"
                     value = record[9:16]
                 elif key_numeric == "19":
                     key = "Nummer akkoord"
