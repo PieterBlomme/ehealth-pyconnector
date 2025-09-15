@@ -2,12 +2,13 @@ from py4j.java_gateway import JavaGateway
 from pydantic import BaseModel
 import base64
 import logging
-from typing import Optional, Any
+from typing import Optional, List, Any
 from io import StringIO
 from ..sts.assertion import Assertion
 from xsdata.formats.dataclass.parsers.config import ParserConfig
 from xsdata_pydantic.bindings import XmlParser
 from ehealth.efact.efact import Practitioner
+from .models import HealthCareParty, Patient, TherapeuticLink
 
 logger = logging.getLogger(__name__)
 
@@ -275,7 +276,7 @@ class TherLinkService:
 
         return response
 
-    def get_therlink(self, token: str, patient_in: TherLinkPatient) -> None:
+    def get_therlink(self, token: str, patient_in: TherLinkPatient) -> List[TherapeuticLink]:
         hcparty = self.set_configuration_from_token(token)
         print(f"hcparty: {hcparty}")
 
@@ -291,8 +292,6 @@ class TherLinkService:
                 .withInss(patient_in.ssin).build()
             )
             print(f"patient: {patient}")
-            proof = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.Proof(self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.ProofTypeValues.EIDREADING.getValue())
-            print(f"proof: {proof}")
         elif patient_in.isinumber:
             patient = (
                 self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient.Builder()
@@ -302,16 +301,9 @@ class TherLinkService:
                 .withInss(patient_in.ssin).build()
             )
             print(f"patient: {patient}")
-            proof = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.Proof(self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.ProofTypeValues.ISIREADING.getValue())
-            print(f"proof: {proof}")
         else:
             patient = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient.Builder().withFamilyName(patient_in.lastname).withFirstName(patient_in.firstname).withInss(patient_in.ssin).build()
             print(f"patient: {patient}")
-            proof = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.Proof(self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.ProofTypeValues.EIDSIGNING.getValue())
-            print(f"proof: {proof}")
-            signatureBytes = base64.b64decode(patient_in.signed_encoded)
-            binaryProof = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.requests.BinaryProof("CMS", signatureBytes)
-            proof.setBinaryProof(binaryProof)
         
         requestObjectBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.builders.RequestObjectBuilderFactory.getRequestObjectBuilder()
 
@@ -325,13 +317,10 @@ class TherLinkService:
         maxRows = requestObjectBuilder.getMaxRows()
         print(f"therapeuticLink: {therapeuticLink}")
         print(f"maxRows: {maxRows}")
-
-        proofArray = self.GATEWAY.new_array(self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.Proof, 1)
-        proofArray[0] = proof
         
         request = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.requests.GetTherapeuticLinkRequest(
                 start, kmehrId, author,
-                therapeuticLink, maxRows, proofArray)
+                therapeuticLink, maxRows, None)
         print(f"request: {request}")
 
         mappedRequest = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.mappers.MapperFactory.getRequestObjectMapper().mapGetTherapeuticLinkRequest(request)
@@ -349,4 +338,33 @@ class TherLinkService:
         elif len(ack.getListOfErrors()) == 1:
             raise Exception(ack.getListOfErrors()[0].getErrorDescription())
 
-        return response
+        links = response.getListOfTherapeuticLinks()
+        print(f"links: {links} of len {len(links)}")
+        pythonLinks = []
+        for link in links:
+            hcparty = HealthCareParty(
+                nihii=link.getHcParty().getNihii(),
+                inss=link.getHcParty().getInss(),
+                type=link.getHcParty().getType()
+            )
+            p = link.getPatient()
+            patient = Patient(
+                inss=link.getPatient().getInss(),
+                regNrWithMut=link.getPatient().getRegNrWithMut(),
+                mutuality=link.getPatient().getMutuality(),
+                firstname=link.getPatient().getFirstName(),
+                lastname=link.getPatient().getLastName(),
+                eidnumber=link.getPatient().getEidCardNumber(),
+                isinumber=link.getPatient().getIsiCardNumber(),
+                sisCardNumber=link.getPatient().getSisCardNumber()
+            )
+            therapeuticLink = TherapeuticLink(
+                start_date=link.getStartDate().toString(),
+                end_date=link.getEndDate().toString(),
+                type=link.getType(),
+                hcparty=hcparty,
+                patient=patient
+            )
+            pythonLinks.append(therapeuticLink)
+        print(f"pythonLinks: {pythonLinks}")
+        return pythonLinks
