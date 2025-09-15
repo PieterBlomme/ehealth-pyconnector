@@ -2,7 +2,7 @@ from py4j.java_gateway import JavaGateway
 from pydantic import BaseModel
 import base64
 import logging
-from typing import Optional
+from typing import Optional, Any
 from io import StringIO
 from ..sts.assertion import Assertion
 from xsdata.formats.dataclass.parsers.config import ParserConfig
@@ -243,43 +243,24 @@ class TherLinkService:
         elif len(ack.getListOfErrors()) == 1:
             raise Exception(ack.getListOfErrors()[0].getErrorDescription())
 
-    def revoke_therlink(self, token, patient_in: TherLinkPatient) -> bool:
+    def revoke_therlink(self, token, patient_in: TherLinkPatient) -> Any:
         hcparty = self.set_configuration_from_token(token)
         print(f"hcparty: {hcparty}")
-        commonBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.builders.RequestObjectBuilderFactory.getCommonBuilder()
         requestObjectBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.builders.RequestObjectBuilderFactory.getRequestObjectBuilder()
         requestObjectMapper = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.mappers.MapperFactory.getRequestObjectMapper()
         samlToken = self.GATEWAY.jvm.be.ehealth.technicalconnector.session.Session.getInstance().getSession().getSAMLToken()
         responseObjectMapper = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.mappers.MapperFactory.getResponseObjectMapper()
         therLinkService = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.service.ServiceFactory.getTherLinkService()
 
-        kmehrId = commonBuilder.createKmehrID()
-        print(f"kmehrId: {kmehrId}")
-        author = commonBuilder.createAuthor(requestObjectBuilder.getAuthorHcParties())
-        print(f"author: {author}")
-        start = self.GATEWAY.jvm.org.joda.time.DateTime()
-        end = (self.GATEWAY.jvm.org.joda.time.DateTime()).plusMonths(6)
         patient = self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient.Builder().withFamilyName(patient_in.lastname).withFirstName(patient_in.firstname).withInss(patient_in.ssin).build()
-        print(f"patient: {patient}")
-        therapeuticLink = commonBuilder.createTherapeuticLink(start, end, patient, "persphysiotherapist", None, None, hcparty)
-        
-        patient = (
-            self.GATEWAY.jvm.be.ehealth.business.common.domain.Patient.Builder()
-            .withFamilyName(patient_in.lastname)
-            .withFirstName(patient_in.firstname)
-            .withEid(patient_in.eidnumber)
-            .withInss(patient_in.ssin).build()
-        )
-        print(f"patient: {patient}")
-        proof = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.Proof(self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.ProofTypeValues.EIDREADING.getValue())
-        print(f"proof: {proof}")
-        request = self.GATEWAY.jvm.be.ehealth.businessconnector.therlink.domain.requests.RevokeTherapeuticLinkRequest(self.GATEWAY.jvm.org.joda.time.DateTime(), kmehrId, author, therapeuticLink)
+
+        request = requestObjectBuilder.createRevokeTherapeuticLinkRequest(self.GATEWAY.jvm.org.joda.time.DateTime(), None, patient, hcparty, "consultation", None, None)
         print(f"request: {request}")
 
         mappedRequest = requestObjectMapper.mapRevokeTherapeuticLinkRequest(request)
 
         revokeTherapeuticLink = therLinkService.revokeTherapeuticLink(samlToken, mappedRequest)
-        print(f"revokeTherapeuticLink: {revokeTherapeuticLink.isValue()}")
+        print(f"revokeTherapeuticLink: {revokeTherapeuticLink}")
         print(self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(revokeTherapeuticLink))
 
         response = responseObjectMapper.mapJaxbToRevokeTherapeuticLinkResponse(revokeTherapeuticLink)
@@ -292,4 +273,4 @@ class TherLinkService:
         elif len(ack.getListOfErrors()) == 1:
             raise Exception(ack.getListOfErrors()[0].getErrorDescription())
 
-        return revokeTherapeuticLink.isValue()
+        return response
