@@ -89,3 +89,13 @@ def test_revoke_therlink_eidnumber(sts_service, token, therlink_service):
             eidnumber="615136039755"
         )
         therlink_service.revoke_therlink(token, p)
+
+def test_get_therlink_eidnumber(sts_service, token, therlink_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        p = TherLinkPatient(
+            firstname="Mona",
+            lastname="Blomme",
+            ssin="24061608411",
+            eidnumber="615136039755"
+        )
+        therlink_service.get_therlink(token, p)
