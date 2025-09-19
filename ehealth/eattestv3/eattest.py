@@ -468,6 +468,14 @@ class EAttestV3Service:
             sendAttestationResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.session.AttestSessionServiceFactory.getAttestService().sendAttestation(attestBuilderRequest)
             if input_model.force_retryable:
                 raise Exception("Force technical exception to test Duplicate service")
+            return self.handle_send_attestation_response(
+                attestBuilder=attestBuilder,
+                template=template,
+                raw_request=raw_request,
+                sendAttestationResponse=sendAttestationResponse,
+                meta=meta,
+                callback_fn=callback_fn
+                )
         except Exception as e:
             retryable = EAttestRetryableAttempt(
                 input_reference_str=input_reference_str,
@@ -478,15 +486,6 @@ class EAttestV3Service:
             raise TechnicalEAttestException(
                 message=str(e),
                 retryable=retryable
-            )
-        
-        return self.handle_send_attestation_response(
-            attestBuilder=attestBuilder,
-            template=template,
-            raw_request=raw_request,
-            sendAttestationResponse=sendAttestationResponse,
-            meta=meta,
-            callback_fn=callback_fn
             )
     
     def retry_send_attestation(self, token: str, input_model: EAttestRetryableAttempt,
