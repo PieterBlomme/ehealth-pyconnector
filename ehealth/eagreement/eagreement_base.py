@@ -116,7 +116,7 @@ class AbstractEAgreementService:
                                 endpoint=Endpoint("MyCareNet")
                                 ),
                             source=Source(Endpoint(practitioner_role_urn)),
-                            sender=Sender(Reference("PractitionerRole/PractitionerRole1")),
+                            sender=Sender(Reference("PractitionerRole/practitionerrole1")),
                             focus=focus,            
                         )
                     )
@@ -150,7 +150,7 @@ class AbstractEAgreementService:
 
     @classmethod
     def _render_practitioner_role(cls,
-                                practitioner_role: Optional[str] = "PractitionerRole1",
+                                practitioner_role: Optional[str] = "practitionerrole1",
                                 practitioner: Optional[str] = "Practitioner/Practitioner1",
                                 code: Optional[str] = "persphysiotherapist"
                                 
@@ -435,8 +435,8 @@ class AbstractEAgreementService:
                                     )
                             ) if claim_ask.billable_period else None,
                             created=Created(now.isoformat(timespec="seconds")),
-                            enterer=Enterer(Reference("PractitionerRole/PractitionerRole1")),
-                            provider=Provider(Reference("PractitionerRole/PractitionerRole1")),
+                            enterer=Enterer(Reference("PractitionerRole/practitionerrole1")),
+                            provider=Provider(Reference("PractitionerRole/practitionerrole1")),
                             priority=Priority(
                                     coding=Coding(
                                         system=System("http://terminology.hl7.org/CodeSystem/processpriority"),
@@ -539,7 +539,7 @@ class AbstractEAgreementService:
             practitioner_identifier="Practitioner1"
         )
         practitioner_role_physio = self._render_practitioner_role(
-            practitioner_role="PractitionerRole1",
+            practitioner_role="practitionerrole1",
             practitioner=f"Practitioner/Practitioner1",
             code="persphysiotherapist"
         )
@@ -614,7 +614,7 @@ class AbstractEAgreementService:
             practitioner_identifier="Practitioner1"
         )
         practitioner_role_physio = self._render_practitioner_role(
-            practitioner_role="PractitionerRole1",
+            practitioner_role="practitionerrole1",
             practitioner=f"Practitioner/Practitioner1",
             code="persphysiotherapist"
         )
@@ -663,7 +663,7 @@ class AbstractEAgreementService:
             practitioner_identifier="Practitioner1"
         )
         practitioner_role_physio = self._render_practitioner_role(
-            practitioner_role="PractitionerRole1",
+            practitioner_role="practitionerrole1",
             practitioner=f"Practitioner/Practitioner1",
             code="persphysiotherapist"
         )
@@ -707,7 +707,7 @@ class AbstractEAgreementService:
             practitioner_identifier="Practitioner1"
         )
         practitioner_role_physio = self._render_practitioner_role(
-            practitioner_role="PractitionerRole1",
+            practitioner_role="practitionerrole1",
             practitioner=f"Practitioner/Practitioner1",
             code="persphysiotherapist"
         )
