@@ -103,6 +103,9 @@ class AbstractEAgreementService:
                                 code=Code("search-type")
                             )
             focus=Focus(Reference("Parameters/Parameters1"))
+            
+            
+        sender = "PractitionerRole/" + practitioner_role_urn.replace("urn:uuid:", "")
 
         message_header = Entry(
                     full_url=FullUrl(f"urn:uuid:{message_header_uuid}"),
@@ -116,7 +119,7 @@ class AbstractEAgreementService:
                                 endpoint=Endpoint("MyCareNet")
                                 ),
                             source=Source(Endpoint(practitioner_role_urn)),
-                            sender=Sender(Reference("PractitionerRole/practitionerrole1")),
+                            sender=Sender(Reference(sender)),
                             focus=focus,            
                         )
                     )
@@ -321,6 +324,7 @@ class AbstractEAgreementService:
                       claim_ask: ClaimAsk,
                       service_request: Optional[str] = None,
                       previous_service_request: Optional[str] = None,
+                      practitioner_role: Optional[str] = "practitionerrole1",
                       ):
         entry_uuid = str(uuid.uuid4())
         
@@ -435,8 +439,8 @@ class AbstractEAgreementService:
                                     )
                             ) if claim_ask.billable_period else None,
                             created=Created(now.isoformat(timespec="seconds")),
-                            enterer=Enterer(Reference("PractitionerRole/practitionerrole1")),
-                            provider=Provider(Reference("PractitionerRole/practitionerrole1")),
+                            enterer=Enterer(Reference(f"PractitionerRole/{practitioner_role}")),
+                            provider=Provider(Reference(f"PractitionerRole/{practitioner_role}")),
                             priority=Priority(
                                     coding=Coding(
                                         system=System("http://terminology.hl7.org/CodeSystem/processpriority"),
@@ -538,8 +542,9 @@ class AbstractEAgreementService:
             practitioner=practitioner,
             practitioner_identifier="Practitioner1"
         )
+        practitioner_role_physio_uuid = str(uuid.uuid4())
         practitioner_role_physio = self._render_practitioner_role(
-            practitioner_role="practitionerrole1",
+            practitioner_role=practitioner_role_physio_uuid,
             practitioner=f"Practitioner/Practitioner1",
             code="persphysiotherapist"
         )
@@ -557,7 +562,7 @@ class AbstractEAgreementService:
             practitioner_identifier="Practitioner2"
         )
         practitioner_role_physician = self._render_practitioner_role(
-            practitioner_role="PractitionerRole2",
+            practitioner_role=str(uuid.uuid4()),
             practitioner=f"Practitioner/Practitioner2",
             code="persphysician"
         )
@@ -588,7 +593,8 @@ class AbstractEAgreementService:
             now=now,
             claim_ask=input_model.claim,
             service_request=service_request,
-            previous_service_request=previous_service_request
+            previous_service_request=previous_service_request,
+            practitioner_role=practitioner_role_physio_uuid
             )
         entries.append(claim)
         
