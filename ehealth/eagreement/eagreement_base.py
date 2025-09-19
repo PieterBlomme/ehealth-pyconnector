@@ -155,12 +155,11 @@ class AbstractEAgreementService:
                                 code: Optional[str] = "persphysiotherapist"
                                 
                                 ):
-        entry_uuid = str(uuid.uuid4())
         return Entry(
-                    full_url=FullUrl(f"urn:uuid:{entry_uuid}"),
+                    full_url=FullUrl(f"urn:uuid:{practitioner_role}"),
                     resource=Resource(
                         practitioner_role=PractitionerRole(
-                            id=Id(entry_uuid),
+                            id=Id(practitioner_role),
                             meta=MetaType(Profile("https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitionerrole")),
                             practitioner=Practitioner2(
                                 Reference(practitioner)
