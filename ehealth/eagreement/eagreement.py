@@ -136,7 +136,10 @@ class EAgreementService(AbstractEAgreementService):
         try:
             serviceResponse = self.get_service().askAgreement(request.getRequest())
         except Exception as e:
-            exception_str = get_exception_message(e)
+            try:
+                exception_str = get_exception_message(e)
+            except:
+                exception_str = str(e)
             if "SEND_TO_IO_EXCEPTION" in exception_str:
                 raise ServerSideException(exception_str)
             raise Exception(exception_str)
