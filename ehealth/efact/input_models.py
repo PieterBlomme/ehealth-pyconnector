@@ -1777,6 +1777,9 @@ class Record80(BaseModel):
                 elif key_numeric == "99":
                     key = "Controlecijfer record"
                     value = record[348:350]
+                elif key_numeric == "08":
+                    key = "Identificatie rechthebbende"
+                    value = record[35:48]
                 else:
                     raise Exception(f"Numeric key {key_numeric} not yet mapped for Record80")
 
