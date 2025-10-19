@@ -45,7 +45,9 @@ def ehbox_service():
 
 def test_get_messages(sts_service, token, ehbox_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        ehbox_service.get_messages(token)
+        messages = ehbox_service.get_messages(token)
+        for message in messages:
+            logger.info(message)
 
 def test_send_message(sts_service, token, ehbox_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
@@ -57,5 +59,6 @@ def test_send_message(sts_service, token, ehbox_service):
             mimeType="application/pdf",
             filename="dummy_1.pdf",
             content=content,
+            title="A message",
             quality_type="PHYSIOTHERAPIST_SSIN"
         )

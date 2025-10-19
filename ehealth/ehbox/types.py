@@ -1,0 +1,80 @@
+import logging
+from pydantic import BaseModel
+from typing import Any, Optional
+
+logger = logging.getLogger(__name__)
+
+class ContentInfo(BaseModel):
+    mime_type: str
+    title: str
+
+    @classmethod
+    def from_jvm(cls, jvm_object: Any) -> 'ContentInfo':
+        return cls(
+            mime_type=jvm_object.getMimeType(),
+            title=jvm_object.getTitle(),
+        )
+class ContentSpecification(BaseModel):
+    application_name: str
+    content_type: str
+    is_encrypted: bool
+    is_important: bool
+
+    @classmethod
+    def from_jvm(cls, jvm_object: Any) -> 'ContentSpecification':
+        return cls(
+            application_name=jvm_object.getApplicationName(),
+            content_type=jvm_object.getContentType(),
+            is_encrypted=jvm_object.isIsEncrypted(),
+            is_important=jvm_object.isIsImportant(),
+        )
+
+class MessageInfo(BaseModel):
+    expiration_date: str
+    publication_date: str
+
+    @classmethod
+    def from_jvm(cls, jvm_object: Any) -> 'MessageInfo':
+        return cls(
+            expiration_date=jvm_object.getExpirationDate().toString(),
+            publication_date=jvm_object.getPublicationDate().toString(),
+        )
+
+class Sender(BaseModel):
+    first_name: Optional[str]
+    name: Optional[str]
+    id: str
+    quality: str
+    type: str
+    sub_type: Optional[str]
+    person_in_organisation: Optional[bool]
+
+    @classmethod
+    def from_jvm(cls, jvm_object: Any) -> 'Sender':
+        return cls(
+            first_name=jvm_object.getFirstName(),
+            name=jvm_object.getName(),
+            id=jvm_object.getId(),
+            quality=jvm_object.getQuality(),
+            type=jvm_object.getType(),
+            sub_type=jvm_object.getSubType(),
+            person_in_organisation=jvm_object.getPersonInOrganisation(),
+        )
+
+
+class Message(BaseModel):
+    id: str
+    content_info: Any
+    content_specification: Any
+    message_info: Any
+    sender: Any
+
+    @classmethod
+    def from_jvm(cls, jvm_object: Any) -> "Message":
+        return cls(
+            id=jvm_object.getMessageId(),
+            content_info=ContentInfo.from_jvm(jvm_object.getContentInfo()),
+            content_specification=ContentSpecification.from_jvm(jvm_object.getContentSpecification()),
+            message_info=MessageInfo.from_jvm(jvm_object.getMessageInfo()),
+            sender=Sender.from_jvm(jvm_object.getSender()),
+        )

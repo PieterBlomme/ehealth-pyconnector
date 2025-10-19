@@ -1,15 +1,13 @@
 from py4j.java_gateway import JavaGateway
 from typing import Any, Optional, Callable, Literal
-import datetime
-import pytz
 import logging
 from io import StringIO
 from ..sts.assertion import Assertion
-from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata.formats.dataclass.parsers.config import ParserConfig
-from xsdata_pydantic.bindings import XmlSerializer, XmlParser
-from pydantic import BaseModel
+from xsdata_pydantic.bindings import XmlParser
 from ehealth.utils.callbacks import storage_callback, CallMetadata, CallType, ServiceType
+
+from .types import Message
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +62,7 @@ class EHBoxService:
         logger.info(f"Name: {givenname} {surname}, SSIN {ssin}, NIHII {nihii}, quality {quality}")
         self.config_validator.setProperty("ehbox.application.name", "Sophia")
     
-    def get_messages(self, token: str):
+    def get_messages(self, token: str) -> list[Message]:
         self.set_configuration_from_token(token)
 
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.session.ServiceFactory.getEhealthBoxServiceV3()
@@ -74,8 +72,8 @@ class EHBoxService:
 
         allEhboxesMessagesList = service.getAllEhboxesMessagesList(request).getMessages()
         logger.info(f"Received {len(allEhboxesMessagesList)} messages")
-        for message in allEhboxesMessagesList:
-            logger.info(f"Message: {message.getMessageId()}, {message.getMessageType()}, {message.getSentDate()}, {message.getSender()}, {message.getSubject()}")
+
+        return [Message.from_jvm(message) for message in allEhboxesMessagesList]
 
     def send_message(
             self, 
@@ -83,9 +81,11 @@ class EHBoxService:
             id: str,
             mimeType: str,
             filename: str,
+            title: str,
             content: bytes,
-            quality_type: Literal["DOCTOR_NIHII", "DOCTOR_SSIN", "PHYSIOTHERAPIST_NIHII", "PHYSIOTHERAPY_SSIN"]
-
+            quality_type: Literal["DOCTOR_NIHII", "DOCTOR_SSIN", "PHYSIOTHERAPIST_NIHII", "PHYSIOTHERAPY_SSIN"],
+            is_important: Optional[bool] = False,
+            is_encrypted: Optional[bool] = True,
         ):
         self.set_configuration_from_token(token)
 
@@ -111,23 +111,23 @@ class EHBoxService:
         document = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.api.domain.Document()
 
         document.setFilename(filename)
-        document.setMimeType("text/plain")
-        document.setTitle("A MESSAGE")
-        document.setContent(b"a message")
+        document.setMimeType(mimeType)
+        document.setTitle(title)
+        document.setContent(content)
         message.setBody(document)
         message.getDestinations().add(destination)
-        message.setEncrypted(False)
-        message.setImportant(True)
+        message.setEncrypted(is_encrypted)
+        message.setImportant(is_important)
         message.setUseReceivedReceipt(True)
         message.setUsePublicationReceipt(True)
         message.setUseReadReceipt(True)
 
-        annex = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.api.domain.Document()
-        annex.setFilename(filename)
-        annex.setMimeType(mimeType)
-        annex.setContent(content)
-        annex.setTitle("ANNEX")
-        message.getAnnexList().add(annex)
+        # annex = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.api.domain.Document()
+        # annex.setFilename(filename)
+        # annex.setMimeType(mimeType)
+        # annex.setContent(content)
+        # annex.setTitle("ANNEX")
+        # message.getAnnexList().add(annex)
 
         logger.info(message)
 
