@@ -1,0 +1,138 @@
+from py4j.java_gateway import JavaGateway
+from typing import Any, Optional, Callable, Literal
+import datetime
+import pytz
+import logging
+from io import StringIO
+from ..sts.assertion import Assertion
+from xsdata.models.datatype import XmlDate, XmlTime
+from xsdata.formats.dataclass.parsers.config import ParserConfig
+from xsdata_pydantic.bindings import XmlSerializer, XmlParser
+from pydantic import BaseModel
+from ehealth.utils.callbacks import storage_callback, CallMetadata, CallType, ServiceType
+
+logger = logging.getLogger(__name__)
+
+class EHBoxService:
+    def __init__(
+            self,
+            mycarenet_license_username: str,
+            mycarenet_license_password: str,
+            etk_endpoint: str = "$uddi{uddi:ehealth-fgov-be:business:etkdepot:v1}",
+            environment: str = "acc",
+    ):
+        self.GATEWAY = JavaGateway()
+        self.EHEALTH_JVM = self.GATEWAY.entry_point
+
+        # set up required configuration
+        self.config_validator = self.EHEALTH_JVM.getConfigValidator()
+        self.config_validator.setProperty("environment", environment)
+        if environment == "acc":
+            self.is_test = True
+        else:
+            self.is_test = False
+
+        self.config_validator.setProperty("mycarenet.licence.username", mycarenet_license_username)
+        self.config_validator.setProperty("mycarenet.licence.password", mycarenet_license_password)
+        self.config_validator.setProperty("endpoint.etk", etk_endpoint)
+        self.config_validator.setProperty("endpoint.eattestv3", "$uddi{uddi:ehealth-fgov-be:business:mycareneteattest:v3}")
+
+    def set_configuration_from_token(self, token: str) -> None:
+        # TODO copy paste from MDA
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
+        token_pydantic = parser.parse(StringIO(token), Assertion)
+        
+        surname = None
+        givenname = None
+        nihii = None
+        ssin = None
+        quality = None
+                                     
+        for attribute in token_pydantic.attribute_statement.attribute:
+            if attribute.attribute_name == 'urn:be:fgov:ehealth:1.0:certificateholder:person:ssin':
+                ssin = attribute.attribute_value
+            elif attribute.attribute_name.startswith('urn:be:fgov:person:ssin:ehealth:1.0:nihii'):
+                nihii = attribute.attribute_value
+            elif attribute.attribute_name  == 'urn:be:fgov:person:ssin:ehealth:1.0:givenname':
+                givenname = attribute.attribute_value
+            elif attribute.attribute_name  == 'urn:be:fgov:person:ssin:ehealth:1.0:surname':
+                surname = attribute.attribute_value
+            elif attribute.attribute_name.startswith('urn:be:fgov:person:ssin:ehealth:1.0:fpsph'):
+                if attribute.attribute_value:
+                    quality = attribute.attribute_name.split(':')[-2]
+
+        logger.info(f"Name: {givenname} {surname}, SSIN {ssin}, NIHII {nihii}, quality {quality}")
+        self.config_validator.setProperty("ehbox.application.name", "Sophia")
+    
+    def get_messages(self, token: str):
+        self.set_configuration_from_token(token)
+
+        service = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.session.ServiceFactory.getEhealthBoxServiceV3()
+
+        request_builder = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.builders.impl.RequestBuilderImpl()
+        request = request_builder.createAllEhboxesMessagesListRequest("INBOX")
+
+        allEhboxesMessagesList = service.getAllEhboxesMessagesList(request).getMessages()
+        logger.info(f"Received {len(allEhboxesMessagesList)} messages")
+        for message in allEhboxesMessagesList:
+            logger.info(f"Message: {message.getMessageId()}, {message.getMessageType()}, {message.getSentDate()}, {message.getSender()}, {message.getSubject()}")
+
+    def send_message(
+            self, 
+            token: str,
+            id: str,
+            mimeType: str,
+            filename: str,
+            content: bytes,
+            quality_type: Literal["DOCTOR_NIHII", "DOCTOR_SSIN", "PHYSIOTHERAPIST_NIHII", "PHYSIOTHERAPY_SSIN"]
+
+        ):
+        self.set_configuration_from_token(token)
+
+        service = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.session.ServiceFactory.getEhealthBoxServiceV3()
+
+        if quality_type.endswith("SSIN"):
+            if quality_type.startswith("DOCTOR"):
+                destination_quality = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.api.utils.QualityType.DOCTOR_SSIN
+            elif quality_type.startswith("PHYSIOTHERAPIST"):
+                destination_quality = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.api.utils.QualityType.PHYSIOTHERAPIST_SSIN
+        else:
+            if quality_type.startswith("DOCTOR"):
+                destination_quality = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.api.utils.QualityType.DOCTOR_NIHII
+            elif quality_type.startswith("PHYSIOTHERAPIST"):
+                destination_quality = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.api.utils.QualityType.PHYSIOTHERAPIST_NIHII
+
+        logger.info(f"Using NIHII {id} as destination with quality {destination_quality}")
+        destination = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.api.domain.Addressee(id, destination_quality)
+        logger.info(f"Destination: {destination}")
+
+        message = self.EHEALTH_JVM.createEmptyDocumentMessage()
+        logger.info(dir(message))
+        document = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.api.domain.Document()
+
+        document.setFilename(filename)
+        document.setMimeType("text/plain")
+        document.setTitle("A MESSAGE")
+        document.setContent(b"a message")
+        message.setBody(document)
+        message.getDestinations().add(destination)
+        message.setEncrypted(False)
+        message.setImportant(True)
+        message.setUseReceivedReceipt(True)
+        message.setUsePublicationReceipt(True)
+        message.setUseReadReceipt(True)
+
+        annex = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.api.domain.Document()
+        annex.setFilename(filename)
+        annex.setMimeType(mimeType)
+        annex.setContent(content)
+        annex.setTitle("ANNEX")
+        message.getAnnexList().add(annex)
+
+        logger.info(message)
+
+        request = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.builders.BuilderFactory.getSendMessageBuilder().buildMessage(message)
+        logger.info(self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(request))
+
+        response = service.sendMessage(request)
+        logger.info(f"Message sent, response: {response}")
