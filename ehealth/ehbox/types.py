@@ -1,5 +1,6 @@
 import logging
-from pydantic import BaseModel
+import datetime
+from pydantic import BaseModel, Field
 from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
@@ -77,4 +78,27 @@ class Message(BaseModel):
             content_specification=ContentSpecification.from_jvm(jvm_object.getContentSpecification()),
             message_info=MessageInfo.from_jvm(jvm_object.getMessageInfo()),
             sender=Sender.from_jvm(jvm_object.getSender()),
+        )
+    
+class Acknowledgement(BaseModel):
+    read: Optional[datetime.datetime]
+    published: Optional[datetime.datetime]
+    received: Optional[datetime.datetime]
+
+    @classmethod
+    def parse_datetime(cls, jvm_datetime: Any) -> Optional[datetime.datetime]:
+        if jvm_datetime is None:
+            return None
+        str_datetime = jvm_datetime.toString()
+        if str_datetime.endswith("Z"):
+            str_datetime = str_datetime[:-1] + "+00:00"
+        return datetime.datetime.fromisoformat(str_datetime)
+    
+    @classmethod
+    def from_jvm(cls, jvm_object: Any) -> "Acknowledgement":
+
+        return cls(
+            read=cls.parse_datetime(jvm_object.getRead()),
+            published=cls.parse_datetime(jvm_object.getPublished()),
+            received=cls.parse_datetime(jvm_object.getReceived()),
         )
