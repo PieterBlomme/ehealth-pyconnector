@@ -62,13 +62,13 @@ class EHBoxService:
         logger.info(f"Name: {givenname} {surname}, SSIN {ssin}, NIHII {nihii}, quality {quality}")
         self.config_validator.setProperty("ehbox.application.name", "Sophia")
     
-    def get_messages(self, token: str) -> list[Message]:
+    def get_messages(self, token: str, inbox: Optional[str] = "INBOX") -> list[Message]:
         self.set_configuration_from_token(token)
 
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.session.ServiceFactory.getEhealthBoxServiceV3()
 
         request_builder = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.builders.impl.RequestBuilderImpl()
-        request = request_builder.createAllEhboxesMessagesListRequest("INBOX")
+        request = request_builder.createAllEhboxesMessagesListRequest(inbox)
 
         allEhboxesMessagesList = service.getAllEhboxesMessagesList(request).getMessages()
         logger.info(f"Received {len(allEhboxesMessagesList)} messages")
@@ -96,6 +96,29 @@ class EHBoxService:
 
         inboxMessage = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.builders.BuilderFactory.getConsultationMessageBuilder().buildFullMessage(fullMessage)
         return FullMessage.from_jvm(inboxMessage)
+    
+    def move_message(
+            self, 
+            token: str,
+            message_id: str,
+            source_inbox: str,
+            destination_inbox: str,
+        ):
+        boxId = self.set_configuration_from_token(token)
+
+        service = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.session.ServiceFactory.getEhealthBoxServiceV3()
+
+        request_builder = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.builders.impl.RequestBuilderImpl()
+
+        request = request_builder.createMoveMessageRequest(
+            source_inbox,
+            destination_inbox,
+            self.EHEALTH_JVM.createMessageIdList(message_id)
+        )
+
+        response = service.moveMessage(request)
+        logger.info(f"Message moved, response: {response.getStatus().getCode()}"
+    )
 
     def send_message(
             self, 

@@ -62,6 +62,11 @@ def test_get_message(sts_service, token, ehbox_service):
         with open("downloaded_message.pdf", "wb") as f:
             f.write(message.content)
 
+
+def test_move_message(sts_service, token, ehbox_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        message = ehbox_service.move_message(token, "3000000044085", "INBOX", "BININBOX")
+
 def test_send_message(sts_service, token, ehbox_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         with open("/home/pieter/Downloads//dummy_1.pdf", "rb") as f:
