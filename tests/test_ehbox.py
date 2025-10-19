@@ -55,6 +55,13 @@ def test_get_acknowledgement(sts_service, token, ehbox_service):
         for ack in acks:
             logger.info(ack)
 
+def test_get_message(sts_service, token, ehbox_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        message = ehbox_service.get_full_message(token, "3000000044090")
+        logger.info(message)
+        with open("downloaded_message.pdf", "wb") as f:
+            f.write(message.content)
+
 def test_send_message(sts_service, token, ehbox_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
         with open("/home/pieter/Downloads//dummy_1.pdf", "rb") as f:

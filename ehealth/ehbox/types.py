@@ -102,3 +102,36 @@ class Acknowledgement(BaseModel):
             published=cls.parse_datetime(jvm_object.getPublished()),
             received=cls.parse_datetime(jvm_object.getReceived()),
         )
+
+class Annex(BaseModel):
+    title: str
+    content: bytes
+    mime_type: str
+
+    @classmethod
+    def from_jvm(cls, jvm_object: Any) -> "Annex":
+        return cls(
+            title=jvm_object.getTitle(),
+            content=jvm_object.getContent(),
+            mime_type=jvm_object.getMimeType(),
+        )
+    
+class FullMessage(Annex):
+    is_encrypted: bool
+    is_important: bool
+    annexes: list[Annex]
+
+    @classmethod
+    def from_jvm(cls, jvm_object: Any) -> "FullMessage":
+        annexes = [
+            Annex.from_jvm(annex)
+            for annex in jvm_object.getAnnexList()
+        ]
+        return cls(
+            title=jvm_object.getDocumentTitle(),
+            content=jvm_object.getBody().getContent(),
+            mime_type=jvm_object.getOriginal().getMessage().getContentContext().getContent().getDocument().getMimeType(),
+            is_encrypted=jvm_object.isEncrypted(),
+            is_important=jvm_object.isImportant(),
+            annexes=annexes,
+        )

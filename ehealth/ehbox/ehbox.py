@@ -7,7 +7,7 @@ from xsdata.formats.dataclass.parsers.config import ParserConfig
 from xsdata_pydantic.bindings import XmlParser
 from ehealth.utils.callbacks import storage_callback, CallMetadata, CallType, ServiceType
 
-from .types import Message, Acknowledgement
+from .types import Message, Acknowledgement, FullMessage
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +83,19 @@ class EHBoxService:
         request = request_builder.createGetMessageAcknowledgmentsStatusRequest(message_id)
         response = service.getMessageAcknowledgmentsStatusRequest(request)
         return [Acknowledgement.from_jvm(ack) for ack in response.getAcknowledgmentsStatus().getRows()]
+    
+    def get_full_message(self, token: str, message_id: str) -> Message:
+        self.set_configuration_from_token(token)
+
+        service = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.session.ServiceFactory.getEhealthBoxServiceV3()
+
+        request_builder = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.builders.impl.RequestBuilderImpl()
+        request = request_builder.createGetFullMessageRequest(message_id)
+
+        fullMessage = service.getFullMessage(request)
+
+        inboxMessage = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.builders.BuilderFactory.getConsultationMessageBuilder().buildFullMessage(fullMessage)
+        return FullMessage.from_jvm(inboxMessage)
 
     def send_message(
             self, 
