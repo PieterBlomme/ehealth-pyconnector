@@ -104,7 +104,7 @@ class EHBoxService:
             source_inbox: str,
             destination_inbox: str,
         ):
-        boxId = self.set_configuration_from_token(token)
+        self.set_configuration_from_token(token)
 
         service = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.session.ServiceFactory.getEhealthBoxServiceV3()
 
@@ -120,6 +120,26 @@ class EHBoxService:
         logger.info(f"Message moved, response: {response.getStatus().getCode()}"
     )
 
+    def delete_message(
+            self, 
+            token: str,
+            message_id: str,
+            inbox: Optional[str] = "SENTBOX",
+        ):
+        self.set_configuration_from_token(token)
+
+        service = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.session.ServiceFactory.getEhealthBoxServiceV3()
+
+        request_builder = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.builders.impl.RequestBuilderImpl()
+    
+        request = request_builder.createDeleteMessageRequest(
+            inbox,
+            self.EHEALTH_JVM.createMessageIdList(message_id)
+        )
+
+        response = service.deleteMessage(request)
+        logger.info(f"Message deleted, response: {response.getStatus().getCode()}"
+    )
     def send_message(
             self, 
             token: str,

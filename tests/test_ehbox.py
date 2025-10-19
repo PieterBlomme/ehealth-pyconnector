@@ -65,7 +65,11 @@ def test_get_message(sts_service, token, ehbox_service):
 
 def test_move_message(sts_service, token, ehbox_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        message = ehbox_service.move_message(token, "3000000044085", "INBOX", "BININBOX")
+        ehbox_service.move_message(token, "3000000044085", "INBOX", "BININBOX")
+
+def test_delete_message(sts_service, token, ehbox_service):
+    with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
+        ehbox_service.delete_message(token, "3000000044090")
 
 def test_send_message(sts_service, token, ehbox_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
