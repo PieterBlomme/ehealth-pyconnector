@@ -1,6 +1,7 @@
 import py4j.GatewayServer;
 import java.util.*;
 
+import javax.management.Query;
 
 import java.io.*;
 import org.w3c.dom.Element;
@@ -68,9 +69,18 @@ import be.ehealth.technicalconnector.exception.TechnicalConnectorExceptionValues
 import be.ehealth.business.mycarenetcommons.v3.mapper.RoutingMapper;
 import be.fgov.ehealth.mycarenet.commons.core.v3.CommonInputType;
 import be.ehealth.business.mycarenetdomaincommons.domain.CommonInput;
+import be.ehealth.businessconnector.ehbox.api.domain.DocumentMessage;
+import be.fgov.ehealth.ehbox.consultation.protocol.v3.Message;
+import sophia.ehealth.SophiaSTSService;
+import sophia.ehealth.SophiaCrypto;
+
 
 public class JavaGateway {
   private static final Logger LOG = LoggerFactory.getLogger(JavaGateway.class);
+
+  public SophiaSTSService getSophiaSTSService(){
+    return new SophiaSTSService();
+  }
 
   public static void main(String[] args) throws Exception {
     JavaGateway app = new JavaGateway();
@@ -119,6 +129,10 @@ public class JavaGateway {
 
   public Query newQuery(){
     return new Query();
+  }
+
+  public DocumentMessage<Message> createEmptyDocumentMessage(){
+    return new DocumentMessage<Message>();
   }
 
   public ConfirmResponse confirmMessage(OrigineType origin, GenAsyncService service, byte[] hashValue) throws URISyntaxException, TechnicalConnectorException, GenAsyncBusinessConnectorException, SessionManagementException {
