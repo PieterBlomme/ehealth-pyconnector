@@ -355,8 +355,16 @@ class EFactService:
         msgQuery.getMessageNames().add("HCPVWR")
 
         tackQuery = self.EHEALTH_JVM.newQuery()
-        tackQuery.setInclude(True)
-        tackQuery.setMax(100)
+        logger.info(f"dir() tackQuery: {dir(tackQuery)}")
+        logger.info(f"type() tackQuery: {type(tackQuery)}")
+        try:
+            tackQuery.setInclude(True)
+        except Exception as e:
+            logger.exception(e)
+        try:
+            tackQuery.setMax(100)
+        except Exception as e:
+            logger.exception(e)
         logger.info("Send of the get request")
 
         PROJECT_NAME = "invoicing"
