@@ -1,8 +1,6 @@
 import py4j.GatewayServer;
 import java.util.*;
 
-import javax.management.Query;
-
 import java.io.*;
 import org.w3c.dom.Element;
 import oasis.names.tc.saml._2_0.protocol.AttributeQuery;
@@ -127,8 +125,8 @@ public class JavaGateway {
     return new MsgQuery();
   }
 
-  public Query newQuery(){
-    return new Query();
+  public be.cin.nip.async.generic.Query newQuery(){
+    return new be.cin.nip.async.generic.Query();
   }
 
   public DocumentMessage<Message> createEmptyDocumentMessage(){
