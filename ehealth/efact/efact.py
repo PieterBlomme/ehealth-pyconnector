@@ -348,6 +348,9 @@ class EFactService:
         self.set_configuration_from_token(token)
         logger.info("Creation of the get")
         msgQuery = self.EHEALTH_JVM.newMsgQuery()
+        logger.info(f"dir() msgQuery: {dir(msgQuery)}")
+        logger.info(f"type() msgQuery: {type(msgQuery)}")
+        logger.info(f"toString msgQuery: {msgQuery.toString()}")
         msgQuery.setInclude(True)
         msgQuery.setMax(200)
         msgQuery.getMessageNames().add("HCPFAC")
@@ -357,6 +360,7 @@ class EFactService:
         tackQuery = self.EHEALTH_JVM.newQuery()
         logger.info(f"dir() tackQuery: {dir(tackQuery)}")
         logger.info(f"type() tackQuery: {type(tackQuery)}")
+        logger.info(f"toString tackQuery: {tackQuery.toString()}")
         try:
             tackQuery.setInclude(True)
         except Exception as e:
