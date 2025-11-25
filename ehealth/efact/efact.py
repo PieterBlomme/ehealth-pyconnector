@@ -348,9 +348,6 @@ class EFactService:
         self.set_configuration_from_token(token)
         logger.info("Creation of the get")
         msgQuery = self.EHEALTH_JVM.newMsgQuery()
-        logger.info(f"dir() msgQuery: {dir(msgQuery)}")
-        logger.info(f"type() msgQuery: {type(msgQuery)}")
-        logger.info(f"toString msgQuery: {msgQuery.toString()}")
         msgQuery.setInclude(True)
         msgQuery.setMax(200)
         msgQuery.getMessageNames().add("HCPFAC")
@@ -358,17 +355,8 @@ class EFactService:
         msgQuery.getMessageNames().add("HCPVWR")
 
         tackQuery = self.EHEALTH_JVM.newQuery()
-        logger.info(f"dir() tackQuery: {dir(tackQuery)}")
-        logger.info(f"type() tackQuery: {type(tackQuery)}")
-        logger.info(f"toString tackQuery: {tackQuery.toString()}")
-        try:
-            tackQuery.setInclude(True)
-        except Exception as e:
-            logger.exception(e)
-        try:
-            tackQuery.setMax(100)
-        except Exception as e:
-            logger.exception(e)
+        tackQuery.setInclude(True)
+        tackQuery.setMax(100)
         logger.info("Send of the get request")
 
         PROJECT_NAME = "invoicing"
