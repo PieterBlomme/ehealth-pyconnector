@@ -1208,9 +1208,13 @@ class Record50(BaseModel):
                     value = record[24:32]
                 elif key_numeric == "07":
                     key = "Nummer ziekenfonds van aansluiting"
+                    value = record[32:35]
                 elif key_numeric == "08":
                     key = "identificatie rechthebbende"
                     value = record[35:47]
+                elif key_numeric == "15":
+                    key = "identificatie verstrekker"
+                    value = record[67:79]
                 elif key_numeric == "19":
                     key = "Teken en bedrag verzekeringstegemoetkoming"
                     value = record[87:99]
