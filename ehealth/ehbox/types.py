@@ -133,7 +133,7 @@ class FullMessage(Annex):
             annexes = []
         return cls(
             title=jvm_object.getDocumentTitle() if jvm_object.isHasAnnex() else None,
-            content=jvm_object.getBody().getContent() if jvm_object.isHasAnnex() else b,
+            content=jvm_object.getBody().getContent() if jvm_object.isHasAnnex() else None,
             mime_type=jvm_object.getOriginal().getMessage().getContentContext().getContent().getDocument().getMimeType(),
             is_encrypted=jvm_object.isEncrypted(),
             is_important=jvm_object.isImportant(),
