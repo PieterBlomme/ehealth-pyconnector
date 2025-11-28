@@ -190,13 +190,6 @@ class EHBoxService:
         message.setUsePublicationReceipt(use_publication_receipt)
         message.setUseReadReceipt(use_read_receipt)
 
-        # annex = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.api.domain.Document()
-        # annex.setFilename(filename)
-        # annex.setMimeType(mimeType)
-        # annex.setContent(content)
-        # annex.setTitle("ANNEX")
-        # message.getAnnexList().add(annex)
-
         logger.info(message)
 
         request = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.v3.builders.BuilderFactory.getSendMessageBuilder().buildMessage(message)

@@ -123,6 +123,12 @@ class FullMessage(Annex):
 
     @classmethod
     def from_jvm(cls, jvm_object: Any) -> "FullMessage":
+        logging.info(f"Type of jvm_object: {type(jvm_object)}")
+        logging.info(f"Dir of jvm_object: {dir(jvm_object)}")
+        
+        # Get the mime type
+        mime_type = jvm_object.getOriginal().getMessage().getContentContext().getContent().getDocument().getMimeType()
+        logging.info(f"Mime type: {mime_type}")
         annexes = [
             Annex.from_jvm(annex)
             for annex in jvm_object.getAnnexList()
@@ -130,7 +136,7 @@ class FullMessage(Annex):
         return cls(
             title=jvm_object.getDocumentTitle(),
             content=jvm_object.getBody().getContent(),
-            mime_type=jvm_object.getOriginal().getMessage().getContentContext().getContent().getDocument().getMimeType(),
+            mime_type=mime_type,
             is_encrypted=jvm_object.isEncrypted(),
             is_important=jvm_object.isImportant(),
             annexes=annexes,
