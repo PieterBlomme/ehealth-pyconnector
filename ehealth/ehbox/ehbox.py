@@ -151,6 +151,9 @@ class EHBoxService:
             quality_type: Literal["DOCTOR_NIHII", "DOCTOR_SSIN", "PHYSIOTHERAPIST_NIHII", "PHYSIOTHERAPY_SSIN"],
             is_important: Optional[bool] = False,
             is_encrypted: Optional[bool] = True,
+            use_received_receipt: Optional[bool] = False,
+            use_publication_receipt: Optional[bool] = False,
+            use_read_receipt: Optional[bool] = False,
         ):
         self.set_configuration_from_token(token)
 
@@ -183,9 +186,9 @@ class EHBoxService:
         message.getDestinations().add(destination)
         message.setEncrypted(is_encrypted)
         message.setImportant(is_important)
-        message.setUseReceivedReceipt(True)
-        message.setUsePublicationReceipt(True)
-        message.setUseReadReceipt(True)
+        message.setUseReceivedReceipt(use_received_receipt)
+        message.setUsePublicationReceipt(use_publication_receipt)
+        message.setUseReadReceipt(use_read_receipt)
 
         # annex = self.GATEWAY.jvm.be.ehealth.businessconnector.ehbox.api.domain.Document()
         # annex.setFilename(filename)
