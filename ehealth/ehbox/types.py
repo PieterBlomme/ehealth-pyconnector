@@ -126,9 +126,18 @@ class FullMessage(Annex):
         logging.info(f"Type of jvm_object: {type(jvm_object)}")
         logging.info(f"Dir of jvm_object: {dir(jvm_object)}")
         
+        logger.info(jvm_object.isHasAnnex())
+        original = jvm_object.getOriginal()
+        logger.info(f"Type of original: {type(original)}")
+        logger.info(f"Dir of original: {dir(original)}")
+        message = original.getMessage()
+        logger.info(f"Type of message: {type(message)}")
+        logger.info(f"Dir of message: {dir(message)}")
+        logger.info(message.toString())
+        
         # Get the mime type
         mime_type = jvm_object.getOriginal().getMessage().getContentContext().getContent().getDocument().getMimeType()
-        logging.info(f"Mime type: {mime_type}")
+        
         annexes = [
             Annex.from_jvm(annex)
             for annex in jvm_object.getAnnexList()
@@ -136,7 +145,7 @@ class FullMessage(Annex):
         return cls(
             title=jvm_object.getDocumentTitle(),
             content=jvm_object.getBody().getContent(),
-            mime_type=mime_type,
+            mime_type=jvm_object.getOriginal().getMessage().getContentContext().getContent().getDocument().getMimeType(),
             is_encrypted=jvm_object.isEncrypted(),
             is_important=jvm_object.isImportant(),
             annexes=annexes,
