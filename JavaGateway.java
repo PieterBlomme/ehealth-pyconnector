@@ -248,7 +248,10 @@ public class JavaGateway {
       request.setDetail(BlobMapper.mapBlobTypefromBlob(blob));
       (new AgreementXmlValidatorImpl()).validate(request);
    }
-
+  
+    public String[] createMessageIdList(String messageId) {
+      return new String[] { messageId };
+    }
   }
 
 }
