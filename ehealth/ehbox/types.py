@@ -104,8 +104,8 @@ class Acknowledgement(BaseModel):
         )
 
 class Annex(BaseModel):
-    title: str
-    content: bytes
+    title: Optional[str]
+    content: Optional[bytes]
     mime_type: str
 
     @classmethod
@@ -132,8 +132,8 @@ class FullMessage(Annex):
         else:
             annexes = []
         return cls(
-            title=jvm_object.getDocumentTitle(),
-            content=jvm_object.getBody().getContent(),
+            title=jvm_object.getDocumentTitle() if jvm_object.isHasAnnex() else None,
+            content=jvm_object.getBody().getContent() if jvm_object.isHasAnnex() else None,
             mime_type=jvm_object.getOriginal().getMessage().getContentContext().getContent().getDocument().getMimeType(),
             is_encrypted=jvm_object.isEncrypted(),
             is_important=jvm_object.isImportant(),
