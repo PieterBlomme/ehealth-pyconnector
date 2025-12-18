@@ -107,10 +107,34 @@ public class SophiaCrypto extends AbstractEndToEndCrypto {
    private static UnsealedData processUnsealResult(CryptoResult<be.fgov.ehealth.etee.crypto.decrypt.UnsealedData> result) throws TechnicalConnectorException {
       LOG.info("Unsealing with SophiaCrypto, result: {}", result);
       // NOTE: always ignore warnings
-      UnsealedData unsealedData = null;
+      
       if (result.hasErrors()) {
-         LOG.error("Unsealed message is invalid.");
-         throw new UnsealConnectorException(UnsealConnectorExceptionValues.ERROR_CRYPTO, result, new Object[]{"Data can't be unsealed."});
+         // Check if we should ignore these errors based on configuration
+         Set<be.fgov.ehealth.etee.crypto.status.NotificationError> errors = new HashSet<>();
+         errors.addAll(result.getErrors());
+         
+         List<String> ignoredErrors = config.getMatchingProperties(PROP_LIST_IGNORED_NOTIFICATION_ERRORS_ROOTKEY);
+         if (ignoredErrors == null) {
+            ignoredErrors = new ArrayList<>();
+         }
+         
+         // Remove ignored errors from the set
+         for (String ignoredError : ignoredErrors) {
+            try {
+               errors.remove(be.fgov.ehealth.etee.crypto.status.NotificationError.valueOf(ignoredError.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+               LOG.warn("Unknown notification error in configuration: {}", ignoredError);
+            }
+         }
+         
+         // If there are still errors after removing ignored ones, throw exception
+         if (!errors.isEmpty()) {
+            LOG.error("Unsealed message has non-ignored errors: {}", errors);
+            throw new UnsealConnectorException(UnsealConnectorExceptionValues.ERROR_CRYPTO, result, new Object[]{"Data can't be unsealed."});
+         } else {
+            LOG.warn("Unsealing succeeded with ignored errors: {}", result.getErrors());
+            return map((be.fgov.ehealth.etee.crypto.decrypt.UnsealedData)result.getData());
+         }
       } else {
          return map((be.fgov.ehealth.etee.crypto.decrypt.UnsealedData)result.getData());
       }
