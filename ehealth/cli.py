@@ -48,6 +48,20 @@ def generate_properties_file():
     with open(f"{PACKAGE_ROOT}/be.ehealth.technicalconnector.properties") as f:
         props = f.read()
     props = props.replace("KEYSTORE_DIR=/P12/${environment}/", f"KEYSTORE_DIR={PACKAGE_ROOT}/java/config/P12/${{environment}}/")
+    
+    print("Fixing PROP_LIST_IGNORED_NOTIFICATION_ERRORS_ROOTKEY to")
+    extras = """
+    ##############################################################################################################################################
+# Configuration for ignoring specific crypto notification errors                                                                             #
+#                                                                                                                                            #
+# TEMPORARY WORKAROUND: Ignoring OUTER_CERTIFICATE_CHAIN_NOT_TRUSTED error from MyCareNet                                                   #
+# This is a violation of eHealth policy but necessary due to certificate issues on MyCareNet's side                                         #
+# Remove this configuration once MyCareNet resolves their certificate chain issue                                                           #
+#                                                                                                                                            #
+##############################################################################################################################################
+be.ehealth.technicalconnector.service.etee.cryptoimpl.ignored_notification_errors.OUTER_CERTIFICATE_CHAIN_NOT_TRUSTED=OUTER_CERTIFICATE_CHAIN_NOT_TRUSTED
+    """
+    props += extras
     with open(f"{PACKAGE_ROOT}/be.ehealth.technicalconnector.properties", "w") as f:
         f.write(props)
 
