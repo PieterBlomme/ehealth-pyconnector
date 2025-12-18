@@ -51,13 +51,13 @@ def test_get_messages(sts_service, token, ehbox_service):
 
 def test_get_acknowledgement(sts_service, token, ehbox_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        acks = ehbox_service.get_message_acknowledgement(token, "3000000044090")
+        acks = ehbox_service.get_message_acknowledgement(token, "3000000131685")
         for ack in acks:
             logger.info(ack)
 
 def test_get_message(sts_service, token, ehbox_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        message = ehbox_service.get_full_message(token, "3000000044090")
+        message = ehbox_service.get_full_message(token, "3000000131692")
         logger.info(message)
         with open("downloaded_message.pdf", "wb") as f:
             f.write(message.content)
@@ -65,11 +65,11 @@ def test_get_message(sts_service, token, ehbox_service):
 
 def test_move_message(sts_service, token, ehbox_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        ehbox_service.move_message(token, "3000000044085", "INBOX", "BININBOX")
+        ehbox_service.move_message(token, "3000000131692", "INBOX", "BININBOX")
 
 def test_delete_message(sts_service, token, ehbox_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:
-        ehbox_service.delete_message(token, "3000000044090")
+        ehbox_service.delete_message(token, "3000000131692", inbox="BININBOX")
 
 def test_send_message(sts_service, token, ehbox_service):
     with sts_service.session(token, KEYSTORE_PATH, KEYSTORE_PASSPHRASE) as session:

@@ -120,22 +120,27 @@ class FullMessage(Annex):
     is_encrypted: bool
     is_important: bool
     annexes: list[Annex]
+    sender: Any
+    message_info: Any
 
     @classmethod
     def from_jvm(cls, jvm_object: Any) -> "FullMessage":
         
-        if jvm_object.isHasAnnex():
+        try:
             annexes = [
                 Annex.from_jvm(annex)
                 for annex in jvm_object.getAnnexList()
             ]
-        else:
+        except Exception:
             annexes = []
+            
         return cls(
-            title=jvm_object.getDocumentTitle() if jvm_object.isHasAnnex() else None,
-            content=jvm_object.getBody().getContent() if jvm_object.isHasAnnex() else None,
+            title=jvm_object.getDocumentTitle(),
+            content=jvm_object.getBody().getContent(),
             mime_type=jvm_object.getOriginal().getMessage().getContentContext().getContent().getDocument().getMimeType(),
             is_encrypted=jvm_object.isEncrypted(),
             is_important=jvm_object.isImportant(),
             annexes=annexes,
+            sender=Sender.from_jvm(jvm_object.getOriginal().getSender()),
+            message_info=MessageInfo.from_jvm(jvm_object.getOriginal().getMessageInfo()),
         )

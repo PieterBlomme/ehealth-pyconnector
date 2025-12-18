@@ -179,6 +179,12 @@ public class JavaGateway {
           return ConnectorIOUtils.getResourceAsString(path).getBytes(StandardCharsets.UTF_8);
   }
 
+  public ArrayList<String> createMessageIdList(String messageId){
+    ArrayList<String> messageIdList = new ArrayList<String>();
+    messageIdList.add(messageId);
+    return messageIdList;
+  } 
+
   public <T> ConfirmResponse confirmEAgreementMessage(String ref) throws ConnectorException {
       Confirm confirm = new Confirm();
       String projectName = "eagreement";
@@ -248,10 +254,6 @@ public class JavaGateway {
       request.setDetail(BlobMapper.mapBlobTypefromBlob(blob));
       (new AgreementXmlValidatorImpl()).validate(request);
    }
-  
-    public String[] createMessageIdList(String messageId) {
-      return new String[] { messageId };
-    }
   }
 
 }
