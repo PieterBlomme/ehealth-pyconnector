@@ -14,3 +14,19 @@ class TechnicalEAttestException(Exception):
     ):
         super().__init__(message)
         self.retryable = retryable
+
+class UnsealException(Exception):
+    """Exception raised when decryption fails during handleSendAttestionResponse.
+    
+    This exception captures the encrypted request and response data to allow
+    for later retry via decrypt_send_attestation_response.
+    """
+    def __init__(
+        self,
+        message: str,
+        encrypted_response: str,
+        encrypted_request: str
+    ):
+        super().__init__(message)
+        self.encrypted_response = encrypted_response
+        self.encrypted_request = encrypted_request

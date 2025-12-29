@@ -12,7 +12,7 @@ from xsdata_pydantic.bindings import XmlSerializer, XmlParser
 from pydantic import BaseModel
 from ehealth.utils.callbacks import storage_callback, CallMetadata, CallType, ServiceType
 import tempfile
-from .exceptions import EAttestRetryableAttempt, TechnicalEAttestException
+from .exceptions import EAttestRetryableAttempt, TechnicalEAttestException, UnsealException
 from .send_transaction_request import (
     SendTransactionRequest,
     Request,
@@ -394,7 +394,16 @@ class EAttestV3Service:
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(sendAttestationResponse)
         callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
 
-        attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilder)
+        try:
+            attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilder)
+        except Exception as e:
+            # Decryption/unsealing failed - raise UnsealException with encrypted data for later retry
+            raise UnsealException(
+                message=str(e),
+                encrypted_response=raw_response,
+                encrypted_request=raw_request
+            )
+        
         # self.verify_result(attestResponse)
         response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
         callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
@@ -411,7 +420,36 @@ class EAttestV3Service:
             soap_request=raw_request,
             soap_response=raw_response
         )
-    
+
+    def decrypt_send_attestation_response(self, encrypted_request: str, encrypted_response: str, input_reference_str: str, ssin: str) -> str:
+        """Given an encrypted request and and an encrypted response (as str), return a decrypted response (str)"""
+        sendAttestationResponse = self.GATEWAY.decryptEAttest(encrypted_response)
+        logger.info(sendAttestationResponse)
+        with tempfile.NamedTemporaryFile(suffix='.xml', mode='w', delete=False) as tmp:
+            tmp.write(encrypted_request)
+
+        inputReference = self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.InputReference(input_reference_str)
+        send_attest_request = (self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.SendAttestationRequestInput
+                               .builder()
+                               .isTest(self.is_test)
+                               .inputReference(inputReference)
+                               .kmehrmessage(self.EHEALTH_JVM.getBytesFromFile(tmp.name))
+                                .patientSsin(self.GATEWAY.jvm.be.ehealth.business.mycarenetdomaincommons.domain.Ssin(ssin))
+                                .referenceDate(self.GATEWAY.jvm.java.time.LocalDateTime.now())
+                                .messageVersion("3.0")
+                                .issuer("some issuer")
+                                .commonInputAttributes(self.EHEALTH_JVM.commonInputAttributes(1)) # TODO probably also needs some updates still
+                                .build())  
+        attestBuilder = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.RequestObjectBuilderFactory.getRequestObjectBuilder().buildSendAttestationRequest(
+            send_attest_request
+        )
+        # handleSendAttestionResponse can throw be.ehealth.technicalconnector.exception.UnsealConnectorException
+        # TODO: ensure this throws a proper error.  In these cases we shouldn't retry but ensure we can decrypt
+        attestResponse = self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.attestv3.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder().handleSendAttestionResponse(sendAttestationResponse, attestBuilder)
+        response_string = self.GATEWAY.jvm.java.lang.String(attestResponse.getBusinessResponse(), "UTF-8")
+        print(response_string)
+        return response_string
+
     def send_attestation(self, token: str, input_model: EAttestInputModel,
                          callback_fn: Optional[Callable] = storage_callback):
         timestamp = datetime.datetime.now()
@@ -476,6 +514,8 @@ class EAttestV3Service:
                 meta=meta,
                 callback_fn=callback_fn
                 )
+        except UnsealConnectorException as e:
+            raise e
         except Exception as e:
             retryable = EAttestRetryableAttempt(
                 input_reference_str=input_reference_str,
@@ -488,6 +528,7 @@ class EAttestV3Service:
                 retryable=retryable
             )
     
+  
     def retry_send_attestation(self, token: str, input_model: EAttestRetryableAttempt,
                          callback_fn: Optional[Callable] = storage_callback):
         # increment attempt number
