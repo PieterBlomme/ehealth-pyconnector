@@ -390,7 +390,17 @@ class EAttestV3Service:
         }
         return serializer.render(bundle, ns_map)
     
-    def handle_send_attestation_response(self, attestBuilder: Any, template: str, raw_request: str, sendAttestationResponse: Any, meta: CallMetadata, callback_fn: Optional[Callable] = storage_callback) -> EAttestV3:
+    def handle_send_attestation_response(
+        self, 
+        attestBuilder: Any, 
+        template: str, 
+        raw_request: str, 
+        sendAttestationResponse: Any, 
+        meta: CallMetadata, 
+        input_reference_str: str,
+        ssin: str,
+        callback_fn: Optional[Callable] = storage_callback
+    ) -> EAttestV3:
         raw_response = self.GATEWAY.jvm.be.ehealth.technicalconnector.utils.ConnectorXmlUtils.toString(sendAttestationResponse)
         callback_fn(raw_response, meta.set_call_type(CallType.ENCRYPTED_RESPONSE))
 
@@ -401,7 +411,9 @@ class EAttestV3Service:
             raise UnsealException(
                 message=str(e),
                 encrypted_response=raw_response,
-                encrypted_request=raw_request
+                encrypted_request=raw_request,
+                input_reference_str=input_reference_str,
+                ssin=ssin,
             )
         
         # self.verify_result(attestResponse)
@@ -512,6 +524,8 @@ class EAttestV3Service:
                 raw_request=raw_request,
                 sendAttestationResponse=sendAttestationResponse,
                 meta=meta,
+                input_reference_str=input_reference_str,
+                ssin=ssin,
                 callback_fn=callback_fn
                 )
         except UnsealConnectorException as e:
@@ -584,6 +598,8 @@ class EAttestV3Service:
             raw_request=raw_request,
             sendAttestationResponse=sendAttestationResponse,
             meta=meta,
+            input_reference_str=input_model.input_reference_str,
+            ssin=input_model.ssin,
             callback_fn=callback_fn
             )
 

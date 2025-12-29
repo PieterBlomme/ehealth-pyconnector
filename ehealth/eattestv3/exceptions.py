@@ -25,8 +25,12 @@ class UnsealException(Exception):
         self,
         message: str,
         encrypted_response: str,
-        encrypted_request: str
+        encrypted_request: str,
+        input_reference_str: str,
+        ssin: str,
     ):
         super().__init__(message)
         self.encrypted_response = encrypted_response
         self.encrypted_request = encrypted_request
+        self.input_reference_str = input_reference_str
+        self.ssin = ssin
