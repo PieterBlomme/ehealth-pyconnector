@@ -528,7 +528,7 @@ class EAttestV3Service:
                 ssin=ssin,
                 callback_fn=callback_fn
                 )
-        except UnsealConnectorException as e:
+        except UnsealException as e:
             raise e
         except Exception as e:
             retryable = EAttestRetryableAttempt(
