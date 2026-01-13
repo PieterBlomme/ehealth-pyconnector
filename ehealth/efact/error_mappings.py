@@ -1206,7 +1206,7 @@ ERROR_DICT = {
     "500516": "Datum eerste verrichte verstrekking groter dan datum van facturering (R 20 Z 47), uitgezonderd voor de medische huizen.",
     "500517": "Voor forfaitair honorarium voor verpleegkundige zorgen is datum eerste verrichte verstrekking verschillend van andere data eerste verrichte verstrekking die deel uitmaken van het blok.",
     "500518": "Datum van de hoofdingreep 2 dagen of meer groter dan de datum van opname en R 50 Z 54b = 1.",
-    "500522": "C.G.1 - C.G.2 (R 20 Z 27) op datum eerste verrichte verstrekking verschillend van C.G.1 - C.G.2 in bestand V.I.",
+    "500522": "C.G.1 - C.G.2 (R 20 Z 27) op datum eerste verrichte verstrekking verschillend van C.G.1 - C.G.2 in bestand V.I.  Haal Gegevens van het Lid opnieuw op.",
     "500523": "C.G.1 - C.G.2 (R 20 Z 27) op datum eerste verrichte verstrekking verschillend van C.G.1 - C.G.2 op het Carenet bericht 721900 of 730000 (of doc van opname).",
     "500524": "C.G.1 - C.G.2 (R 20  Z  27) op datum eerste verrichte verstrekking verschillend van C.G.1 - C.G.2 in bestand V.I. of op het Carenet bericht 721900 of 730000 (of doc van opname) en geen invloed op facturering.",
     "500525": "Datum prestatie buiten de periode van betalingsverbintenis.",
