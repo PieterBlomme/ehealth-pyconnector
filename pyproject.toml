@@ -20,8 +20,9 @@ sentry-sdk = "^2"
 xsdata-pydantic = "22.10"
 pydantic = "^1"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^7.3.1"
+ty = "^0.0.14"
 
 [tool.poetry.scripts]
 download-packages = "ehealth.cli:download_packages"

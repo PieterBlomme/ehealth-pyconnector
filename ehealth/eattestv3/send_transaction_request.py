@@ -263,7 +263,7 @@ class Standard:
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
     cd: Optional[Cd] = field(
-        default=Cd(s="CD-STANDARD", sv="1.35", value="20210120"),
+        default_factory=lambda: Cd(s="CD-STANDARD", sv="1.35", value="20210120"),
         metadata={
             "type": "Element",
             "required": True,
@@ -331,7 +331,7 @@ class Cost:
         }
     )
     unit: Optional[Unit] = field(
-        default=Unit(cd=Cd(s="CD-CURRENCY", sv="1.0", value="EUR")),
+        default_factory=lambda: Unit(cd=Cd(s="CD-CURRENCY", sv="1.0", value="EUR")),
         metadata={
             "type": "Element",
             "required": True,
@@ -455,7 +455,7 @@ class Header:
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
     standard: Optional[Standard] = field(
-        default=Standard(),
+        default_factory=Standard,
         metadata={
             "type": "Element",
             "required": True,

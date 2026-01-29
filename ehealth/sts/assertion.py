@@ -199,7 +199,7 @@ class Reference:
         }
     )
     digest_method: Optional[DigestMethod] = field(
-        default=DigestMethod("http://www.w3.org/2001/04/xmlenc#sha256"),
+        default_factory=lambda: DigestMethod("http://www.w3.org/2001/04/xmlenc#sha256"),
         metadata={
             "name": "DigestMethod",
             "type": "Element",
@@ -242,14 +242,14 @@ class SignedInfo:
         namespace = "http://www.w3.org/2000/09/xmldsig#"
 
     canonicalization_method: Optional[CanonicalizationMethod] = field(
-        default=CanonicalizationMethod("http://www.w3.org/2001/10/xml-exc-c14n#"),
+        default_factory=lambda: CanonicalizationMethod("http://www.w3.org/2001/10/xml-exc-c14n#"),
         metadata={
             "name": "CanonicalizationMethod",
             "type": "Element",
         }
     )
     signature_method: Optional[SignatureMethod] = field(
-        default=SignatureMethod("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"),
+        default_factory=lambda: SignatureMethod("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"),
         metadata={
             "name": "SignatureMethod",
             "type": "Element",

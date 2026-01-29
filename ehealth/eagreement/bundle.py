@@ -599,7 +599,7 @@ class MetaType:
         namespace = "http://hl7.org/fhir"
 
     profile: Optional[Profile] = field(
-        default=Profile("http://www.mycarenet.be/standards/fhir/StructureDefinition/be-eagreementdemand"),
+        default_factory=lambda: Profile("http://www.mycarenet.be/standards/fhir/StructureDefinition/be-eagreementdemand"),
         metadata={
             "type": "Element",
         }
@@ -866,13 +866,13 @@ class Destination:
         namespace = "http://hl7.org/fhir"
 
     name: Optional[Name] = field(
-        default=Name(value="MyCareNet"),
+        default_factory=lambda: Name(value="MyCareNet"),
         metadata={
             "type": "Element",
         }
     )
     endpoint: Optional[Endpoint] = field(
-        default=Endpoint("MyCareNet"),
+        default_factory=lambda: Endpoint("MyCareNet"),
         metadata={
             "type": "Element",
         }
@@ -1498,7 +1498,7 @@ class MessageHeader:
         }
     )
     destination: Optional[Destination] = field(
-        default=Destination(),
+        default_factory=Destination,
         metadata={
             "type": "Element",
         }
@@ -1873,13 +1873,13 @@ class Bundle:
         }
     )
     meta: Optional[MetaType] = field(
-        default=MetaType(),
+        default_factory=MetaType,
         metadata={
             "type": "Element",
         }
     )
     type: Optional[TypeType] = field(
-        default=TypeType(),
+        default_factory=TypeType,
         metadata={
             "type": "Element",
         }
