@@ -66,13 +66,13 @@ be.ehealth.technicalconnector.service.etee.cryptoimpl.ignored_notification_error
         f.write(props)
 
 def move_py4j_jar():
-    print("Moving py4j0.10.9.7.jar")
+    print("Moving py4j0.10.9.9.jar")
     ENV_PATH = subprocess.getoutput("poetry env info --path")
     if not ENV_PATH:
         ENV_PATH = "/usr/local"
-    PY4J_PATH = f"{ENV_PATH}/share/py4j/py4j0.10.9.7.jar"
+    PY4J_PATH = f"{ENV_PATH}/share/py4j/py4j0.10.9.9.jar"
     print(PY4J_PATH)
-    shutil.copy(PY4J_PATH, "./java/lib/py4j0.10.9.7.jar")
+    shutil.copy(PY4J_PATH, "./java/lib/py4j0.10.9.9.jar")
 
 @click.command()
 def compile_bridge():
