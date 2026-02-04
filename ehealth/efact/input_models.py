@@ -930,6 +930,9 @@ class Record20(BaseModel):
                 elif key_numeric == "18":
                     key = "nummer ziekenfonds van bestemming"
                     value = record[84:87]
+                elif key_numeric == "27":
+                    key = "code gerechtigde 1+2"
+                    value = record[127:137]
                 elif key_numeric == "99":
                     key = "controlecijfer record"
                     value = record[348:350]
