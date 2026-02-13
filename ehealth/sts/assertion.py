@@ -1,6 +1,4 @@
-from dataclasses import field
-from pydantic import BaseModel, ConfigDict
-from pydantic.dataclasses import dataclass
+from dataclasses import field, dataclass
 from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDateTime
 import uuid
@@ -363,11 +361,10 @@ class AuthenticationStatement:
     )
 
 
-class Assertion(BaseModel):
+@dataclass
+class Assertion:
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:1.0:assertion"
-
-    model_config = ConfigDict(defer_build=True)
 
     assertion_id: Optional[str] = field(
         default=None,
