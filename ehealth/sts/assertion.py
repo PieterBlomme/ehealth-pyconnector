@@ -1,49 +1,13 @@
-from dataclasses import field
-from pydantic.dataclasses import dataclass
+from dataclasses import field, dataclass
 from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDateTime
 import uuid
 import datetime
 
-# Workaround for xsdata-pydantic compatibility with Pydantic v2 dataclasses
-# Patch Python's is_dataclass to recognize Pydantic dataclasses
-# This must be done before any classes are defined
-try:
-    from dataclasses import is_dataclass as _original_is_dataclass
-    
-    def _patched_is_dataclass(obj):
-        # First check with original function
-        if _original_is_dataclass(obj):
-            return True
-        # Check if it's a Pydantic dataclass (has __dataclass_fields__ attribute)
-        # Pydantic v2 dataclasses have this attribute even if is_dataclass() returns False
-        if isinstance(obj, type) and hasattr(obj, '__dataclass_fields__'):
-            return True
-        return False
-    
-    # Monkey-patch dataclasses.is_dataclass
-    import dataclasses
-    dataclasses.is_dataclass = _patched_is_dataclass
-    
-    # Also patch xsdata's compatibility layer if it exists
-    try:
-        from xsdata.formats.dataclass import compat
-        if hasattr(compat, 'DataclassType') and hasattr(compat.DataclassType, 'verify_model'):
-            _original_verify_model = compat.DataclassType.verify_model
-            
-            def _patched_verify_model(self, obj):
-                if _patched_is_dataclass(obj):
-                    return
-                return _original_verify_model(self, obj)
-            
-            compat.DataclassType.verify_model = _patched_verify_model
-    except (ImportError, AttributeError):
-        pass
-except Exception as e:
-    # If patching fails, continue without it
-    import logging
-    logging.getLogger(__name__).debug(f"Could not patch dataclass detection: {e}")
-    pass
+# Note: Using standard Python dataclasses instead of Pydantic dataclasses
+# because xsdata-pydantic doesn't properly recognize Pydantic v2 dataclasses.
+# This is acceptable since these classes are primarily used for XML parsing,
+# not for validation. For validation, use Pydantic BaseModel classes instead.
 
 @dataclass
 class CanonicalizationMethod:
@@ -404,6 +368,8 @@ class AuthenticationStatement:
 
 @dataclass
 class Assertion:
+    # Ensure this class is recognized as a dataclass by xsdata
+    # Pydantic v2 dataclasses have __dataclass_fields__ which should be enough
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:1.0:assertion"
 
