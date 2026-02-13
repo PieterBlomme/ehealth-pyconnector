@@ -23,7 +23,7 @@ class MDAInputModel(BaseModel):
     ssin: Optional[str] = None
     registrationNumber: Optional[str] = None
     mutuality: Optional[str] = None
-    facets=[
+    facets: List[Facet] = [
                 Facet(
                     id="urn:be:cin:nippin:insurability",
                     dimensions=[
