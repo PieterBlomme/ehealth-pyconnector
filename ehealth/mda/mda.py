@@ -4,7 +4,7 @@ import datetime
 import tempfile
 import uuid
 from typing import List, Optional, Tuple, Callable
-from pydantic import BaseModel, root_validator
+from pydantic import BaseModel, model_validator
 from io import StringIO
 from ..sts.assertion import Assertion
 from .attribute_query import AttributeQuery, Issuer, Extensions, Subject, SubjectConfirmation, SubjectConfirmationData, NameId, Facet, Dimension
@@ -39,23 +39,24 @@ class MDAInputModel(BaseModel):
                 )
     ]
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
+    @classmethod
     def check_card_number_omitted(cls, values):
-        ssin = values.get("ssin")
-        registrationNumber = values.get("registrationNumber")
-        mutuality = values.get("mutuality")
-        if ssin is not None:
-            if registrationNumber is not None or mutuality is not None:
-                raise ValueError("If SSIN is given, mutuality and registrationNumber should be None")
-        else:
-            if registrationNumber is None or mutuality is None:
-                raise ValueError("If SSIN is not given, mutuality and registrationNumber should both be provided")
-
+        if isinstance(values, dict):
+            ssin = values.get("ssin")
+            registrationNumber = values.get("registrationNumber")
+            mutuality = values.get("mutuality")
+            if ssin is not None:
+                if registrationNumber is not None or mutuality is not None:
+                    raise ValueError("If SSIN is given, mutuality and registrationNumber should be None")
+            else:
+                if registrationNumber is None or mutuality is None:
+                    raise ValueError("If SSIN is not given, mutuality and registrationNumber should both be provided")
         return values
 
     def __eq__(self, other):
             if other.__class__ is self.__class__:
-                return self.json() == other.json()
+                return self.model_dump_json() == other.model_dump_json()
             return NotImplemented
 
 class AbstractMDAService:

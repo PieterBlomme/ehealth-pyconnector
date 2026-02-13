@@ -1,4 +1,4 @@
-from pydantic import Extra
+from pydantic import ConfigDict
 from dataclasses import field
 from pydantic.dataclasses import dataclass
 from typing import List, Optional
@@ -1169,10 +1169,7 @@ class Bundle:
     )
 
 
-class Config:
-    extra = Extra.forbid
-
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class Response:
     response: Bundle
     transaction_request: str

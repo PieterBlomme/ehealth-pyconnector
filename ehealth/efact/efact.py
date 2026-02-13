@@ -13,8 +13,7 @@ from py4j.protocol import Py4JJavaError
 from .input_models import Record80, Header200, Header300, Footer95, Footer96, ErrorMessage, Header300Refusal, Record10, Record90, Record20, Record50, Record52, Record51, Record91, Record92
 from .input_models_kine import Message200KineNoPractitioner, Message200Kine
 import tempfile
-from pydantic import BaseModel
-from pydantic import Extra
+from pydantic import BaseModel, ConfigDict
 from pydantic.dataclasses import dataclass
 from unidecode import unidecode
 import sentry_sdk
@@ -30,16 +29,13 @@ class Practitioner(BaseModel):
 class TooManyRequestsException(Exception):
     pass
 
-class Config:
-    extra = Extra.forbid
-
 class TACK(BaseModel):
     base64_hash: str
     reference: str
     type: Optional[str] = "Tack"
     value: Optional[bool] = True
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class Message:
     reference: str
     base64_hash: str
@@ -50,7 +46,7 @@ class Message:
     settlements: Optional[List[Union[Record91, Record92]]] = None
     type: Optional[str] = "message"
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class Response:
     inputReference: str
     transaction_request: str
@@ -159,7 +155,7 @@ class EFactService:
             first_name_contact=first_name_contact,
             nummer_derdebetalende=practitioner.nihii,
             nummer_facturerende_instelling=practitioner.nihii,
-            **input_model.dict()
+            **input_model.model_dump()
         )
         for patient_block in message_200.patient_blocks:
             patient_block.nummer_facturerende_instelling = message_200.nummer_facturerende_instelling

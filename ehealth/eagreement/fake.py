@@ -50,7 +50,7 @@ class FakeEAgreementService(AbstractEAgreementService):
         patient_state = self._state.get(input_model.patient.ssin, {})
 
         for model, state, response_string in self.faked:
-            if model == input_model.json() and state == patient_state:
+            if model == input_model.model_dump_json() and state == patient_state:
 
                 response_pydantic = self.convert_response_to_pydantic(response_string, AskResponseBundle)
 
@@ -78,7 +78,7 @@ class FakeEAgreementService(AbstractEAgreementService):
         patient_state = self._state.get(input_model.ssin, {})
 
         for model, state, response_string in self.faked:
-            if model == input_model.json() and state == patient_state:
+            if model == input_model.model_dump_json() and state == patient_state:
 
                 response_pydantic = self.convert_response_to_pydantic(response_string, ConsultResponseBundle)
 

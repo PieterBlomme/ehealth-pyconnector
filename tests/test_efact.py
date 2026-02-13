@@ -387,7 +387,7 @@ def test_input_model(sts_service, token, efact_service):
             first_name_contact=practitioner.givenname,
             nummer_derdebetalende=practitioner.nihii,
             nummer_facturerende_instelling=practitioner.nihii,
-            **input_model.dict()
+            **input_model.model_dump()
         )
 
 
@@ -417,5 +417,5 @@ def test_input_model(sts_service, token, efact_service):
         totaal_supplement=totaal_supplement,
         control_invoice=calculate_invoice_control([dr.nomenclatuur.rjust(7, "0") for dr in message_200.detail_records])
         ).to_record_80()
-        for k, v in record_50.dict().items():
+        for k, v in record_50.model_dump().items():
             logger.info(f"{k}: {v}")

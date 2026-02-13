@@ -37,7 +37,7 @@ class CallMetadata(BaseModel):
     efact_reference: Optional[str] = None
 
     def set_call_type(self, value: CallType):
-        d = self.dict()
+        d = self.model_dump()
         d["call_type"] = value
         return CallMetadata(
             **d
@@ -50,7 +50,7 @@ def storage_callback(
     # This is a dummy implementation
     logger.debug(type(content))
     logger.debug(f"Received content: {content}")
-    logger.debug(f"Received metadata: {meta.json()}")
+    logger.debug(f"Received metadata: {meta.model_dump_json()}")
 
 def file_callback(
     content: str,

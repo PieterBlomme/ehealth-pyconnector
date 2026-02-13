@@ -53,7 +53,7 @@ def ask_agreement_extended(service: EAgreementService, token: str, input_model: 
 
     # store consult call
     store = {
-        "input_model": patient.json(),
+        "input_model": patient.model_dump_json(),
         "state": existing_agreements,
         "response": response.transaction_response
     }
@@ -67,7 +67,7 @@ def ask_agreement_extended(service: EAgreementService, token: str, input_model: 
         )
     
     store = {
-        "input_model": input_model.json(),
+        "input_model": input_model.model_dump_json(),
         "state": existing_agreements,
         "response": response.transaction_response
     }

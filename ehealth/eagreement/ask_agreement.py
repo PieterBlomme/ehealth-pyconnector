@@ -2,7 +2,7 @@ from dataclasses import field
 from pydantic.dataclasses import dataclass
 from typing import List, Optional
 from xsdata.models.datatype import XmlDateTime, XmlDate
-from pydantic import Extra
+from pydantic import ConfigDict
 
 __NAMESPACE__ = "http://hl7.org/fhir"
 
@@ -1302,10 +1302,7 @@ class Bundle:
         }
     )
 
-class Config:
-    extra = Extra.forbid
-
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class Response:
     response: Bundle
     transaction_request: str

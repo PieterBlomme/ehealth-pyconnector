@@ -1641,7 +1641,7 @@ class Record52(BaseModel):
                 if ERROR_DICT.get(e[1:]):
                     e_dict["message"] = ERROR_DICT.get(e[1:])
             
-            if e_dict not in [r.dict() for r in result]:
+            if e_dict not in [r.model_dump() for r in result]:
                 # sometimes duplicate errors
                 result.append(ErrorMessage(**e_dict, num_record=num_record))
         return result

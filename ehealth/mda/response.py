@@ -1,14 +1,11 @@
 from dataclasses import field
-from pydantic import Extra
+from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 from typing import List, Optional, Union
 from xml.etree.ElementTree import QName
 from xsdata.models.datatype import XmlDate, XmlDateTime
 
-class Config:
-    extra = Extra.forbid
-
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class Dimension:
     class Meta:
         namespace = ""
@@ -24,7 +21,7 @@ class Dimension:
     )
 
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class AttributeValue:
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
@@ -41,7 +38,7 @@ class AttributeValue:
     )
 
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class NameId:
     class Meta:
         name = "NameID"
@@ -59,7 +56,7 @@ class NameId:
     )
 
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class SubjectConfirmationData:
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
@@ -80,7 +77,7 @@ class SubjectConfirmationData:
     )
 
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class StatusCode:
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
@@ -100,7 +97,7 @@ class StatusCode:
         }
     )
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class Facet:
     class Meta:
         namespace = "urn:be:cin:nippin:memberdata:saml:extension"
@@ -121,7 +118,7 @@ class Facet:
     )
 
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class Attribute:
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
@@ -142,7 +139,7 @@ class Attribute:
     )
 
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class SubjectConfirmation:
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
@@ -275,7 +272,7 @@ class StatusDetail:
             "namespace": "urn:be:cin:types:v1",
         }
     )
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class Status:
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
@@ -296,7 +293,7 @@ class Status:
         }
     )
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class Advice:
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
@@ -326,7 +323,7 @@ class Advice:
     )
 
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class AttributeStatement:
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
@@ -340,7 +337,7 @@ class AttributeStatement:
     )
 
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class Subject:
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
@@ -361,7 +358,7 @@ class Subject:
     )
 
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class Assertion:
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
@@ -417,7 +414,7 @@ class Assertion:
     )
 
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class Response:
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
@@ -474,7 +471,7 @@ class Response:
         }
     )
 
-@dataclass(config=Config)
+@dataclass(config=ConfigDict(extra='forbid'))
 class MemberData:
     response: Response
     transaction_request: str

@@ -3,7 +3,7 @@ from decimal import Decimal
 from pydantic.dataclasses import dataclass
 from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDate, XmlTime
-from pydantic import Extra
+from pydantic import ConfigDict
 
 
 @dataclass
@@ -837,10 +837,8 @@ class SendTransactionResponse:
         }
     )
 
-@dataclass
+@dataclass(config=ConfigDict(extra='forbid'))
 class EAttestV3:
-    class Config:
-        extra = Extra.forbid
 
     response: SendTransactionResponse
     transaction_request: str
