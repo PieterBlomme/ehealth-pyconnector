@@ -11,32 +11,6 @@ from .assertion import Assertion
 from xsdata_pydantic.bindings import XmlParser
 from xsdata.formats.dataclass.parsers.config import ParserConfig
 
-# Workaround for xsdata-pydantic compatibility with Pydantic v2 dataclasses
-# Patch xsdata's compatibility layer to recognize Pydantic dataclasses
-try:
-    from xsdata.formats.dataclass import compat
-    from dataclasses import is_dataclass as std_is_dataclass
-    
-    # Store original function
-    _original_verify_model = compat.DataclassType.verify_model
-    
-    def _patched_verify_model(self, obj):
-        # Check if it's a standard dataclass
-        if std_is_dataclass(obj):
-            return
-        # Check if it's a Pydantic dataclass (has __dataclass_fields__ attribute)
-        # Pydantic v2 dataclasses have this attribute even if is_dataclass() returns False
-        if hasattr(obj, '__dataclass_fields__'):
-            return
-        # Fall back to original check which will raise the error
-        return _original_verify_model(self, obj)
-    
-    # Apply patch
-    compat.DataclassType.verify_model = _patched_verify_model
-except (ImportError, AttributeError):
-    # If patching fails, continue without it
-    pass
-
 logger = logging.getLogger(__name__)
 
 PHYSIOTHERAPY_DESIGNATORS = [
