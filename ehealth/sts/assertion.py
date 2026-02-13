@@ -1,4 +1,5 @@
-from dataclasses import field, dataclass
+from dataclasses import field
+from pydantic.dataclasses import dataclass
 from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDateTime
 import uuid
