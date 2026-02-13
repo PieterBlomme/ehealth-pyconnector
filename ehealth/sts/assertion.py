@@ -1,4 +1,5 @@
 from dataclasses import field
+from pydantic import BaseModel, Field, ConfigDict
 from pydantic.dataclasses import dataclass
 from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDateTime
@@ -362,70 +363,71 @@ class AuthenticationStatement:
     )
 
 
-@dataclass
-class Assertion:
+class Assertion(BaseModel):
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:1.0:assertion"
 
-    assertion_id: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    assertion_id: Optional[str] = Field(
         default=None,
-        metadata={
+        json_schema_extra={
             "name": "AssertionID",
             "type": "Attribute",
         }
     )
-    issue_instant: Optional[XmlDateTime] = field(
+    issue_instant: Optional[XmlDateTime] = Field(
         default=None,
-        metadata={
+        json_schema_extra={
             "name": "IssueInstant",
             "type": "Attribute",
         }
     )
-    issuer: Optional[str] = field(
+    issuer: Optional[str] = Field(
         default="urn:be:fgov:ehealth:sts:1_0",
-        metadata={
+        json_schema_extra={
             "name": "Issuer",
             "type": "Attribute",
         }
     )
-    major_version: Optional[int] = field(
+    major_version: Optional[int] = Field(
         default=1,
-        metadata={
+        json_schema_extra={
             "name": "MajorVersion",
             "type": "Attribute",
         }
     )
-    minor_version: Optional[int] = field(
+    minor_version: Optional[int] = Field(
         default=1,
-        metadata={
+        json_schema_extra={
             "name": "MinorVersion",
             "type": "Attribute",
         }
     )
-    conditions: Optional[Conditions] = field(
+    conditions: Optional[Conditions] = Field(
         default=None,
-        metadata={
+        json_schema_extra={
             "name": "Conditions",
             "type": "Element",
         }
     )
-    authentication_statement: Optional[AuthenticationStatement] = field(
+    authentication_statement: Optional[AuthenticationStatement] = Field(
         default=None,
-        metadata={
+        json_schema_extra={
             "name": "AuthenticationStatement",
             "type": "Element",
         }
     )
-    attribute_statement: Optional[AttributeStatement] = field(
+    attribute_statement: Optional[AttributeStatement] = Field(
         default=None,
-        metadata={
+        json_schema_extra={
             "name": "AttributeStatement",
             "type": "Element",
         }
     )
-    signature: Optional[Signature] = field(
+    signature: Optional[Signature] = Field(
         default=None,
-        metadata={
+        json_schema_extra={
             "name": "Signature",
             "type": "Element",
             "namespace": "http://www.w3.org/2000/09/xmldsig#",
