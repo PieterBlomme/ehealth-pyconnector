@@ -250,10 +250,9 @@ class MDAService(AbstractMDAService):
             self.GATEWAY.jvm.org.junit.Assert.assertTrue("Errors found in the signature verification",
                   entry.getValue().isValid())
         
-        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         response_string = self.GATEWAY.jvm.java.lang.String(response.getResponse(), "UTF-8")
         callback_fn(response_string, meta.set_call_type(CallType.UNENCRYPTED_RESPONSE))
-        response_pydantic = parser.parse(StringIO(response_string), Response)
+        response_pydantic = self.parse_response(response_string)
         
         return MemberData(
             response=response_pydantic,
@@ -262,3 +261,8 @@ class MDAService(AbstractMDAService):
             soap_request=raw_request,
             soap_response=raw_response
         )
+    
+    @classmethod
+    def parse_response(cls, response: str) -> Response:
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
+        return parser.parse(StringIO(response), Response)

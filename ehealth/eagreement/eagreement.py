@@ -64,11 +64,16 @@ class EAgreementService(AbstractEAgreementService):
     def get_response_builder(self):
         return self.GATEWAY.jvm.be.ehealth.businessconnector.mycarenet.agreement.builders.ResponseObjectBuilderFactory.getResponseObjectBuilder()
 
-    def convert_response_to_pydantic(self, response: any, target_class: Callable):
+    @classmethod
+    def parse_response(cls, response: str, target_class: Callable) -> Any:
         parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
+        return parser.parse(StringIO(response), target_class)
+    
+    
+    def convert_response_to_pydantic(self, response: any, target_class: Callable):
         response_string = self.GATEWAY.jvm.java.lang.String(response.getBusinessResponse(), "UTF-8")
         try:
-            return parser.parse(StringIO(response_string), target_class)  
+            return self.parse_response(response_string, target_class)
         except:
             logger.error(response_string)
             raise

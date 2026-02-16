@@ -1,20 +1,13 @@
-from dataclasses import field, dataclass
+from pydantic import BaseModel, Field
 from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDateTime
 import uuid
 import datetime
-
-# Note: Using standard Python dataclasses instead of Pydantic dataclasses
-# because xsdata-pydantic doesn't properly recognize Pydantic v2 dataclasses.
-# This is acceptable since these classes are primarily used for XML parsing,
-# not for validation. For validation, use Pydantic BaseModel classes instead.
-
-@dataclass
-class CanonicalizationMethod:
+class CanonicalizationMethod(BaseModel):
     class Meta:
         namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    algorithm: Optional[str] = field(
+    algorithm: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Algorithm",
@@ -23,12 +16,11 @@ class CanonicalizationMethod:
     )
 
 
-@dataclass
-class DigestMethod:
+class DigestMethod(BaseModel):
     class Meta:
         namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    algorithm: Optional[str] = field(
+    algorithm: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Algorithm",
@@ -37,12 +29,11 @@ class DigestMethod:
     )
 
 
-@dataclass
-class SignatureMethod:
+class SignatureMethod(BaseModel):
     class Meta:
         namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    algorithm: Optional[str] = field(
+    algorithm: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Algorithm",
@@ -51,12 +42,11 @@ class SignatureMethod:
     )
 
 
-@dataclass
-class Transform:
+class Transform(BaseModel):
     class Meta:
         namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    algorithm: Optional[str] = field(
+    algorithm: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Algorithm",
@@ -65,12 +55,11 @@ class Transform:
     )
 
 
-@dataclass
-class X509Data:
+class X509Data(BaseModel):
     class Meta:
         namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    x509_certificate: Optional[str] = field(
+    x509_certificate: Optional[str] = Field(
         default=None,
         metadata={
             "name": "X509Certificate",
@@ -79,26 +68,25 @@ class X509Data:
     )
 
 
-@dataclass
-class Attribute:
+class Attribute(BaseModel):
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:1.0:assertion"
 
-    attribute_name: Optional[str] = field(
+    attribute_name: Optional[str] = Field(
         default=None,
         metadata={
             "name": "AttributeName",
             "type": "Attribute",
         }
     )
-    attribute_namespace: Optional[str] = field(
+    attribute_namespace: Optional[str] = Field(
         default=None,
         metadata={
             "name": "AttributeNamespace",
             "type": "Attribute",
         }
     )
-    attribute_value: Optional[Union[bool, str]] = field(
+    attribute_value: Optional[Union[bool, str]] = Field(
         default=None,
         metadata={
             "name": "AttributeValue",
@@ -107,19 +95,18 @@ class Attribute:
     )
 
 
-@dataclass
-class Conditions:
+class Conditions(BaseModel):
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:1.0:assertion"
 
-    not_before: Optional[XmlDateTime] = field(
+    not_before: Optional[XmlDateTime] = Field(
         default=None,
         metadata={
             "name": "NotBefore",
             "type": "Attribute",
         }
     )
-    not_on_or_after: Optional[XmlDateTime] = field(
+    not_on_or_after: Optional[XmlDateTime] = Field(
         default=None,
         metadata={
             "name": "NotOnOrAfter",
@@ -128,36 +115,34 @@ class Conditions:
     )
 
 
-@dataclass
-class NameIdentifier:
+class NameIdentifier(BaseModel):
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:1.0:assertion"
 
-    format: Optional[str] = field(
+    format: Optional[str] = Field(
         default="urn:oasis:names:tc:SAML:1.1:nameid-format:X509SubjectName",
         metadata={
             "name": "Format",
             "type": "Attribute",
         }
     )
-    name_qualifier: Optional[str] = field(
+    name_qualifier: Optional[str] = Field(
         default="CN=TEST-ZetesConfidens-eHealth acceptance test-issuing CA 001, SERIALNUMBER=001, O=ZETES SA, C=BE",
         metadata={
             "name": "NameQualifier",
             "type": "Attribute",
         }
     )
-    value: str = field(
+    value: str = Field(
         default=""
     )
 
 
-@dataclass
-class KeyInfo:
+class KeyInfo(BaseModel):
     class Meta:
         namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    x509_data: Optional[X509Data] = field(
+    x509_data: Optional[X509Data] = Field(
         default=None,
         metadata={
             "name": "X509Data",
@@ -166,12 +151,11 @@ class KeyInfo:
     )
 
 
-@dataclass
-class Transforms:
+class Transforms(BaseModel):
     class Meta:
         namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    transform: List[Transform] = field(
+    transform: List[Transform] = Field(
         default_factory=lambda: [
             Transform(algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"), 
             Transform(algorithm="http://www.w3.org/2001/10/xml-exc-c14n#")
@@ -183,33 +167,32 @@ class Transforms:
     )
 
 
-@dataclass
-class Reference:
+class Reference(BaseModel):
     class Meta:
         namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    uri: Optional[str] = field(
+    uri: Optional[str] = Field(
         default=None,
         metadata={
             "name": "URI",
             "type": "Attribute",
         }
     )
-    transforms: Optional[Transforms] = field(
+    transforms: Optional[Transforms] = Field(
         default=None,
         metadata={
             "name": "Transforms",
             "type": "Element",
         }
     )
-    digest_method: Optional[DigestMethod] = field(
-        default_factory=lambda: DigestMethod("http://www.w3.org/2001/04/xmlenc#sha256"),
+    digest_method: Optional[DigestMethod] = Field(
+        default_factory=lambda: DigestMethod(algorithm="http://www.w3.org/2001/04/xmlenc#sha256"),
         metadata={
             "name": "DigestMethod",
             "type": "Element",
         }
     )
-    digest_value: Optional[str] = field(
+    digest_value: Optional[str] = Field(
         default=None,
         metadata={
             "name": "DigestValue",
@@ -218,19 +201,18 @@ class Reference:
     )
 
 
-@dataclass
-class SubjectConfirmation:
+class SubjectConfirmation(BaseModel):
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:1.0:assertion"
 
-    confirmation_method: Optional[str] = field(
+    confirmation_method: Optional[str] = Field(
         default="urn:oasis:names:tc:SAML:1.0:cm:holder-of-key",
         metadata={
             "name": "ConfirmationMethod",
             "type": "Element",
         }
     )
-    key_info: Optional[KeyInfo] = field(
+    key_info: Optional[KeyInfo] = Field(
         default=None,
         metadata={
             "name": "KeyInfo",
@@ -240,26 +222,25 @@ class SubjectConfirmation:
     )
 
 
-@dataclass
-class SignedInfo:
+class SignedInfo(BaseModel):
     class Meta:
         namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    canonicalization_method: Optional[CanonicalizationMethod] = field(
-        default_factory=lambda: CanonicalizationMethod("http://www.w3.org/2001/10/xml-exc-c14n#"),
+    canonicalization_method: Optional[CanonicalizationMethod] = Field(
+        default_factory=lambda: CanonicalizationMethod(algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"),
         metadata={
             "name": "CanonicalizationMethod",
             "type": "Element",
         }
     )
-    signature_method: Optional[SignatureMethod] = field(
-        default_factory=lambda: SignatureMethod("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"),
+    signature_method: Optional[SignatureMethod] = Field(
+        default_factory=lambda: SignatureMethod(algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"),
         metadata={
             "name": "SignatureMethod",
             "type": "Element",
         }
     )
-    reference: Optional[Reference] = field(
+    reference: Optional[Reference] = Field(
         default=None,
         metadata={
             "name": "Reference",
@@ -268,19 +249,18 @@ class SignedInfo:
     )
 
 
-@dataclass
-class Subject:
+class Subject(BaseModel):
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:1.0:assertion"
 
-    name_identifier: Optional[NameIdentifier] = field(
+    name_identifier: Optional[NameIdentifier] = Field(
         default=None,
         metadata={
             "name": "NameIdentifier",
             "type": "Element",
         }
     )
-    subject_confirmation: Optional[SubjectConfirmation] = field(
+    subject_confirmation: Optional[SubjectConfirmation] = Field(
         default=None,
         metadata={
             "name": "SubjectConfirmation",
@@ -289,26 +269,25 @@ class Subject:
     )
 
 
-@dataclass
-class Signature:
+class Signature(BaseModel):
     class Meta:
         namespace = "http://www.w3.org/2000/09/xmldsig#"
 
-    signed_info: Optional[SignedInfo] = field(
+    signed_info: Optional[SignedInfo] = Field(
         default=None,
         metadata={
             "name": "SignedInfo",
             "type": "Element",
         }
     )
-    signature_value: Optional[str] = field(
+    signature_value: Optional[str] = Field(
         default=None,
         metadata={
             "name": "SignatureValue",
             "type": "Element",
         }
     )
-    key_info: Optional[KeyInfo] = field(
+    key_info: Optional[KeyInfo] = Field(
         default=None,
         metadata={
             "name": "KeyInfo",
@@ -317,19 +296,18 @@ class Signature:
     )
 
 
-@dataclass
-class AttributeStatement:
+class AttributeStatement(BaseModel):
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:1.0:assertion"
 
-    subject: Optional[Subject] = field(
+    subject: Optional[Subject] = Field(
         default=None,
         metadata={
             "name": "Subject",
             "type": "Element",
         }
     )
-    attribute: List[Attribute] = field(
+    attribute: List[Attribute] = Field(
         default_factory=list,
         metadata={
             "name": "Attribute",
@@ -338,26 +316,25 @@ class AttributeStatement:
     )
 
 
-@dataclass
-class AuthenticationStatement:
+class AuthenticationStatement(BaseModel):
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:1.0:assertion"
 
-    authentication_instant: Optional[XmlDateTime] = field(
+    authentication_instant: Optional[XmlDateTime] = Field(
         default=None,
         metadata={
             "name": "AuthenticationInstant",
             "type": "Attribute",
         }
     )
-    authentication_method: Optional[str] = field(
+    authentication_method: Optional[str] = Field(
         default="urn:oasis:names:tc:SAML:1.0:am:X509-PKI",
         metadata={
             "name": "AuthenticationMethod",
             "type": "Attribute",
         }
     )
-    subject: Optional[Subject] = field(
+    subject: Optional[Subject] = Field(
         default=None,
         metadata={
             "name": "Subject",
@@ -366,70 +343,71 @@ class AuthenticationStatement:
     )
 
 
-@dataclass
-class Assertion:
-    # Ensure this class is recognized as a dataclass by xsdata
-    # Pydantic v2 dataclasses have __dataclass_fields__ which should be enough
+class Assertion(BaseModel):
+    """
+    Assertion class for SAML 1.0 assertions.
+    Uses Pydantic BaseModel for xsdata-pydantic compatibility with Pydantic v2.
+    """
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:1.0:assertion"
 
-    assertion_id: Optional[str] = field(
+    assertion_id: Optional[str] = Field(
         default=None,
         metadata={
             "name": "AssertionID",
             "type": "Attribute",
         }
     )
-    issue_instant: Optional[XmlDateTime] = field(
+    issue_instant: Optional[XmlDateTime] = Field(
         default=None,
         metadata={
             "name": "IssueInstant",
             "type": "Attribute",
         }
     )
-    issuer: Optional[str] = field(
+    issuer: Optional[str] = Field(
         default="urn:be:fgov:ehealth:sts:1_0",
         metadata={
             "name": "Issuer",
             "type": "Attribute",
         }
     )
-    major_version: Optional[int] = field(
+    major_version: Optional[int] = Field(
         default=1,
         metadata={
             "name": "MajorVersion",
             "type": "Attribute",
         }
     )
-    minor_version: Optional[int] = field(
+    minor_version: Optional[int] = Field(
         default=1,
         metadata={
             "name": "MinorVersion",
             "type": "Attribute",
         }
     )
-    conditions: Optional[Conditions] = field(
+    conditions: Optional[Conditions] = Field(
         default=None,
         metadata={
             "name": "Conditions",
             "type": "Element",
         }
     )
-    authentication_statement: Optional[AuthenticationStatement] = field(
+    authentication_statement: Optional[AuthenticationStatement] = Field(
         default=None,
         metadata={
             "name": "AuthenticationStatement",
             "type": "Element",
         }
     )
-    attribute_statement: Optional[AttributeStatement] = field(
+    attribute_statement: Optional[AttributeStatement] = Field(
         default=None,
         metadata={
             "name": "AttributeStatement",
             "type": "Element",
         }
     )
-    signature: Optional[Signature] = field(
+    signature: Optional[Signature] = Field(
         default=None,
         metadata={
             "name": "Signature",
@@ -527,3 +505,4 @@ class Assertion:
                         )
             )
         )
+

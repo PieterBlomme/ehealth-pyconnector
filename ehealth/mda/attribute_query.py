@@ -1,31 +1,28 @@
-from dataclasses import field
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from xsdata.models.datatype import XmlDateTime
 
 
-@dataclass
-class Dimension:
+class Dimension(BaseModel):
     class Meta:
         namespace = ""
 
-    id: str = field(
+    id: str = Field(
         metadata={
             "type": "Attribute",
         }
     )
-    value: str = field(
+    value: str = Field(
         default=""
     )
 
 
-@dataclass
-class Issuer:
+class Issuer(BaseModel):
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
     value: str
-    format: Optional[str] = field(
+    format: Optional[str] = Field(
         default="urn:be:cin:nippin:nihii11",
         metadata={
             "name": "Format",
@@ -34,14 +31,13 @@ class Issuer:
     )
 
 
-@dataclass
-class NameId:
+class NameId(BaseModel):
     class Meta:
         name = "NameID"
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
     value: str
-    format: Optional[str] = field(
+    format: Optional[str] = Field(
         default="urn:be:fgov:person:ssin",
         metadata={
             "name": "Format",
@@ -50,18 +46,17 @@ class NameId:
     )
 
 
-@dataclass
-class SubjectConfirmationData:
+class SubjectConfirmationData(BaseModel):
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    not_before: XmlDateTime = field(
+    not_before: XmlDateTime = Field(
         metadata={
             "name": "NotBefore",
             "type": "Attribute",
         }
     )
-    not_on_or_after: XmlDateTime = field(
+    not_on_or_after: XmlDateTime = Field(
         metadata={
             "name": "NotOnOrAfter",
             "type": "Attribute",
@@ -69,17 +64,16 @@ class SubjectConfirmationData:
     )
 
 
-@dataclass
-class Facet:
+class Facet(BaseModel):
     class Meta:
         namespace = "urn:be:cin:nippin:memberdata:saml:extension"
 
-    id: str = field(
+    id: str = Field(
         metadata={
             "type": "Attribute",
         }
     )
-    dimensions: List[Dimension] = field(
+    dimensions: List[Dimension] = Field(
         default_factory=list,
         metadata={
             "name": "Dimension",
@@ -89,18 +83,17 @@ class Facet:
     )
 
 
-@dataclass
-class SubjectConfirmation:
+class SubjectConfirmation(BaseModel):
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    subject_confirmation_data: SubjectConfirmationData = field(
+    subject_confirmation_data: SubjectConfirmationData = Field(
         metadata={
             "name": "SubjectConfirmationData",
             "type": "Element",
         }
     )
-    method: Optional[str] = field(
+    method: Optional[str] = Field(
         default="urn:be:cin:nippin:memberIdentification",
         metadata={
             "name": "Method",
@@ -108,18 +101,17 @@ class SubjectConfirmation:
         }
     )
 
-@dataclass
-class Subject:
+class Subject(BaseModel):
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    name_id: NameId = field(
+    name_id: NameId = Field(
         metadata={
             "name": "NameID",
             "type": "Element",
         }
     )
-    subject_confirmation: SubjectConfirmation = field(
+    subject_confirmation: SubjectConfirmation = Field(
         metadata={
             "name": "SubjectConfirmation",
             "type": "Element",
@@ -127,12 +119,11 @@ class Subject:
     )
 
 
-@dataclass
-class Extensions:
+class Extensions(BaseModel):
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
 
-    facets: List[Facet] = field(
+    facets: List[Facet] = Field(
         default_factory=list,
         metadata={
             "name": "Facet",
@@ -140,7 +131,7 @@ class Extensions:
             "namespace": "urn:be:cin:nippin:memberdata:saml:extension",
         }
     )
-    type: Optional[str] = field(
+    type: Optional[str] = Field(
         default="ext:ExtensionsType",
         metadata={
             "type": "Attribute",
@@ -148,45 +139,44 @@ class Extensions:
         }
     )
 
-@dataclass
-class AttributeQuery:
+class AttributeQuery(BaseModel):
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
 
 
-    issue_instant: XmlDateTime = field(
+    issue_instant: XmlDateTime = Field(
         metadata={
             "name": "IssueInstant",
             "type": "Attribute",
         }
     )
-    id: str = field(
+    id: str = Field(
         metadata={
             "name": "ID",
             "type": "Attribute",
         }
     )
-    issuer: Issuer = field(
+    issuer: Issuer = Field(
         metadata={
             "name": "Issuer",
             "type": "Element",
             "namespace": "urn:oasis:names:tc:SAML:2.0:assertion",
         }
     )
-    extensions: Extensions = field(
+    extensions: Extensions = Field(
         metadata={
             "name": "Extensions",
             "type": "Element",
         }
     )
-    subject: Subject = field(
+    subject: Subject = Field(
         metadata={
             "name": "Subject",
             "type": "Element",
             "namespace": "urn:oasis:names:tc:SAML:2.0:assertion",
         }
     )
-    version: Optional[float] = field(
+    version: Optional[float] = Field(
         default=2.0,
         metadata={
             "name": "Version",

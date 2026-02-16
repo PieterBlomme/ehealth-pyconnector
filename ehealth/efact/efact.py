@@ -14,7 +14,6 @@ from .input_models import Record80, Header200, Header300, Footer95, Footer96, Er
 from .input_models_kine import Message200KineNoPractitioner, Message200Kine
 import tempfile
 from pydantic import BaseModel, ConfigDict
-from pydantic.dataclasses import dataclass
 from unidecode import unidecode
 import sentry_sdk
 from ehealth.utils.callbacks import storage_callback, CallMetadata, CallType, ServiceType
@@ -35,8 +34,8 @@ class TACK(BaseModel):
     type: Optional[str] = "Tack"
     value: Optional[bool] = True
 
-@dataclass(config=ConfigDict(extra='forbid'))
-class Message:
+class Message(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     reference: str
     base64_hash: str
     raw: str
@@ -46,8 +45,8 @@ class Message:
     settlements: Optional[List[Union[Record91, Record92]]] = None
     type: Optional[str] = "message"
 
-@dataclass(config=ConfigDict(extra='forbid'))
-class Response:
+class Response(BaseModel):
+    model_config = ConfigDict(extra='forbid')
     inputReference: str
     transaction_request: str
     transaction_response: str

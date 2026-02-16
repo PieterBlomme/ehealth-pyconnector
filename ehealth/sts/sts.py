@@ -1,5 +1,4 @@
 import logging
-import shutil
 from io import StringIO
 from py4j.java_gateway import JavaGateway
 from py4j.protocol import Py4JJavaError
@@ -139,10 +138,14 @@ class STSService(AbstractSTSService):
     def get_serialized_token(self, path: str, pwd: str, ssin: str, quality: str = "physiotherapy") -> str:
         assertion = self.get_token(path, pwd, ssin, quality)
         return self.GATEWAY.jvm.be.ehealth.technicalconnector.service.sts.utils.SAMLConverter.toXMLString(assertion)
+    
+    @classmethod
+    def parse_token(cls, token: str) -> Assertion:
+        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
+        return parser.parse(StringIO(token), Assertion)
 
     def set_configuration_from_token(self, token: str):
-        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
-        token_pydantic = parser.parse(StringIO(token), Assertion)
+        token_pydantic = self.parse_token(token)
         
         ssin = None
         quality = None
