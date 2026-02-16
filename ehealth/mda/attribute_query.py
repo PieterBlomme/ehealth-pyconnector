@@ -1,28 +1,33 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict
+from xsdata_pydantic.fields import field
 from typing import List, Optional
 from xsdata.models.datatype import XmlDateTime
 
 
 class Dimension(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         namespace = ""
 
-    id: str = Field(
+    id: str = field(
         metadata={
             "type": "Attribute",
         }
     )
-    value: str = Field(
+    value: str = field(
         default=""
     )
 
 
 class Issuer(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
     value: str
-    format: Optional[str] = Field(
+    format: Optional[str] = field(
         default="urn:be:cin:nippin:nihii11",
         metadata={
             "name": "Format",
@@ -32,12 +37,14 @@ class Issuer(BaseModel):
 
 
 class NameId(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "NameID"
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
     value: str
-    format: Optional[str] = Field(
+    format: Optional[str] = field(
         default="urn:be:fgov:person:ssin",
         metadata={
             "name": "Format",
@@ -47,16 +54,18 @@ class NameId(BaseModel):
 
 
 class SubjectConfirmationData(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    not_before: XmlDateTime = Field(
+    not_before: XmlDateTime = field(
         metadata={
             "name": "NotBefore",
             "type": "Attribute",
         }
     )
-    not_on_or_after: XmlDateTime = Field(
+    not_on_or_after: XmlDateTime = field(
         metadata={
             "name": "NotOnOrAfter",
             "type": "Attribute",
@@ -65,15 +74,17 @@ class SubjectConfirmationData(BaseModel):
 
 
 class Facet(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         namespace = "urn:be:cin:nippin:memberdata:saml:extension"
 
-    id: str = Field(
+    id: str = field(
         metadata={
             "type": "Attribute",
         }
     )
-    dimensions: List[Dimension] = Field(
+    dimensions: List[Dimension] = field(
         default_factory=list,
         metadata={
             "name": "Dimension",
@@ -84,16 +95,18 @@ class Facet(BaseModel):
 
 
 class SubjectConfirmation(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    subject_confirmation_data: SubjectConfirmationData = Field(
+    subject_confirmation_data: SubjectConfirmationData = field(
         metadata={
             "name": "SubjectConfirmationData",
             "type": "Element",
         }
     )
-    method: Optional[str] = Field(
+    method: Optional[str] = field(
         default="urn:be:cin:nippin:memberIdentification",
         metadata={
             "name": "Method",
@@ -102,16 +115,18 @@ class SubjectConfirmation(BaseModel):
     )
 
 class Subject(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    name_id: NameId = Field(
+    name_id: NameId = field(
         metadata={
             "name": "NameID",
             "type": "Element",
         }
     )
-    subject_confirmation: SubjectConfirmation = Field(
+    subject_confirmation: SubjectConfirmation = field(
         metadata={
             "name": "SubjectConfirmation",
             "type": "Element",
@@ -120,10 +135,12 @@ class Subject(BaseModel):
 
 
 class Extensions(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
 
-    facets: List[Facet] = Field(
+    facets: List[Facet] = field(
         default_factory=list,
         metadata={
             "name": "Facet",
@@ -131,7 +148,7 @@ class Extensions(BaseModel):
             "namespace": "urn:be:cin:nippin:memberdata:saml:extension",
         }
     )
-    type: Optional[str] = Field(
+    type: Optional[str] = field(
         default="ext:ExtensionsType",
         metadata={
             "type": "Attribute",
@@ -140,43 +157,45 @@ class Extensions(BaseModel):
     )
 
 class AttributeQuery(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
 
 
-    issue_instant: XmlDateTime = Field(
+    issue_instant: XmlDateTime = field(
         metadata={
             "name": "IssueInstant",
             "type": "Attribute",
         }
     )
-    id: str = Field(
+    id: str = field(
         metadata={
             "name": "ID",
             "type": "Attribute",
         }
     )
-    issuer: Issuer = Field(
+    issuer: Issuer = field(
         metadata={
             "name": "Issuer",
             "type": "Element",
             "namespace": "urn:oasis:names:tc:SAML:2.0:assertion",
         }
     )
-    extensions: Extensions = Field(
+    extensions: Extensions = field(
         metadata={
             "name": "Extensions",
             "type": "Element",
         }
     )
-    subject: Subject = Field(
+    subject: Subject = field(
         metadata={
             "name": "Subject",
             "type": "Element",
             "namespace": "urn:oasis:names:tc:SAML:2.0:assertion",
         }
     )
-    version: Optional[float] = Field(
+    version: Optional[float] = field(
         default=2.0,
         metadata={
             "name": "Version",
