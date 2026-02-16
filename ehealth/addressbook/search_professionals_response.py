@@ -1,14 +1,17 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict
+from xsdata_pydantic.fields import field
 
 from typing import List, Optional
 from xsdata.models.datatype import XmlDateTime
 
 
 class ProfessionCode(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         namespace = "urn:be:fgov:ehealth:aa:complextype:v1"
 
-    authentic_source: Optional[str] = Field(
+    authentic_source: Optional[str] = field(
         default=None,
         metadata={
             "name": "authenticSource",
@@ -16,14 +19,14 @@ class ProfessionCode(BaseModel):
             "required": True,
         }
     )
-    type: Optional[str] = Field(
+    type: Optional[str] = field(
         default=None,
         metadata={
             "type": "Attribute",
             "required": True,
         }
     )
-    value: str = Field(
+    value: str = field(
         default="",
         metadata={
             "required": True,
@@ -32,10 +35,12 @@ class ProfessionCode(BaseModel):
 
 
 class ProfessionFriendlyName(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         namespace = "urn:be:fgov:ehealth:aa:complextype:v1"
 
-    lang: Optional[str] = Field(
+    lang: Optional[str] = field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -43,7 +48,7 @@ class ProfessionFriendlyName(BaseModel):
             "required": True,
         }
     )
-    value: str = Field(
+    value: str = field(
         default="",
         metadata={
             "required": True,
@@ -52,10 +57,12 @@ class ProfessionFriendlyName(BaseModel):
 
 
 class StatusCode(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         namespace = "urn:be:fgov:ehealth:commons:core:v2"
 
-    value: Optional[str] = Field(
+    value: Optional[str] = field(
         default=None,
         metadata={
             "name": "Value",
@@ -64,7 +71,7 @@ class StatusCode(BaseModel):
         }
     )
 
-    status_code: Optional["StatusCode"] = Field(
+    status_code: Optional["StatusCode"] = field(
         default=None,
         metadata={
             "name": "StatusCode",
@@ -73,10 +80,12 @@ class StatusCode(BaseModel):
     )
     
 class Profession(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         namespace = "urn:be:fgov:ehealth:aa:complextype:v1"
 
-    profession_code: Optional[ProfessionCode] = Field(
+    profession_code: Optional[ProfessionCode] = field(
         default=None,
         metadata={
             "name": "ProfessionCode",
@@ -84,7 +93,7 @@ class Profession(BaseModel):
             "required": True,
         }
     )
-    profession_friendly_name: List[ProfessionFriendlyName] = Field(
+    profession_friendly_name: List[ProfessionFriendlyName] = field(
         default_factory=list,
         metadata={
             "name": "ProfessionFriendlyName",
@@ -92,7 +101,7 @@ class Profession(BaseModel):
             "min_occurs": 1,
         }
     )
-    nihii: Optional[int] = Field(
+    nihii: Optional[int] = field(
         default=None,
         metadata={
             "name": "NIHII",
@@ -102,10 +111,12 @@ class Profession(BaseModel):
 
 
 class Status(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         namespace = "urn:be:fgov:ehealth:commons:core:v2"
 
-    status_code: Optional[StatusCode] = Field(
+    status_code: Optional[StatusCode] = field(
         default=None,
         metadata={
             "name": "StatusCode",
@@ -114,7 +125,7 @@ class Status(BaseModel):
         }
     )
 
-    status_message: Optional[str] = Field(
+    status_message: Optional[str] = field(
         default=None,
         metadata={
             "name": "StatusMessage",
@@ -124,17 +135,19 @@ class Status(BaseModel):
     )
     
 class HealthCareProfessional(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         namespace = "urn:be:fgov:ehealth:aa:complextype:v1"
 
-    ssin: Optional[int] = Field(
+    ssin: Optional[int] = field(
         default=None,
         metadata={
             "name": "SSIN",
             "type": "Element",
         }
     )
-    last_name: Optional[str] = Field(
+    last_name: Optional[str] = field(
         default=None,
         metadata={
             "name": "LastName",
@@ -142,7 +155,7 @@ class HealthCareProfessional(BaseModel):
             "required": True,
         }
     )
-    first_name: Optional[str] = Field(
+    first_name: Optional[str] = field(
         default=None,
         metadata={
             "name": "FirstName",
@@ -150,7 +163,7 @@ class HealthCareProfessional(BaseModel):
             "required": True,
         }
     )
-    middle_names: Optional[str] = Field(
+    middle_names: Optional[str] = field(
         default=None,
         metadata={
             "name": "MiddleNames",
@@ -158,7 +171,7 @@ class HealthCareProfessional(BaseModel):
             "required": True,
         }
     )
-    language: Optional[str] = Field(
+    language: Optional[str] = field(
         default=None,
         metadata={
             "name": "Language",
@@ -166,7 +179,7 @@ class HealthCareProfessional(BaseModel):
             "required": True,
         }
     )
-    gender: Optional[str] = Field(
+    gender: Optional[str] = field(
         default=None,
         metadata={
             "name": "Gender",
@@ -174,7 +187,7 @@ class HealthCareProfessional(BaseModel):
             "required": True,
         }
     )
-    birth_date: Optional[str] = Field(
+    birth_date: Optional[str] = field(
         default=None,
         metadata={
             "name": "BirthDate",
@@ -182,14 +195,14 @@ class HealthCareProfessional(BaseModel):
             "required": True,
         }
     )
-    death_date: Optional[str] = Field(
+    death_date: Optional[str] = field(
         default=None,
         metadata={
             "name": "DeathDate",
             "type": "Element",
         }
     )
-    profession: Optional[Profession] = Field(
+    profession: Optional[Profession] = field(
         default=None,
         metadata={
             "name": "Profession",
@@ -200,10 +213,12 @@ class HealthCareProfessional(BaseModel):
 
 
 class SearchProfessionalsResponse(BaseModel):
+    model_config = ConfigDict(extra='forbid', defer_build=True)
+
     class Meta:
         namespace = "urn:be:fgov:ehealth:addressbook:protocol:v1"
 
-    offset: Optional[int] = Field(
+    offset: Optional[int] = field(
         default=None,
         metadata={
             "name": "Offset",
@@ -211,7 +226,7 @@ class SearchProfessionalsResponse(BaseModel):
             "required": True,
         }
     )
-    max_elements: Optional[int] = Field(
+    max_elements: Optional[int] = field(
         default=None,
         metadata={
             "name": "MaxElements",
@@ -219,7 +234,7 @@ class SearchProfessionalsResponse(BaseModel):
             "required": True,
         }
     )
-    id: Optional[str] = Field(
+    id: Optional[str] = field(
         default=None,
         metadata={
             "name": "Id",
@@ -227,7 +242,7 @@ class SearchProfessionalsResponse(BaseModel):
             "required": True,
         }
     )
-    issue_instant: Optional[XmlDateTime] = Field(
+    issue_instant: Optional[XmlDateTime] = field(
         default=None,
         metadata={
             "name": "IssueInstant",
@@ -235,7 +250,7 @@ class SearchProfessionalsResponse(BaseModel):
             "required": True,
         }
     )
-    status: Optional[Status] = Field(
+    status: Optional[Status] = field(
         default=None,
         metadata={
             "name": "Status",
@@ -244,7 +259,7 @@ class SearchProfessionalsResponse(BaseModel):
             "required": True,
         }
     )
-    health_care_professional: List[HealthCareProfessional] = Field(
+    health_care_professional: List[HealthCareProfessional] = field(
         default_factory=list,
         metadata={
             "name": "HealthCareProfessional",

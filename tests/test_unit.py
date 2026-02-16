@@ -1,10 +1,13 @@
 import pytest
 import json
+import logging
 from pathlib import Path
 from ehealth.sts.sts import STSService
 from ehealth.mda.mda import MDAService
 from ehealth.eagreement.eagreement import EAgreementService
 from ehealth.eagreement.ask_agreement import Bundle as AskResponseBundle
+
+logger = logging.getLogger(__name__)
 
 @pytest.fixture
 def token():
@@ -27,11 +30,14 @@ def eagreement_response():
 def test_parse_token(token):
     assertion = STSService.parse_token(token)
     assert assertion is not None
+    assert assertion.attribute_statement is not None
     
-def test_parse_mda_response(token):
-    response = MDAService.parse_response(token)
+def test_parse_mda_response(mda_response):
+    response = MDAService.parse_response(mda_response)
     assert response is not None
+    assert response.issuer is not None
     
 def test_parse_eagreement_response(eagreement_response):
     response = EAgreementService.parse_response(eagreement_response, AskResponseBundle)
     assert response is not None
+    assert response.timestamp.value is not None

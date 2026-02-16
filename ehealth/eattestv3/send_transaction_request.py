@@ -1,15 +1,18 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict
+from xsdata_pydantic.fields import field
 from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDate, XmlTime
 
 
 
 class Id2(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "id"
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
-    s: Optional[str] = Field(
+    s: Optional[str] = field(
         default="ID-KMEHR",
         metadata={
             "name": "S",
@@ -17,7 +20,7 @@ class Id2(BaseModel):
             "required": True,
         }
     )
-    sv: Optional[str] = Field(
+    sv: Optional[str] = field(
         default="1.0",
         metadata={
             "name": "SV",
@@ -25,7 +28,7 @@ class Id2(BaseModel):
             "required": True,
         }
     )
-    value: str = Field(
+    value: str = field(
         default="",
         metadata={
             "required": True,
@@ -35,11 +38,13 @@ class Id2(BaseModel):
 
 
 class Cd(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "cd"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    s: Optional[str] = Field(
+    s: Optional[str] = field(
         default=None,
         metadata={
             "name": "S",
@@ -47,14 +52,14 @@ class Cd(BaseModel):
             "required": True,
         }
     )
-    sl: Optional[str] = Field(
+    sl: Optional[str] = field(
         default=None,
         metadata={
             "name": "SL",
             "type": "Attribute",
         }
     )
-    sv: Optional[str] = Field(
+    sv: Optional[str] = field(
         default=None,
         metadata={
             "name": "SV",
@@ -62,7 +67,7 @@ class Cd(BaseModel):
             "required": True,
         }
     )
-    value: Union[int, str] = Field(
+    value: Union[int, str] = field(
         default="",
         metadata={
             "required": True,
@@ -72,11 +77,13 @@ class Cd(BaseModel):
 
 
 class Id1(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "id"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    s: Optional[str] = Field(
+    s: Optional[str] = field(
         default=None,
         metadata={
             "name": "S",
@@ -84,7 +91,7 @@ class Id1(BaseModel):
             "required": True,
         }
     )
-    sl: Optional[str] = Field(
+    sl: Optional[str] = field(
         default=None,
         metadata={
             "name": "SL",
@@ -92,7 +99,7 @@ class Id1(BaseModel):
             "required": False,
         }
     )
-    sv: Optional[str] = Field(
+    sv: Optional[str] = field(
         default="1.0",
         metadata={
             "name": "SV",
@@ -100,18 +107,20 @@ class Id1(BaseModel):
             "required": True,
         }
     )
-    value: str = Field(
+    value: str = field(
         default=""
     )
 
 
 
 class Quantity(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "quantity"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    decimal: Optional[int] = Field(
+    decimal: Optional[int] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -122,36 +131,38 @@ class Quantity(BaseModel):
 
 
 class Hcparty(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "hcparty"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    id: List[Id1] = Field(
+    id: List[Id1] = field(
         default_factory=list,
         metadata={
             "type": "Element",
         }
     )
-    cd: Optional[Cd] = Field(
+    cd: Optional[Cd] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    firstname: Optional[str] = Field(
+    firstname: Optional[str] = field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    familyname: Optional[str] = Field(
+    familyname: Optional[str] = field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    name: Optional[str] = Field(
+    name: Optional[str] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -160,11 +171,13 @@ class Hcparty(BaseModel):
 
 
 class Text(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "text"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    l: Optional[str] = Field(
+    l: Optional[str] = field(
         default="en",
         metadata={
             "name": "L",
@@ -172,7 +185,7 @@ class Text(BaseModel):
             "required": True,
         }
     )
-    value: str = Field(
+    value: str = field(
         default="",
         metadata={
             "required": True,
@@ -181,29 +194,31 @@ class Text(BaseModel):
 
 
 class Content(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "content"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    date: Optional[XmlDate] = Field(
+    date: Optional[XmlDate] = field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    cd: Optional[Cd] = Field(
+    cd: Optional[Cd] = field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    id: Optional[Id1] = Field(
+    id: Optional[Id1] = field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    hcparty: Optional[Hcparty] = Field(
+    hcparty: Optional[Hcparty] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -211,7 +226,7 @@ class Content(BaseModel):
             "required": True,
         }
     )
-    text: Optional[Text] = Field(
+    text: Optional[Text] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -220,18 +235,20 @@ class Content(BaseModel):
 
 
 class Insurancymembership(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "insurancymembership"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    id: Optional[Id1] = Field(
+    id: Optional[Id1] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    membership: Optional[str] = Field(
+    membership: Optional[str] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -242,11 +259,13 @@ class Insurancymembership(BaseModel):
 
 
 class Sex(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "sex"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    cd: Optional[Cd] = Field(
+    cd: Optional[Cd] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -257,11 +276,13 @@ class Sex(BaseModel):
 
 
 class Standard(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "standard"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    cd: Optional[Cd] = Field(
+    cd: Optional[Cd] = field(
         default_factory=lambda: Cd(s="CD-STANDARD", sv="1.35", value="20210120"),
         metadata={
             "type": "Element",
@@ -272,11 +293,13 @@ class Standard(BaseModel):
 
 
 class Unit(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "unit"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    cd: Optional[Cd] = Field(
+    cd: Optional[Cd] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -287,11 +310,13 @@ class Unit(BaseModel):
 
 
 class Author2(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "author"
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
-    hcparty: Optional[Hcparty] = Field(
+    hcparty: Optional[Hcparty] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -303,11 +328,13 @@ class Author2(BaseModel):
 
 
 class Author1(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "author"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    hcparty: Optional[Hcparty] = Field(
+    hcparty: Optional[Hcparty] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -318,18 +345,20 @@ class Author1(BaseModel):
 
 
 class Cost(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "cost"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    decimal: Optional[str] = Field(
+    decimal: Optional[str] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    unit: Optional[Unit] = Field(
+    unit: Optional[Unit] = field(
         default_factory=lambda: Unit(cd=Cd(s="CD-CURRENCY", sv="1.0", value="EUR")),
         metadata={
             "type": "Element",
@@ -340,39 +369,41 @@ class Cost(BaseModel):
 
 
 class Patient(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "patient"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    id: Optional[Id1] = Field(
+    id: Optional[Id1] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    firstname: Optional[str] = Field(
+    firstname: Optional[str] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    familyname: Optional[str] = Field(
+    familyname: Optional[str] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    sex: Optional[Sex] = Field(
+    sex: Optional[Sex] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    insurancymembership: Optional[Insurancymembership] = Field(
+    insurancymembership: Optional[Insurancymembership] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -383,11 +414,13 @@ class Patient(BaseModel):
 
 
 class Recipient(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "recipient"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    hcparty: Optional[Hcparty] = Field(
+    hcparty: Optional[Hcparty] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -398,11 +431,13 @@ class Recipient(BaseModel):
 
 
 class Sender(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "sender"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    hcparty: Optional[Hcparty] = Field(
+    hcparty: Optional[Hcparty] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -413,32 +448,34 @@ class Sender(BaseModel):
 
 
 class Request(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "request"
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
-    id: Optional[Id2] = Field(
+    id: Optional[Id2] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    author: Optional[Author2] = Field(
+    author: Optional[Author2] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    date: Optional[XmlDate] = Field(
+    date: Optional[XmlDate] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    time: Optional[XmlTime] = Field(
+    time: Optional[XmlTime] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -449,46 +486,48 @@ class Request(BaseModel):
 
 
 class Header(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "header"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    standard: Optional[Standard] = Field(
+    standard: Optional[Standard] = field(
         default_factory=Standard,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    id: Optional[Id1] = Field(
+    id: Optional[Id1] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    date: Optional[XmlDate] = Field(
+    date: Optional[XmlDate] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    time: Optional[XmlTime] = Field(
+    time: Optional[XmlTime] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    sender: Optional[Sender] = Field(
+    sender: Optional[Sender] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    recipient: Optional[Recipient] = Field(
+    recipient: Optional[Recipient] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -499,37 +538,39 @@ class Header(BaseModel):
 
 
 class Item(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "item"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    id: Optional[Id1] = Field(
+    id: Optional[Id1] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    cd: Optional[Cd] = Field(
+    cd: Optional[Cd] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    content: List[Content] = Field(
+    content: List[Content] = field(
         default_factory=list,
         metadata={
             "type": "Element",
         }
     )
-    quantity: Optional[Quantity] = Field(
+    quantity: Optional[Quantity] = field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    cost: Optional[Cost] = Field(
+    cost: Optional[Cost] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -539,60 +580,62 @@ class Item(BaseModel):
 
 
 class Transaction(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "transaction"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    id: Optional[Id1] = Field(
+    id: Optional[Id1] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    cd: Optional[Cd] = Field(
+    cd: Optional[Cd] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    date: Optional[XmlDate] = Field(
+    date: Optional[XmlDate] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    time: Optional[XmlTime] = Field(
+    time: Optional[XmlTime] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    author: Optional[Author1] = Field(
+    author: Optional[Author1] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    iscomplete: Optional[bool] = Field(
+    iscomplete: Optional[bool] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    isvalidated: Optional[bool] = Field(
+    isvalidated: Optional[bool] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    item: List[Item] = Field(
+    item: List[Item] = field(
         default_factory=list,
         metadata={
             "type": "Element",
@@ -603,25 +646,27 @@ class Transaction(BaseModel):
 
 
 class Folder(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "folder"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    id: Optional[Id1] = Field(
+    id: Optional[Id1] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    patient: Optional[Patient] = Field(
+    patient: Optional[Patient] = field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    transaction: List[Transaction] = Field(
+    transaction: List[Transaction] = field(
         default_factory=list,
         metadata={
             "type": "Element",
@@ -632,11 +677,13 @@ class Folder(BaseModel):
 
 
 class Kmehrmessage(BaseModel):
+    model_config = ConfigDict(defer_build=True)
+
     class Meta:
         name = "kmehrmessage"
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
-    header: Optional[Header] = Field(
+    header: Optional[Header] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -644,7 +691,7 @@ class Kmehrmessage(BaseModel):
             "required": True,
         }
     )
-    folder: Optional[Folder] = Field(
+    folder: Optional[Folder] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -657,7 +704,9 @@ class Kmehrmessage(BaseModel):
 
 class SendTransactionRequest(BaseModel):
 
-    message_protocole_schema_version: Optional[str] = Field(
+    model_config = ConfigDict(defer_build=True)
+
+    message_protocole_schema_version: Optional[str] = field(
         default="1.34",
         metadata={
             "name": "messageProtocoleSchemaVersion",
@@ -665,7 +714,7 @@ class SendTransactionRequest(BaseModel):
             "required": True,
         }
     )
-    request: Optional[Request] = Field(
+    request: Optional[Request] = field(
         default=None,
         metadata={
             "type": "Element",
@@ -673,7 +722,7 @@ class SendTransactionRequest(BaseModel):
             "required": True,
         }
     )
-    kmehrmessage: Optional[Kmehrmessage] = Field(
+    kmehrmessage: Optional[Kmehrmessage] = field(
         default=None,
         metadata={
             "type": "Element",

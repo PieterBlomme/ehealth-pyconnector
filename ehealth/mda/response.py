@@ -1,76 +1,77 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict
+from xsdata_pydantic.fields import field
 from typing import List, Optional, Union
 from xml.etree.ElementTree import QName
 from xsdata.models.datatype import XmlDate, XmlDateTime
 
 class Dimension(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     class Meta:
         namespace = ""
 
-    id: Optional[str] = Field(
+    id: Optional[str] = field(
         default=None,
         metadata={
             "type": "Attribute",
         }
     )
-    value: str = Field(
+    value: str = field(
         default=""
     )
 
 
 class AttributeValue(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    type: Optional[QName] = Field(
+    type: Optional[QName] = field(
         default=None,
         metadata={
             "type": "Attribute",
             "namespace": "http://www.w3.org/2001/XMLSchema-instance",
         }
     )
-    value: Union[str, bool, XmlDate] = Field(
+    value: Union[str, bool, XmlDate] = field(
         default=""
     )
 
 
 class NameId(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     class Meta:
         name = "NameID"
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    format: Optional[str] = Field(
+    format: Optional[str] = field(
         default=None,
         metadata={
             "name": "Format",
             "type": "Attribute",
         }
     )
-    value: Optional[str] = Field(
+    value: Optional[str] = field(
         default=None
     )
 
 
 class SubjectConfirmationData(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    not_before: Optional[XmlDateTime] = Field(
+    not_before: Optional[XmlDateTime] = field(
         default=None,
         metadata={
             "name": "NotBefore",
             "type": "Attribute",
         }
     )
-    not_on_or_after: Optional[XmlDateTime] = Field(
+    not_on_or_after: Optional[XmlDateTime] = field(
         default=None,
         metadata={
             "name": "NotOnOrAfter",
@@ -80,19 +81,19 @@ class SubjectConfirmationData(BaseModel):
 
 
 class StatusCode(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
 
-    value: Optional[str] = Field(
+    value: Optional[str] = field(
         default=None,
         metadata={
             "name": "Value",
             "type": "Attribute",
         }
     )
-    status_code: Optional["StatusCode"] = Field(
+    status_code: Optional["StatusCode"] = field(
         default=None,
         metadata={
             "name": "StatusCode",
@@ -101,18 +102,18 @@ class StatusCode(BaseModel):
     )
 
 class Facet(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     class Meta:
         namespace = "urn:be:cin:nippin:memberdata:saml:extension"
 
-    id: Optional[str] = Field(
+    id: Optional[str] = field(
         default=None,
         metadata={
             "type": "Attribute",
         }
     )
-    dimension: List[Dimension] = Field(
+    dimension: List[Dimension] = field(
         default_factory=list,
         metadata={
             "name": "Dimension",
@@ -123,19 +124,19 @@ class Facet(BaseModel):
 
 
 class Attribute(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    name: Optional[str] = Field(
+    name: Optional[str] = field(
         default=None,
         metadata={
             "name": "Name",
             "type": "Attribute",
         }
     )
-    attribute_value: List[AttributeValue] = Field(
+    attribute_value: List[AttributeValue] = field(
         default_factory=list,
         metadata={
             "name": "AttributeValue",
@@ -145,19 +146,19 @@ class Attribute(BaseModel):
 
 
 class SubjectConfirmation(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    method: Optional[str] = Field(
+    method: Optional[str] = field(
         default=None,
         metadata={
             "name": "Method",
             "type": "Attribute",
         }
     )
-    subject_confirmation_data: Optional[SubjectConfirmationData] = Field(
+    subject_confirmation_data: Optional[SubjectConfirmationData] = field(
         default=None,
         metadata={
             "name": "SubjectConfirmationData",
@@ -166,122 +167,24 @@ class SubjectConfirmation(BaseModel):
     )
 
 class Detail(BaseModel):
-    class Meta:
-        namespace = "urn:be:cin:types:v1"
-
-    detail_code: Optional[str] = Field(
-        default=None,
-        metadata={
-            "name": "DetailCode",
-            "type": "Element",
-        }
-    )
-    detail_source: Optional[str] = Field(
-        default=None,
-        metadata={
-            "name": "DetailSource",
-            "type": "Element",
-        }
-    )
-    location: Optional[str] = Field(
-        default=None,
-        metadata={
-            "name": "Location",
-            "type": "Element",
-        }
-    )
-    message: Optional[str] = Field(
-        default=None,
-        metadata={
-            "name": "Message",
-            "type": "Element",
-        }
-    )
+    model_config = ConfigDict(defer_build=True)
 
 class Details(BaseModel):
-    class Meta:
-        namespace = "urn:be:cin:types:v1"
+    model_config = ConfigDict(defer_build=True)
 
-    detail: List[Detail] = Field(
-        default_factory=list,
-        metadata={
-            "name": "Detail",
-            "type": "Element",
-        }
-    )
-    
 class Fault(BaseModel):
-    class Meta:
-        namespace = ""
+    model_config = ConfigDict(defer_build=True)
 
-    type: Optional[QName] = Field(
-        default=None,
-        metadata={
-            "type": "Attribute",
-            "namespace": "http://www.w3.org/2001/XMLSchema-instance",
-        }
-    )
-    fault_code: Optional[str] = Field(
-        default=None,
-        metadata={
-            "name": "FaultCode",
-            "type": "Element",
-            "namespace": "urn:be:cin:types:v1",
-        }
-    )
-    fault_source: Optional[str] = Field(
-        default=None,
-        metadata={
-            "name": "FaultSource",
-            "type": "Element",
-            "namespace": "urn:be:cin:types:v1",
-        }
-    )
-    message: Optional[object] = Field(
-        default=None,
-        metadata={
-            "name": "Message",
-            "type": "Element",
-            "namespace": "urn:be:cin:types:v1",
-        }
-    )
-    details: Optional[Details] = Field(
-        default=None,
-        metadata={
-            "name": "Details",
-            "type": "Element",
-            "namespace": "urn:be:cin:types:v1",
-        }
-    )
-    
 class StatusDetail(BaseModel):
-    class Meta:
-        namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
+    model_config = ConfigDict(defer_build=True)
 
-    fault: Optional[Fault] = Field(
-        default=None,
-        metadata={
-            "name": "Fault",
-            "type": "Element",
-            "namespace": "",
-        }
-    )
-
-    fault_with_namespace: Optional[Fault] = Field(
-        default=None,
-        metadata={
-            "name": "Fault",
-            "type": "Element",
-            "namespace": "urn:be:cin:types:v1",
-        }
-    )
 class Status(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
 
-    status_code: Optional[StatusCode] = Field(
+    status_code: Optional[StatusCode] = field(
         default=None,
         metadata={
             "name": "StatusCode",
@@ -289,7 +192,7 @@ class Status(BaseModel):
         }
     )
     
-    status_detail: Optional[StatusDetail] = Field(
+    status_detail: Optional[StatusDetail] = field(
         default=None,
         metadata={
             "name": "StatusDetail",
@@ -298,19 +201,19 @@ class Status(BaseModel):
     )
 
 class Advice(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    type: Optional[QName] = Field(
+    type: Optional[QName] = field(
         default=None,
         metadata={
             "type": "Attribute",
             "namespace": "http://www.w3.org/2001/XMLSchema-instance",
         }
     )
-    assertion_type: Optional[str] = Field(
+    assertion_type: Optional[str] = field(
         default=None,
         metadata={
             "name": "AssertionType",
@@ -318,7 +221,7 @@ class Advice(BaseModel):
             "namespace": "urn:be:cin:nippin:memberdata:saml:extension",
         }
     )
-    facet: List[Facet] = Field(
+    facet: List[Facet] = field(
         default_factory=list,
         metadata={
             "name": "Facet",
@@ -329,12 +232,12 @@ class Advice(BaseModel):
 
 
 class AttributeStatement(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    attribute: List[Attribute] = Field(
+    attribute: List[Attribute] = field(
         default_factory=list,
         metadata={
             "name": "Attribute",
@@ -344,19 +247,19 @@ class AttributeStatement(BaseModel):
 
 
 class Subject(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    name_id: Optional[NameId] = Field(
+    name_id: Optional[NameId] = field(
         default=None,
         metadata={
             "name": "NameID",
             "type": "Element",
         }
     )
-    subject_confirmation: Optional[SubjectConfirmation] = Field(
+    subject_confirmation: Optional[SubjectConfirmation] = field(
         default=None,
         metadata={
             "name": "SubjectConfirmation",
@@ -366,54 +269,54 @@ class Subject(BaseModel):
 
 
 class Assertion(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    id: Optional[str] = Field(
+    id: Optional[str] = field(
         default=None,
         metadata={
             "name": "ID",
             "type": "Attribute",
         }
     )
-    issue_instant: Optional[XmlDateTime] = Field(
+    issue_instant: Optional[XmlDateTime] = field(
         default=None,
         metadata={
             "name": "IssueInstant",
             "type": "Attribute",
         }
     )
-    version: Optional[float] = Field(
+    version: Optional[float] = field(
         default=None,
         metadata={
             "name": "Version",
             "type": "Attribute",
         }
     )
-    issuer: Optional[str] = Field(
+    issuer: Optional[str] = field(
         default=None,
         metadata={
             "name": "Issuer",
             "type": "Element",
         }
     )
-    subject: Optional[Subject] = Field(
+    subject: Optional[Subject] = field(
         default=None,
         metadata={
             "name": "Subject",
             "type": "Element",
         }
     )
-    advice: Optional[Advice] = Field(
+    advice: Optional[Advice] = field(
         default=None,
         metadata={
             "name": "Advice",
             "type": "Element",
         }
     )
-    attribute_statement: Optional[AttributeStatement] = Field(
+    attribute_statement: Optional[AttributeStatement] = field(
         default=None,
         metadata={
             "name": "AttributeStatement",
@@ -423,40 +326,40 @@ class Assertion(BaseModel):
 
 
 class Response(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
 
-    id: Optional[str] = Field(
+    id: Optional[str] = field(
         default=None,
         metadata={
             "name": "ID",
             "type": "Attribute",
         }
     )
-    in_response_to: Optional[str] = Field(
+    in_response_to: Optional[str] = field(
         default=None,
         metadata={
             "name": "InResponseTo",
             "type": "Attribute",
         }
     )
-    issue_instant: Optional[XmlDateTime] = Field(
+    issue_instant: Optional[XmlDateTime] = field(
         default=None,
         metadata={
             "name": "IssueInstant",
             "type": "Attribute",
         }
     )
-    version: Optional[float] = Field(
+    version: Optional[float] = field(
         default=None,
         metadata={
             "name": "Version",
             "type": "Attribute",
         }
     )
-    issuer: Optional[str] = Field(
+    issuer: Optional[str] = field(
         default=None,
         metadata={
             "name": "Issuer",
@@ -464,14 +367,14 @@ class Response(BaseModel):
             "namespace": "urn:oasis:names:tc:SAML:2.0:assertion",
         }
     )
-    status: Optional[Status] = Field(
+    status: Optional[Status] = field(
         default=None,
         metadata={
             "name": "Status",
             "type": "Element",
         }
     )
-    assertion: List[Assertion] = Field(
+    assertion: List[Assertion] = field(
         default_factory=list,
         metadata={
             "name": "Assertion",
@@ -481,7 +384,7 @@ class Response(BaseModel):
     )
 
 class MemberData(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(extra='forbid', defer_build=True)
     
     response: Response
     transaction_request: str
