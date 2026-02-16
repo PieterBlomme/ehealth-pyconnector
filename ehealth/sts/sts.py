@@ -141,6 +141,7 @@ class STSService(AbstractSTSService):
     
     @classmethod
     def parse_token(cls, token: str) -> Assertion:
+        logger.info(f"Parsing token: {token}")
         parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
         return parser.parse(StringIO(token), Assertion)
 

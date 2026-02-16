@@ -5,7 +5,7 @@ import pytz
 import logging
 from .input_models import Practitioner, Patient as PatientIn, EAttestInputModel, CancelEAttestInputModel, Transaction as TransactionIn
 from io import StringIO
-from ..sts.assertion import Assertion
+from ..sts.sts import STSService
 from xsdata.models.datatype import XmlDate, XmlTime
 from xsdata.formats.dataclass.parsers.config import ParserConfig
 from xsdata_pydantic.bindings import XmlSerializer, XmlParser
@@ -65,10 +65,8 @@ class EAttestV3Service:
         self.config_validator.setProperty("endpoint.eattestv3", "$uddi{uddi:ehealth-fgov-be:business:mycareneteattest:v3}")
 
     def set_configuration_from_token(self, token: str) -> Practitioner:
-        # TODO copy paste from MDA
-        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
-        token_pydantic = parser.parse(StringIO(token), Assertion)
-        
+        token_pydantic = STSService.parse_token(token)
+
         surname = None
         givenname = None
         nihii = None

@@ -3,10 +3,7 @@ from pydantic import BaseModel
 import base64
 import logging
 from typing import Optional, List, Any
-from io import StringIO
-from ..sts.assertion import Assertion
-from xsdata.formats.dataclass.parsers.config import ParserConfig
-from xsdata_pydantic.bindings import XmlParser
+from ..sts.sts import STSService
 from ehealth.efact.efact import Practitioner
 from .models import HealthCareParty, Patient, TherapeuticLink
 
@@ -45,9 +42,7 @@ class TherLinkService:
 
 
     def set_configuration_from_token(self, token: str) -> Practitioner:
-        # TODO copy paste from MDA
-        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
-        token_pydantic = parser.parse(StringIO(token), Assertion)
+        token_pydantic = STSService.parse_token(token)
         
         surname = None
         givenname = None

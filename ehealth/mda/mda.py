@@ -6,7 +6,7 @@ import uuid
 from typing import List, Optional, Tuple, Callable
 from pydantic import BaseModel, model_validator
 from io import StringIO
-from ..sts.assertion import Assertion
+from ..sts.sts import STSService
 from .attribute_query import AttributeQuery, Issuer, Extensions, Subject, SubjectConfirmation, SubjectConfirmationData, NameId, Facet, Dimension
 from . response import MemberData, Response
 from xsdata.models.datatype import XmlDateTime
@@ -77,8 +77,7 @@ class AbstractMDAService:
             self.is_test = False
 
     def set_configuration_from_token(self, token: str):
-        parser = XmlParser(ParserConfig(fail_on_unknown_properties=False))
-        token_pydantic = parser.parse(StringIO(token), Assertion)
+        token_pydantic = STSService.parse_token(token)
         
         surname = None
         givenname = None
