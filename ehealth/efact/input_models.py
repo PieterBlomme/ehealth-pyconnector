@@ -1929,15 +1929,54 @@ class Record90(BaseModel):
                 if key_numeric == "00":
                     continue # TODO?
 
-                if key_numeric == "02":
+                if key_numeric == "01":
+                    key = "recordtype"
+                    value = record[0:2]
+                elif key_numeric == "02":
                     key = "volgnummer record"
                     value = record[2:8]
+                elif key_numeric == "05" or key_numeric == "06":
+                    key = "financieel rekeningnummer a"
+                    value = record[16:28]
+                elif key_numeric == "07":
+                    key = "zendingsnummer"
+                    value = record[32:35]
+                elif key_numeric == "08":
+                    key = "financieel rekeningnummer b"
+                    value = record[35:47]
+                elif key_numeric == "14":
+                    key = "nummer derdebetalende"
+                    value = record[55:67]
+                elif key_numeric == "15":
+                    key = "teken + totaal bedrag financieel rekeningnummer b"
+                    value = record[67:79]
                 elif key_numeric == "19":
                     key = "teken + totaal bedrag financieel rekeningnummer a"
                     value = record[87:99]
+                elif key_numeric == "22":
+                    key = "gefactureerd jaar"
+                    value = record[107:112]
                 elif key_numeric == "23":
                     key = "gefactureerde maand"
                     value = record[112:114]
+                elif key_numeric == "27":
+                    key = "KBO-nummer"
+                    value = record[127:137]
+                elif key_numeric == "28":
+                    key = "referentie instelling"
+                    value = record[137:162]
+                elif key_numeric in ["31", "32", "33", "34"]:
+                    key = "bic financiele rekening a"
+                    value = record[166:177]
+                elif key_numeric in ["36", "37", "38", "39"]:
+                    key = "iban financiele rekening a"
+                    value = record[178:212]
+                elif key_numeric == "43":
+                    key = "bic financiele rekening b"
+                    value = record[218:229]
+                elif key_numeric in ["49", "50", "51", "52"]:
+                    key = "iban financiele rekening b"
+                    value = record[270:304]
                 elif key_numeric == "98":
                     key = "controlecijfer factuur"
                     value = record[346:348]
