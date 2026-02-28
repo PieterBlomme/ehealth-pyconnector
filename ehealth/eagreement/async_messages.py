@@ -705,6 +705,20 @@ class ProductOrService:
     )
 
 @dataclass
+class ReasonText:
+    class Meta:
+        name = "text"
+        namespace = "http://hl7.org/fhir"
+
+    value: Optional[str] = field(
+        default=None,
+        metadata={
+            "type": "Attribute",
+        }
+    )
+
+
+@dataclass
 class Reason:
     class Meta:
         name = "reason"
@@ -717,7 +731,14 @@ class Reason:
             "required": True,
         }
     )
-    
+    text: Optional[ReasonText] = field(
+        default=None,
+        metadata={
+            "type": "Element",
+        }
+    )
+
+
 @dataclass
 class SubType:
     class Meta:
