@@ -166,7 +166,7 @@ class Id1(BaseModel):
             "required": True,
         }
     )
-    value: Optional[int] = field(
+    value: Optional[Union[str, int]] = field(
         default=None,
         metadata={
             "required": True,
@@ -182,7 +182,7 @@ class Quantity(BaseModel):
         name = "quantity"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    decimal: Optional[int] = field(
+    decimal: Optional[Union[float, int]] = field(
         default=None,
         metadata={
             "type": "Element",

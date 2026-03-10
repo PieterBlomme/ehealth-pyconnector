@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from xsdata_pydantic.fields import field
-from typing import List, Optional
+from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDateTime, XmlDate
 
 __NAMESPACE__ = "http://hl7.org/fhir"
@@ -340,7 +340,7 @@ class Value(BaseModel):
         name = "value"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[int] = field(
+    value: Optional[Union[str, int]] = field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -407,7 +407,7 @@ class Identifier(BaseModel):
             "type": "Element",
         }
     )
-    value_attribute: Optional[str] = field(
+    value_attribute: Optional[Union[str, int]] = field(
         default=None,
         metadata={
             "name": "value",
