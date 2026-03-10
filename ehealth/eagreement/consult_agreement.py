@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from pydantic import BaseModel, ConfigDict
 from xsdata_pydantic.fields import field
 from xsdata.models.datatype import XmlDate, XmlDateTime
@@ -450,7 +450,7 @@ class Value(BaseModel):
         name = "value"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[int] = field(
+    value: Optional[Union[str, int]] = field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -520,7 +520,7 @@ class Identifier(BaseModel):
             "type": "Element",
         }
     )
-    value_attribute: Optional[str] = field(
+    value_attribute: Optional[Union[str, int]] = field(
         default=None,
         metadata={
             "name": "value",
@@ -1109,7 +1109,7 @@ class Text(BaseModel):
         name = "text"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    value: Optional[Union[str, int]] = field(
         default=None,
         metadata={
             "type": "Attribute",

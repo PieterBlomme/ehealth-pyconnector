@@ -1038,6 +1038,7 @@ class P(BaseModel):
             "choices": (
                 {
                     "name": "b",
+                    "namespace": "http://www.w3.org/1999/xhtml",
                     "type": str,
                 },
                 {
@@ -1073,7 +1074,7 @@ class Td(BaseModel):
             "choices": (
                 {
                     "name": "span",
-                    "type": Union[Span, str],
+                    "type": Span,
                 },
                 {
                     "type": str,
@@ -1081,10 +1082,12 @@ class Td(BaseModel):
                 },
                 {
                     "name": "b",
+                    "namespace": "http://www.w3.org/1999/xhtml",
                     "type": str,
                 },
                 {
                     "name": "code",
+                    "namespace": "http://www.w3.org/1999/xhtml",
                     "type": str,
                 },
             ),
