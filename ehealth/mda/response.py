@@ -1,77 +1,78 @@
-from dataclasses import field
-from pydantic import Extra
-from pydantic.dataclasses import dataclass
+
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional, Union
 from xml.etree.ElementTree import QName
 from xsdata.models.datatype import XmlDate, XmlDateTime
 
-class Config:
-    extra = Extra.forbid
-
-@dataclass(config=Config)
-class Dimension:
+class Dimension(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = ""
 
-    id: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
         }
     )
-    value: str = field(
+    value: str = Field(
         default=""
     )
 
-
-@dataclass(config=Config)
-class AttributeValue:
+class AttributeValue(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    type: Optional[QName] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    type: Optional[QName] = Field(
         default=None,
         metadata={
             "type": "Attribute",
             "namespace": "http://www.w3.org/2001/XMLSchema-instance",
         }
     )
-    value: Union[str, bool, XmlDate] = field(
+    value: Union[str, bool, XmlDate] = Field(
         default=""
     )
 
-
-@dataclass(config=Config)
-class NameId:
+class NameId(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "NameID"
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    format: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    format: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Format",
             "type": "Attribute",
         }
     )
-    value: Optional[str] = field(
+    value: Optional[str] = Field(
         default=None
     )
 
-
-@dataclass(config=Config)
-class SubjectConfirmationData:
+class SubjectConfirmationData(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    not_before: Optional[XmlDateTime] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    not_before: Optional[XmlDateTime] = Field(
         default=None,
         metadata={
             "name": "NotBefore",
             "type": "Attribute",
         }
     )
-    not_on_or_after: Optional[XmlDateTime] = field(
+    not_on_or_after: Optional[XmlDateTime] = Field(
         default=None,
         metadata={
             "name": "NotOnOrAfter",
@@ -79,20 +80,21 @@ class SubjectConfirmationData:
         }
     )
 
-
-@dataclass(config=Config)
-class StatusCode:
+class StatusCode(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Value",
             "type": "Attribute",
         }
     )
-    status_code: Optional["StatusCode"] = field(
+    status_code: Optional["StatusCode"] = Field(
         default=None,
         metadata={
             "name": "StatusCode",
@@ -100,18 +102,20 @@ class StatusCode:
         }
     )
 
-@dataclass(config=Config)
-class Facet:
+class Facet(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:cin:nippin:memberdata:saml:extension"
 
-    id: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
         }
     )
-    dimension: List[Dimension] = field(
+    dimension: List[Dimension] = Field(
         default_factory=list,
         metadata={
             "name": "Dimension",
@@ -120,20 +124,21 @@ class Facet:
         }
     )
 
-
-@dataclass(config=Config)
-class Attribute:
+class Attribute(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    name: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    name: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Name",
             "type": "Attribute",
         }
     )
-    attribute_value: List[AttributeValue] = field(
+    attribute_value: List[AttributeValue] = Field(
         default=list,
         metadata={
             "name": "AttributeValue",
@@ -141,20 +146,21 @@ class Attribute:
         }
     )
 
-
-@dataclass(config=Config)
-class SubjectConfirmation:
+class SubjectConfirmation(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    method: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    method: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Method",
             "type": "Attribute",
         }
     )
-    subject_confirmation_data: Optional[SubjectConfirmationData] = field(
+    subject_confirmation_data: Optional[SubjectConfirmationData] = Field(
         default=None,
         metadata={
             "name": "SubjectConfirmationData",
@@ -162,45 +168,49 @@ class SubjectConfirmation:
         }
     )
 
-@dataclass
-class Detail:
+class Detail(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:cin:types:v1"
 
-    detail_code: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    detail_code: Optional[str] = Field(
         default=None,
         metadata={
             "name": "DetailCode",
             "type": "Element",
         }
     )
-    detail_source: Optional[str] = field(
+    detail_source: Optional[str] = Field(
         default=None,
         metadata={
             "name": "DetailSource",
             "type": "Element",
         }
     )
-    location: Optional[str] = field(
+    location: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Location",
             "type": "Element",
         }
     )
-    message: Optional[str] = field(
+    message: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Message",
             "type": "Element",
         }
     )
-@dataclass
-class Details:
+class Details(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:cin:types:v1"
 
-    detail: List[Detail] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    detail: List[Detail] = Field(
         default=list,
         metadata={
             "name": "Detail",
@@ -208,19 +218,21 @@ class Details:
         }
     )
     
-@dataclass
-class Fault:
+class Fault(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = ""
 
-    type: Optional[QName] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    type: Optional[QName] = Field(
         default=None,
         metadata={
             "type": "Attribute",
             "namespace": "http://www.w3.org/2001/XMLSchema-instance",
         }
     )
-    fault_code: Optional[str] = field(
+    fault_code: Optional[str] = Field(
         default=None,
         metadata={
             "name": "FaultCode",
@@ -228,7 +240,7 @@ class Fault:
             "namespace": "urn:be:cin:types:v1",
         }
     )
-    fault_source: Optional[str] = field(
+    fault_source: Optional[str] = Field(
         default=None,
         metadata={
             "name": "FaultSource",
@@ -236,7 +248,7 @@ class Fault:
             "namespace": "urn:be:cin:types:v1",
         }
     )
-    message: Optional[object] = field(
+    message: Optional[object] = Field(
         default=None,
         metadata={
             "name": "Message",
@@ -244,7 +256,7 @@ class Fault:
             "namespace": "urn:be:cin:types:v1",
         }
     )
-    details: Optional[Details] = field(
+    details: Optional[Details] = Field(
         default=None,
         metadata={
             "name": "Details",
@@ -253,12 +265,14 @@ class Fault:
         }
     )
     
-@dataclass
-class StatusDetail:
+class StatusDetail(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
 
-    fault: Optional[Fault] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    fault: Optional[Fault] = Field(
         default=None,
         metadata={
             "name": "Fault",
@@ -267,7 +281,7 @@ class StatusDetail:
         }
     )
 
-    fault_with_namespace: Optional[Fault] = field(
+    fault_with_namespace: Optional[Fault] = Field(
         default=None,
         metadata={
             "name": "Fault",
@@ -275,12 +289,14 @@ class StatusDetail:
             "namespace": "urn:be:cin:types:v1",
         }
     )
-@dataclass(config=Config)
-class Status:
+class Status(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
 
-    status_code: Optional[StatusCode] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    status_code: Optional[StatusCode] = Field(
         default=None,
         metadata={
             "name": "StatusCode",
@@ -288,7 +304,7 @@ class Status:
         }
     )
     
-    status_detail: Optional[StatusDetail] = field(
+    status_detail: Optional[StatusDetail] = Field(
         default=None,
         metadata={
             "name": "StatusDetail",
@@ -296,19 +312,21 @@ class Status:
         }
     )
 
-@dataclass(config=Config)
-class Advice:
+class Advice(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    type: Optional[QName] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    type: Optional[QName] = Field(
         default=None,
         metadata={
             "type": "Attribute",
             "namespace": "http://www.w3.org/2001/XMLSchema-instance",
         }
     )
-    assertion_type: Optional[str] = field(
+    assertion_type: Optional[str] = Field(
         default=None,
         metadata={
             "name": "AssertionType",
@@ -316,7 +334,7 @@ class Advice:
             "namespace": "urn:be:cin:nippin:memberdata:saml:extension",
         }
     )
-    facet: List[Facet] = field(
+    facet: List[Facet] = Field(
         default=list,
         metadata={
             "name": "Facet",
@@ -325,13 +343,14 @@ class Advice:
         }
     )
 
-
-@dataclass(config=Config)
-class AttributeStatement:
+class AttributeStatement(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    attribute: List[Attribute] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    attribute: List[Attribute] = Field(
         default_factory=list,
         metadata={
             "name": "Attribute",
@@ -339,20 +358,21 @@ class AttributeStatement:
         }
     )
 
-
-@dataclass(config=Config)
-class Subject:
+class Subject(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    name_id: Optional[NameId] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    name_id: Optional[NameId] = Field(
         default=None,
         metadata={
             "name": "NameID",
             "type": "Element",
         }
     )
-    subject_confirmation: Optional[SubjectConfirmation] = field(
+    subject_confirmation: Optional[SubjectConfirmation] = Field(
         default=None,
         metadata={
             "name": "SubjectConfirmation",
@@ -360,55 +380,56 @@ class Subject:
         }
     )
 
-
-@dataclass(config=Config)
-class Assertion:
+class Assertion(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:assertion"
 
-    id: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[str] = Field(
         default=None,
         metadata={
             "name": "ID",
             "type": "Attribute",
         }
     )
-    issue_instant: Optional[XmlDateTime] = field(
+    issue_instant: Optional[XmlDateTime] = Field(
         default=None,
         metadata={
             "name": "IssueInstant",
             "type": "Attribute",
         }
     )
-    version: Optional[float] = field(
+    version: Optional[Union[str, float]] = Field(
         default=None,
         metadata={
             "name": "Version",
             "type": "Attribute",
         }
     )
-    issuer: Optional[str] = field(
+    issuer: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Issuer",
             "type": "Element",
         }
     )
-    subject: Optional[Subject] = field(
+    subject: Optional[Subject] = Field(
         default=None,
         metadata={
             "name": "Subject",
             "type": "Element",
         }
     )
-    advice: Optional[Advice] = field(
+    advice: Optional[Advice] = Field(
         default=None,
         metadata={
             "name": "Advice",
             "type": "Element",
         }
     )
-    attribute_statement: Optional[AttributeStatement] = field(
+    attribute_statement: Optional[AttributeStatement] = Field(
         default=None,
         metadata={
             "name": "AttributeStatement",
@@ -416,41 +437,42 @@ class Assertion:
         }
     )
 
-
-@dataclass(config=Config)
-class Response:
+class Response(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:oasis:names:tc:SAML:2.0:protocol"
 
-    id: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[str] = Field(
         default=None,
         metadata={
             "name": "ID",
             "type": "Attribute",
         }
     )
-    in_response_to: Optional[str] = field(
+    in_response_to: Optional[str] = Field(
         default=None,
         metadata={
             "name": "InResponseTo",
             "type": "Attribute",
         }
     )
-    issue_instant: Optional[XmlDateTime] = field(
+    issue_instant: Optional[XmlDateTime] = Field(
         default=None,
         metadata={
             "name": "IssueInstant",
             "type": "Attribute",
         }
     )
-    version: Optional[float] = field(
+    version: Optional[Union[str, float]] = Field(
         default=None,
         metadata={
             "name": "Version",
             "type": "Attribute",
         }
     )
-    issuer: Optional[str] = field(
+    issuer: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Issuer",
@@ -458,14 +480,14 @@ class Response:
             "namespace": "urn:oasis:names:tc:SAML:2.0:assertion",
         }
     )
-    status: Optional[Status] = field(
+    status: Optional[Status] = Field(
         default=None,
         metadata={
             "name": "Status",
             "type": "Element",
         }
     )
-    assertion: List[Assertion] = field(
+    assertion: List[Assertion] = Field(
         default_factory=list,
         metadata={
             "name": "Assertion",
@@ -474,8 +496,8 @@ class Response:
         }
     )
 
-@dataclass(config=Config)
-class MemberData:
+class MemberData(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     response: Response
     transaction_request: str
     transaction_response: str

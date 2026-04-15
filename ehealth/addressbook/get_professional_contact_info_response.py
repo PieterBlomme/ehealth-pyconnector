@@ -1,15 +1,16 @@
-from dataclasses import field
-from pydantic.dataclasses import dataclass
-from typing import List, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
+from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDateTime
 
-
-@dataclass
-class Description:
+class Description(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:fgov:ehealth:aa:complextype:v1"
 
-    lang: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    lang: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -17,20 +18,21 @@ class Description:
             "required": True,
         }
     )
-    value: str = field(
+    value: str = Field(
         default="",
         metadata={
             "required": True,
         }
     )
 
-
-@dataclass
-class HealthCareAdditionalInformation:
+class HealthCareAdditionalInformation(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:fgov:ehealth:aa:complextype:v1"
 
-    type: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    type: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Type",
@@ -38,20 +40,21 @@ class HealthCareAdditionalInformation:
             "required": True,
         }
     )
-    value: str = field(
+    value: str = Field(
         default="",
         metadata={
             "required": True,
         }
     )
 
-
-@dataclass
-class ProfessionCode:
+class ProfessionCode(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:fgov:ehealth:aa:complextype:v1"
 
-    authentic_source: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    authentic_source: Optional[str] = Field(
         default=None,
         metadata={
             "name": "authenticSource",
@@ -59,27 +62,28 @@ class ProfessionCode:
             "required": True,
         }
     )
-    type: Optional[str] = field(
+    type: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
             "required": True,
         }
     )
-    value: str = field(
+    value: str = Field(
         default="",
         metadata={
             "required": True,
         }
     )
 
-
-@dataclass
-class ProfessionFriendlyName:
+class ProfessionFriendlyName(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:fgov:ehealth:aa:complextype:v1"
 
-    lang: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    lang: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -87,20 +91,21 @@ class ProfessionFriendlyName:
             "required": True,
         }
     )
-    value: str = field(
+    value: str = Field(
         default="",
         metadata={
             "required": True,
         }
     )
 
-
-@dataclass
-class StatusCode:
+class StatusCode(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:fgov:ehealth:commons:core:v2"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Value",
@@ -109,13 +114,14 @@ class StatusCode:
         }
     )
 
-
-@dataclass
-class Country:
+class Country(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:fgov:ehealth:aa:complextype:v1"
 
-    isocode: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    isocode: Optional[str] = Field(
         default=None,
         metadata={
             "name": "ISOCode",
@@ -123,7 +129,7 @@ class Country:
             "required": True,
         }
     )
-    description: List[Description] = field(
+    description: List[Description] = Field(
         default_factory=list,
         metadata={
             "name": "Description",
@@ -132,13 +138,14 @@ class Country:
         }
     )
 
-
-@dataclass
-class Municipality:
+class Municipality(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:fgov:ehealth:aa:complextype:v1"
 
-    zip_code: Optional[int] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    zip_code: Optional[Union[str, int]] = Field(
         default=None,
         metadata={
             "name": "ZipCode",
@@ -146,7 +153,7 @@ class Municipality:
             "required": True,
         }
     )
-    description: Optional[Description] = field(
+    description: Optional[Description] = Field(
         default=None,
         metadata={
             "name": "Description",
@@ -155,13 +162,14 @@ class Municipality:
         }
     )
 
-
-@dataclass
-class Profession:
+class Profession(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:fgov:ehealth:aa:complextype:v1"
 
-    profession_code: Optional[ProfessionCode] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    profession_code: Optional[ProfessionCode] = Field(
         default=None,
         metadata={
             "name": "ProfessionCode",
@@ -169,7 +177,7 @@ class Profession:
             "required": True,
         }
     )
-    profession_friendly_name: List[ProfessionFriendlyName] = field(
+    profession_friendly_name: List[ProfessionFriendlyName] = Field(
         default_factory=list,
         metadata={
             "name": "ProfessionFriendlyName",
@@ -177,7 +185,7 @@ class Profession:
             "min_occurs": 1,
         }
     )
-    nihii: Optional[str] = field(
+    nihii: Optional[str] = Field(
         default=None,
         metadata={
             "name": "NIHII",
@@ -186,13 +194,14 @@ class Profession:
         }
     )
 
-
-@dataclass
-class Street:
+class Street(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:fgov:ehealth:aa:complextype:v1"
 
-    description: Optional[Description] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    description: Optional[Description] = Field(
         default=None,
         metadata={
             "name": "Description",
@@ -201,13 +210,14 @@ class Street:
         }
     )
 
-
-@dataclass
-class Status:
+class Status(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:fgov:ehealth:commons:core:v2"
 
-    status_code: Optional[StatusCode] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    status_code: Optional[StatusCode] = Field(
         default=None,
         metadata={
             "name": "StatusCode",
@@ -216,13 +226,14 @@ class Status:
         }
     )
 
-
-@dataclass
-class Address:
+class Address(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:fgov:ehealth:aa:complextype:v1"
 
-    type: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    type: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Type",
@@ -230,7 +241,7 @@ class Address:
             "required": True,
         }
     )
-    street: Optional[Street] = field(
+    street: Optional[Street] = Field(
         default=None,
         metadata={
             "name": "Street",
@@ -238,7 +249,7 @@ class Address:
             "required": True,
         }
     )
-    house_number: Optional[str] = field(
+    house_number: Optional[str] = Field(
         default=None,
         metadata={
             "name": "HouseNumber",
@@ -246,7 +257,7 @@ class Address:
             "required": True,
         }
     )
-    municipality: Optional[Municipality] = field(
+    municipality: Optional[Municipality] = Field(
         default=None,
         metadata={
             "name": "Municipality",
@@ -254,7 +265,7 @@ class Address:
             "required": True,
         }
     )
-    country: Optional[Country] = field(
+    country: Optional[Country] = Field(
         default=None,
         metadata={
             "name": "Country",
@@ -263,13 +274,14 @@ class Address:
         }
     )
 
-
-@dataclass
-class ProfessionalInformation:
+class ProfessionalInformation(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:fgov:ehealth:addressbook:core:v1"
 
-    profession: Optional[Profession] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    profession: Optional[Profession] = Field(
         default=None,
         metadata={
             "name": "Profession",
@@ -278,7 +290,7 @@ class ProfessionalInformation:
             "required": True,
         }
     )
-    address: Optional[Address] = field(
+    address: Optional[Address] = Field(
         default=None,
         metadata={
             "name": "Address",
@@ -287,7 +299,7 @@ class ProfessionalInformation:
             "required": True,
         }
     )
-    health_care_additional_information: Optional[HealthCareAdditionalInformation] = field(
+    health_care_additional_information: Optional[HealthCareAdditionalInformation] = Field(
         default=None,
         metadata={
             "name": "HealthCareAdditionalInformation",
@@ -297,13 +309,14 @@ class ProfessionalInformation:
         }
     )
 
-
-@dataclass
-class IndividualContactInformation:
+class IndividualContactInformation(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:fgov:ehealth:addressbook:protocol:v1"
 
-    last_name: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    last_name: Optional[str] = Field(
         default=None,
         metadata={
             "name": "LastName",
@@ -312,7 +325,7 @@ class IndividualContactInformation:
             "required": True,
         }
     )
-    first_name: Optional[str] = field(
+    first_name: Optional[str] = Field(
         default=None,
         metadata={
             "name": "FirstName",
@@ -321,7 +334,7 @@ class IndividualContactInformation:
             "required": True,
         }
     )
-    middle_names: Optional[str] = field(
+    middle_names: Optional[str] = Field(
         default=None,
         metadata={
             "name": "MiddleNames",
@@ -330,7 +343,7 @@ class IndividualContactInformation:
             "required": True,
         }
     )
-    language: Optional[str] = field(
+    language: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Language",
@@ -339,7 +352,7 @@ class IndividualContactInformation:
             "required": True,
         }
     )
-    gender: Optional[str] = field(
+    gender: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Gender",
@@ -348,7 +361,7 @@ class IndividualContactInformation:
             "required": True,
         }
     )
-    birth_date: Optional[str] = field(
+    birth_date: Optional[str] = Field(
         default=None,
         metadata={
             "name": "BirthDate",
@@ -357,7 +370,7 @@ class IndividualContactInformation:
             "required": True,
         }
     )
-    professional_information: Optional[ProfessionalInformation] = field(
+    professional_information: Optional[ProfessionalInformation] = Field(
         default=None,
         metadata={
             "name": "ProfessionalInformation",
@@ -367,13 +380,14 @@ class IndividualContactInformation:
         }
     )
 
-
-@dataclass
-class GetProfessionalContactInfoResponse:
+class GetProfessionalContactInfoResponse(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "urn:be:fgov:ehealth:addressbook:protocol:v1"
 
-    id: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[str] = Field(
         default=None,
         metadata={
             "name": "Id",
@@ -381,7 +395,7 @@ class GetProfessionalContactInfoResponse:
             "required": True,
         }
     )
-    issue_instant: Optional[XmlDateTime] = field(
+    issue_instant: Optional[XmlDateTime] = Field(
         default=None,
         metadata={
             "name": "IssueInstant",
@@ -389,7 +403,7 @@ class GetProfessionalContactInfoResponse:
             "required": True,
         }
     )
-    status: Optional[Status] = field(
+    status: Optional[Status] = Field(
         default=None,
         metadata={
             "name": "Status",
@@ -398,7 +412,7 @@ class GetProfessionalContactInfoResponse:
             "required": True,
         }
     )
-    individual_contact_information: Optional[IndividualContactInformation] = field(
+    individual_contact_information: Optional[IndividualContactInformation] = Field(
         default=None,
         metadata={
             "name": "IndividualContactInformation",
