@@ -1,0 +1,132 @@
+<Bundle xmlns="http://hl7.org/fhir" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<id value="6e3809d2-4af7-57b1-9b64-706f3af59c16"></id>
+<meta><profile value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementdemandreply"></profile>
+</meta>
+<type value="message"></type>
+<timestamp value="2026-02-12T15:23:08+01:00"></timestamp>
+<entry><fullUrl value="urn:uuid:6e3809d2-4af7-57b1-9b64-706f31040301"></fullUrl>
+<resource>
+<MessageHeader>
+<id value="300m20260212162308134032"></id>
+<meta><profile value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-messageheader"></profile>
+</meta>
+<eventCoding><system value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/message-events"></system>
+<code value="claimresponse-decide"></code>
+</eventCoding>
+<destination><endpoint value="urn:uuid:6e3809d2-4af7-57b1-9b64-706f31040302"></endpoint>
+<receiver><reference value="PractitionerRole/55037008527"></reference>
+</receiver>
+</destination>
+<sender><reference value="Organization/300"></reference>
+</sender>
+<source><endpoint value="urn:uuid:6e3809d2-4af7-57b1-9b64-706f31040303"></endpoint>
+</source>
+<focus><reference value="ClaimResponse/ClaimResponse1"></reference>
+</focus>
+</MessageHeader>
+</resource>
+</entry>
+<entry><fullUrl value="urn:uuid:6e3809d2-4af7-57b1-9b64-706f31040303"></fullUrl>
+<resource>
+<Organization>
+<id value="300"></id>
+<meta><profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-organization"></profile>
+</meta>
+<identifier><system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/insurancenumber"></system>
+<value value="300"></value>
+</identifier>
+<name value="UNMS - NVSM"></name>
+</Organization>
+</resource>
+</entry>
+<entry><fullUrl value="urn:uuid:6e3809d2-4af7-57b1-9b64-706f31040302"></fullUrl>
+<resource>
+<PractitionerRole>
+<id value="55037008527"></id>
+<meta><profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitionerrole"></profile>
+</meta>
+<practitioner><reference value="Practitioner/55037008527"></reference>
+</practitioner>
+<code><coding><system value="https://www.ehealth.fgov.be/standards/fhir/core/CodeSystem/cd-hcparty"></system>
+<code value="persphysiotherapist"></code>
+</coding>
+</code>
+</PractitionerRole>
+</resource>
+</entry>
+<entry><fullUrl value="urn:uuid:6e3809d2-4af7-57b1-9b64-706f31040304"></fullUrl>
+<resource>
+<Practitioner>
+<id value="55037008527"></id>
+<meta><profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitioner"></profile>
+</meta>
+<identifier><system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi"></system>
+<value value="55037008527"></value>
+</identifier>
+<name><family value="MICHIEL"></family>
+<given value="PEETERS"></given>
+</name>
+</Practitioner>
+</resource>
+</entry>
+<entry><fullUrl value="urn:uuid:6e3809d2-4af7-57b1-9b64-706f31040306"></fullUrl>
+<resource>
+<Patient>
+<id value="86071918632"></id>
+<meta><profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-patient"></profile>
+</meta>
+<identifier><system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/ssin"></system>
+<value value="86071918632"></value>
+</identifier>
+<name><family value="BROECKX"></family>
+<given value="LEEN"></given>
+</name>
+<gender value="female"></gender>
+</Patient>
+</resource>
+</entry>
+<entry><fullUrl value="urn:uuid:6e3809d2-4af7-57b1-9b64-706f31040308"></fullUrl>
+<resource>
+<ClaimResponse>
+<id value="ClaimResponse1"></id>
+<meta><profile value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementclaimresponse"></profile>
+</meta>
+<status value="active"></status>
+<type><coding><system value="http://terminology.hl7.org/CodeSystem/claim-type"></system>
+<code value="professional"></code>
+</coding>
+</type>
+<subType><coding><system value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/agreement-types"></system>
+<code value="physiotherapy-common-2-and-more"></code>
+</coding>
+</subType>
+<use value="preauthorization"></use>
+<patient><reference value="Patient/86071918632"></reference>
+</patient>
+<created value="2026-02-12T16:23:08+02:00"></created>
+<insurer><reference value="Organization/300"></reference>
+</insurer>
+<requestor><reference value="PractitionerRole/55037008527"></reference>
+</requestor>
+<outcome value="complete"></outcome>
+<preAuthRef value="30420260212001593683"></preAuthRef>
+<addItem><itemSequence value="1"></itemSequence>
+<productOrService><coding><system value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/nihdi-physiotherapy-pathologysituationcode"></system>
+<code value="co-3-2-5-1"></code>
+</coding>
+</productOrService>
+<adjudication><category><coding><system value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/decision-values"></system>
+<code value="refusal"></code>
+</coding>
+</category>
+<reason><coding><system value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/refusal-values"></system>
+<code value="REF_AGREE_ALL_999"></code>
+</coding>
+<text value="geen bijlagen ifv aanvraag/opeenvolging aandoeningen en kopie voorschriften"></text>
+</reason>
+</adjudication>
+</addItem>
+</ClaimResponse>
+</resource>
+</entry>
+</Bundle>
