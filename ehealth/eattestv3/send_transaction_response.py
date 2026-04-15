@@ -1,18 +1,18 @@
-from dataclasses import field
+
 from decimal import Decimal
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel, ConfigDict, Field
 from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDate, XmlTime
-from pydantic import Extra
 
-
-@dataclass
-class Cd:
+class Cd(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "cd"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    s: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    s: Optional[str] = Field(
         default=None,
         metadata={
             "name": "S",
@@ -20,7 +20,7 @@ class Cd:
             "required": True,
         }
     )
-    sv: Optional[float] = field(
+    sv: Optional[Union[str, float]] = Field(
         default=None,
         metadata={
             "name": "SV",
@@ -28,21 +28,22 @@ class Cd:
             "required": True,
         }
     )
-    value: Union[int, str] = field(
+    value: Union[int, str] = Field(
         default="",
         metadata={
             "required": True,
         }
     )
 
-
-@dataclass
-class Description:
+class Description(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "description"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    l: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    l: Optional[str] = Field(
         default=None,
         metadata={
             "name": "L",
@@ -51,13 +52,15 @@ class Description:
         }
     )
     
-@dataclass
-class Error:
+class Error(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "error"
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
-    cd: Optional[Cd] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    cd: Optional[Cd] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -65,7 +68,7 @@ class Error:
             "required": True,
         }
     )
-    description: Optional[Description] = field(
+    description: Optional[Description] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -73,7 +76,7 @@ class Error:
             "required": True,
         }
     )
-    url: Optional[str] = field(
+    url: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -82,20 +85,22 @@ class Error:
         }
     )
 
-@dataclass
-class Acknowledge:
+class Acknowledge(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "acknowledge"
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
-    iscomplete: Optional[bool] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    iscomplete: Optional[bool] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    error: Optional[Error] = field(
+    error: Optional[Error] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -103,14 +108,15 @@ class Acknowledge:
         }
     )
 
-
-@dataclass
-class Id2:
+class Id2(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "id"
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
-    s: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    s: Optional[str] = Field(
         default=None,
         metadata={
             "name": "S",
@@ -118,7 +124,7 @@ class Id2:
             "required": True,
         }
     )
-    sv: Optional[float] = field(
+    sv: Optional[Union[str, float]] = Field(
         default=None,
         metadata={
             "name": "SV",
@@ -126,21 +132,22 @@ class Id2:
             "required": True,
         }
     )
-    value: Optional[str] = field(
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "required": True,
         }
     )
 
-
-@dataclass
-class Cd:
+class Cd(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "cd"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    s: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    s: Optional[str] = Field(
         default=None,
         metadata={
             "name": "S",
@@ -148,14 +155,14 @@ class Cd:
             "required": True,
         }
     )
-    sl: Optional[str] = field(
+    sl: Optional[str] = Field(
         default=None,
         metadata={
             "name": "SL",
             "type": "Attribute",
         }
     )
-    sv: Optional[float] = field(
+    sv: Optional[Union[str, float]] = Field(
         default=None,
         metadata={
             "name": "SV",
@@ -163,21 +170,22 @@ class Cd:
             "required": True,
         }
     )
-    value: Union[int, str] = field(
+    value: Union[int, str] = Field(
         default="",
         metadata={
             "required": True,
         }
     )
 
-
-@dataclass
-class Id1:
+class Id1(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "id"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    s: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    s: Optional[str] = Field(
         default=None,
         metadata={
             "name": "S",
@@ -185,7 +193,7 @@ class Id1:
             "required": True,
         }
     )
-    sv: Optional[float] = field(
+    sv: Optional[Union[str, float]] = Field(
         default=None,
         metadata={
             "name": "SV",
@@ -193,21 +201,22 @@ class Id1:
             "required": True,
         }
     )
-    value: Optional[int] = field(
+    value: Optional[Union[str, int]] = Field(
         default=None,
         metadata={
             "required": True,
         }
     )
 
-
-@dataclass
-class Quantity:
+class Quantity(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "quantity"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    decimal: Optional[int] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    decimal: Optional[Union[str, int]] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -215,14 +224,15 @@ class Quantity:
         }
     )
 
-
-@dataclass
-class Text:
+class Text(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "text"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    l: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    l: Optional[str] = Field(
         default=None,
         metadata={
             "name": "L",
@@ -230,87 +240,91 @@ class Text:
             "required": True,
         }
     )
-    value: str = field(
+    value: str = Field(
         default="",
         metadata={
             "required": True,
         }
     )
 
-
-@dataclass
-class Content:
+class Content(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "content"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    date: Optional[XmlDate] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    date: Optional[XmlDate] = Field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    cd: Optional[Cd] = field(
+    cd: Optional[Cd] = Field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    text: Optional[Text] = field(
+    text: Optional[Text] = Field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
 
-
-@dataclass
-class Hcparty:
+class Hcparty(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "hcparty"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    id: List[Id1] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: List[Id1] = Field(
         default_factory=list,
         metadata={
             "type": "Element",
             "min_occurs": 1,
         }
     )
-    cd: Optional[Cd] = field(
+    cd: Optional[Cd] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    firstname: Optional[str] = field(
+    firstname: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    familyname: Optional[str] = field(
+    familyname: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
 
-@dataclass
-class Insurancymembership:
+class Insurancymembership(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "insurancymembership"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    id: Optional[Id1] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[Id1] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    membership: Optional[str] = field(
+    membership: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -318,13 +332,15 @@ class Insurancymembership:
         }
     )
 
-@dataclass
-class Sex:
+class Sex(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "sex"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    cd: Optional[Cd] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    cd: Optional[Cd] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -332,14 +348,15 @@ class Sex:
         }
     )
 
-
-@dataclass
-class Standard:
+class Standard(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "standard"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    cd: Optional[Cd] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    cd: Optional[Cd] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -347,14 +364,15 @@ class Standard:
         }
     )
 
-
-@dataclass
-class Unit:
+class Unit(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "unit"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    cd: Optional[Cd] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    cd: Optional[Cd] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -362,14 +380,15 @@ class Unit:
         }
     )
 
-
-@dataclass
-class Author2:
+class Author2(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "author"
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
-    hcparty: Optional[Hcparty] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    hcparty: Optional[Hcparty] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -378,14 +397,15 @@ class Author2:
         }
     )
 
-
-@dataclass
-class Author1:
+class Author1(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "author"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    hcparty: Optional[Hcparty] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    hcparty: Optional[Hcparty] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -393,21 +413,22 @@ class Author1:
         }
     )
 
-
-@dataclass
-class Cost:
+class Cost(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "cost"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    decimal: Optional[float] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    decimal: Optional[Union[str, float]] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    unit: Optional[Unit] = field(
+    unit: Optional[Unit] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -415,42 +436,43 @@ class Cost:
         }
     )
 
-
-@dataclass
-class Patient:
+class Patient(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "patient"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    id: Optional[Id1] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[Id1] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    firstname: Optional[str] = field(
+    firstname: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    familyname: Optional[str] = field(
+    familyname: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    sex: Optional[Sex] = field(
+    sex: Optional[Sex] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    insurancymembership: Optional[Insurancymembership] = field(
+    insurancymembership: Optional[Insurancymembership] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -458,13 +480,15 @@ class Patient:
         }
     )
 
-@dataclass
-class Recipient:
+class Recipient(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "recipient"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    hcparty: Optional[Hcparty] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    hcparty: Optional[Hcparty] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -472,14 +496,15 @@ class Recipient:
         }
     )
 
-
-@dataclass
-class Sender:
+class Sender(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "sender"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    hcparty: Optional[Hcparty] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    hcparty: Optional[Hcparty] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -487,35 +512,36 @@ class Sender:
         }
     )
 
-
-@dataclass
-class Request:
+class Request(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "request"
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
-    id: Optional[Id2] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[Id2] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    author: Optional[Author2] = field(
+    author: Optional[Author2] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    date: Optional[XmlDate] = field(
+    date: Optional[XmlDate] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    time: Optional[XmlTime] = field(
+    time: Optional[XmlTime] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -523,49 +549,50 @@ class Request:
         }
     )
 
-
-@dataclass
-class Header:
+class Header(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "header"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    standard: Optional[Standard] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    standard: Optional[Standard] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    id: Optional[Id1] = field(
+    id: Optional[Id1] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    date: Optional[XmlDate] = field(
+    date: Optional[XmlDate] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    time: Optional[XmlTime] = field(
+    time: Optional[XmlTime] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    sender: Optional[Sender] = field(
+    sender: Optional[Sender] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    recipient: Optional[Recipient] = field(
+    recipient: Optional[Recipient] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -573,13 +600,15 @@ class Header:
         }
     )
     
-@dataclass
-class Lifecycle:
+class Lifecycle(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "lifecycle"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    cd: Optional[Cd] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    cd: Optional[Cd] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -587,51 +616,53 @@ class Lifecycle:
         }
     )
 
-@dataclass
-class Item:
+class Item(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "item"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    id: Optional[Id1] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[Id1] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    cd: Optional[Cd] = field(
+    cd: Optional[Cd] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    content: List[Content] = field(
+    content: List[Content] = Field(
         default_factory=list,
         metadata={
             "type": "Element",
         }
     )
-    author: Optional[Author1] = field(
+    author: Optional[Author1] = Field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    quantity: Optional[Quantity] = field(
+    quantity: Optional[Quantity] = Field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    cost: Optional[Cost] = field(
+    cost: Optional[Cost] = Field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    lifecycle: Optional[Lifecycle] = field(
+    lifecycle: Optional[Lifecycle] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -639,41 +670,43 @@ class Item:
         }
     )
 
-@dataclass
-class Response:
+class Response(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "response"
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
-    id: Optional[Id2] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[Id2] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    author: Optional[Author2] = field(
+    author: Optional[Author2] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    date: Optional[XmlDate] = field(
+    date: Optional[XmlDate] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    time: Optional[XmlTime] = field(
+    time: Optional[XmlTime] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    request: Optional[Request] = field(
+    request: Optional[Request] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -681,63 +714,64 @@ class Response:
         }
     )
 
-
-@dataclass
-class Transaction:
+class Transaction(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "transaction"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    id: Optional[Id1] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[Id1] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    cd: Optional[Cd] = field(
+    cd: Optional[Cd] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    date: Optional[XmlDate] = field(
+    date: Optional[XmlDate] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    time: Optional[XmlTime] = field(
+    time: Optional[XmlTime] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    author: Optional[Author1] = field(
+    author: Optional[Author1] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    iscomplete: Optional[bool] = field(
+    iscomplete: Optional[bool] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    isvalidated: Optional[bool] = field(
+    isvalidated: Optional[bool] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    item: List[Item] = field(
+    item: List[Item] = Field(
         default_factory=list,
         metadata={
             "type": "Element",
@@ -745,28 +779,29 @@ class Transaction:
         }
     )
 
-
-@dataclass
-class Folder:
+class Folder(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "folder"
         namespace = "http://www.ehealth.fgov.be/standards/kmehr/schema/v1"
 
-    id: Optional[Id1] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[Id1] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    patient: Optional[Patient] = field(
+    patient: Optional[Patient] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    transaction: List[Transaction] = field(
+    transaction: List[Transaction] = Field(
         default_factory=list,
         metadata={
             "type": "Element",
@@ -774,14 +809,15 @@ class Folder:
         }
     )
 
-
-@dataclass
-class Kmehrmessage:
+class Kmehrmessage(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "kmehrmessage"
         namespace = "http://www.ehealth.fgov.be/messageservices/core/v1"
 
-    header: Optional[Header] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    header: Optional[Header] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -789,7 +825,7 @@ class Kmehrmessage:
             "required": True,
         }
     )
-    folder: Optional[Folder] = field(
+    folder: Optional[Folder] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -798,13 +834,14 @@ class Kmehrmessage:
         }
     )
 
-
-@dataclass
-class SendTransactionResponse:
+class SendTransactionResponse(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "http://www.ehealth.fgov.be/messageservices/protocol/v1"
 
-    message_protocole_schema_version: Optional[float] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    message_protocole_schema_version: Optional[Union[str, float]] = Field(
         default=None,
         metadata={
             "name": "messageProtocoleSchemaVersion",
@@ -812,7 +849,7 @@ class SendTransactionResponse:
             "required": True,
         }
     )
-    response: Optional[Response] = field(
+    response: Optional[Response] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -820,7 +857,7 @@ class SendTransactionResponse:
             "required": True,
         }
     )
-    acknowledge: Optional[Acknowledge] = field(
+    acknowledge: Optional[Acknowledge] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -828,7 +865,7 @@ class SendTransactionResponse:
             "required": True,
         }
     )
-    kmehrmessage: Optional[Kmehrmessage] = field(
+    kmehrmessage: Optional[Kmehrmessage] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -837,10 +874,8 @@ class SendTransactionResponse:
         }
     )
 
-@dataclass
-class EAttestV3:
-    class Config:
-        extra = Extra.forbid
+class EAttestV3(BaseModel):
+    model_config = ConfigDict(defer_build=True)
 
     response: SendTransactionResponse
     transaction_request: str

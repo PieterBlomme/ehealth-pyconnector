@@ -1,19 +1,19 @@
-from pydantic import Extra
-from dataclasses import field
-from pydantic.dataclasses import dataclass
-from typing import List, Optional
+from pydantic import BaseModel, ConfigDict, Field
+
+from typing import List, Optional, Union
 from xsdata.models.datatype import XmlDate, XmlDateTime
 
 __NAMESPACE__ = "http://hl7.org/fhir"
 
-
-@dataclass
-class Created:
+class Created(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "created"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[XmlDateTime] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[XmlDateTime] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -21,14 +21,15 @@ class Created:
         }
     )
 
-
-@dataclass
-class End:
+class End(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "end"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[XmlDate] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[XmlDate] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -36,14 +37,15 @@ class End:
         }
     )
 
-
-@dataclass
-class Endpoint:
+class Endpoint(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "endpoint"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -51,14 +53,15 @@ class Endpoint:
         }
     )
 
-
-@dataclass
-class Family:
+class Family(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "family"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -66,14 +69,15 @@ class Family:
         }
     )
 
-
-@dataclass
-class FullUrl:
+class FullUrl(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "fullUrl"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -81,14 +85,15 @@ class FullUrl:
         }
     )
 
-
-@dataclass
-class Gender:
+class Gender(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "gender"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -96,14 +101,15 @@ class Gender:
         }
     )
 
-
-@dataclass
-class Given:
+class Given(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "given"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -111,14 +117,15 @@ class Given:
         }
     )
 
-
-@dataclass
-class Id:
+class Id(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "id"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -126,14 +133,15 @@ class Id:
         }
     )
 
-
-@dataclass
-class ItemSequence:
+class ItemSequence(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "itemSequence"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[int] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[Union[str, int]] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -141,14 +149,15 @@ class ItemSequence:
         }
     )
 
-
-@dataclass
-class Outcome:
+class Outcome(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "outcome"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -156,14 +165,15 @@ class Outcome:
         }
     )
 
-
-@dataclass
-class PreAuthRef:
+class PreAuthRef(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "preAuthRef"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[int] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[Union[str, int]] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -171,14 +181,15 @@ class PreAuthRef:
         }
     )
 
-
-@dataclass
-class Profile:
+class Profile(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "profile"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -186,14 +197,15 @@ class Profile:
         }
     )
 
-
-@dataclass
-class Reference:
+class Reference(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "reference"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -201,14 +213,15 @@ class Reference:
         }
     )
 
-
-@dataclass
-class Start:
+class Start(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "start"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[XmlDate] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[XmlDate] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -216,14 +229,15 @@ class Start:
         }
     )
 
-
-@dataclass
-class Status:
+class Status(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "status"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -231,14 +245,15 @@ class Status:
         }
     )
 
-
-@dataclass
-class System:
+class System(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "system"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -246,14 +261,15 @@ class System:
         }
     )
 
-
-@dataclass
-class Timestamp:
+class Timestamp(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "timestamp"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[XmlDateTime] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[XmlDateTime] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -261,14 +277,15 @@ class Timestamp:
         }
     )
 
-
-@dataclass
-class Use:
+class Use(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "use"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -276,14 +293,15 @@ class Use:
         }
     )
 
-
-@dataclass
-class Value:
+class Value(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "value"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
@@ -291,21 +309,22 @@ class Value:
         }
     )
 
-
-@dataclass
-class Coding:
+class Coding(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "coding"
         namespace = "http://hl7.org/fhir"
 
-    system: Optional[System] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    system: Optional[System] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    code: Optional["Code"] = field(
+    code: Optional["Code"] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -313,14 +332,15 @@ class Coding:
         }
     )
 
-
-@dataclass
-class Focus:
+class Focus(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "focus"
         namespace = "http://hl7.org/fhir"
 
-    reference: Optional[Reference] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    reference: Optional[Reference] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -328,21 +348,22 @@ class Focus:
         }
     )
 
-
-@dataclass
-class Identifier:
+class Identifier(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "identifier"
         namespace = "http://hl7.org/fhir"
 
-    system: Optional[System] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    system: Optional[System] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    value: Optional[Value] = field(
+    value: Optional[Value] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -350,14 +371,15 @@ class Identifier:
         }
     )
 
-
-@dataclass
-class Insurer:
+class Insurer(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "insurer"
         namespace = "http://hl7.org/fhir"
 
-    reference: Optional[Reference] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    reference: Optional[Reference] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -365,14 +387,15 @@ class Insurer:
         }
     )
 
-
-@dataclass
-class MetaType:
+class MetaType(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "meta"
         namespace = "http://hl7.org/fhir"
 
-    profile: Optional[Profile] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    profile: Optional[Profile] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -380,40 +403,42 @@ class MetaType:
         }
     )
 
-
-@dataclass
-class Name:
+class Name(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "name"
         namespace = "http://hl7.org/fhir"
 
-    family: Optional[Family] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    family: Optional[Family] = Field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    given: Optional[Given] = field(
+    given: Optional[Given] = Field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    value: Optional[str] = field(
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
         }
     )
 
-
-@dataclass
-class Patient2:
+class Patient2(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "patient"
         namespace = "http://hl7.org/fhir"
 
-    reference: Optional[Reference] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    reference: Optional[Reference] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -421,14 +446,15 @@ class Patient2:
         }
     )
 
-
-@dataclass
-class Practitioner2:
+class Practitioner2(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "practitioner"
         namespace = "http://hl7.org/fhir"
 
-    reference: Optional[Reference] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    reference: Optional[Reference] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -436,21 +462,22 @@ class Practitioner2:
         }
     )
 
-
-@dataclass
-class PreAuthPeriod:
+class PreAuthPeriod(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "preAuthPeriod"
         namespace = "http://hl7.org/fhir"
 
-    start: Optional[Start] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    start: Optional[Start] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    end: Optional[End] = field(
+    end: Optional[End] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -458,14 +485,15 @@ class PreAuthPeriod:
         }
     )
 
-
-@dataclass
-class Receiver:
+class Receiver(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "receiver"
         namespace = "http://hl7.org/fhir"
 
-    reference: Optional[Reference] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    reference: Optional[Reference] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -473,14 +501,15 @@ class Receiver:
         }
     )
 
-
-@dataclass
-class Requestor:
+class Requestor(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "requestor"
         namespace = "http://hl7.org/fhir"
 
-    reference: Optional[Reference] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    reference: Optional[Reference] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -488,14 +517,15 @@ class Requestor:
         }
     )
 
-
-@dataclass
-class Sender:
+class Sender(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "sender"
         namespace = "http://hl7.org/fhir"
 
-    reference: Optional[Reference] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    reference: Optional[Reference] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -503,14 +533,15 @@ class Sender:
         }
     )
 
-
-@dataclass
-class Source:
+class Source(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "source"
         namespace = "http://hl7.org/fhir"
 
-    endpoint: Optional[Endpoint] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    endpoint: Optional[Endpoint] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -518,34 +549,35 @@ class Source:
         }
     )
 
-
-@dataclass
-class Organization:
+class Organization(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "http://hl7.org/fhir"
 
-    id: Optional[Id] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[Id] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    meta: Optional[MetaType] = field(
+    meta: Optional[MetaType] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    identifier: Optional[Identifier] = field(
+    identifier: Optional[Identifier] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    name: Optional[Name] = field(
+    name: Optional[Name] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -553,42 +585,43 @@ class Organization:
         }
     )
 
-
-@dataclass
-class Patient1:
+class Patient1(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "Patient"
         namespace = "http://hl7.org/fhir"
 
-    id: Optional[Id] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[Id] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    meta: Optional[MetaType] = field(
+    meta: Optional[MetaType] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    identifier: Optional[Identifier] = field(
+    identifier: Optional[Identifier] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    name: Optional[Name] = field(
+    name: Optional[Name] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    gender: Optional[Gender] = field(
+    gender: Optional[Gender] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -596,35 +629,36 @@ class Patient1:
         }
     )
 
-
-@dataclass
-class Practitioner1:
+class Practitioner1(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "Practitioner"
         namespace = "http://hl7.org/fhir"
 
-    id: Optional[Id] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[Id] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    meta: Optional[MetaType] = field(
+    meta: Optional[MetaType] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    identifier: Optional[Identifier] = field(
+    identifier: Optional[Identifier] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    name: Optional[Name] = field(
+    name: Optional[Name] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -632,14 +666,15 @@ class Practitioner1:
         }
     )
 
-
-@dataclass
-class Category:
+class Category(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "category"
         namespace = "http://hl7.org/fhir"
 
-    coding: Optional[Coding] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    coding: Optional[Coding] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -647,41 +682,43 @@ class Category:
         }
     )
 
-
-@dataclass
-class Code:
+class Code(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "code"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
         }
     )
-    coding: Optional[Coding] = field(
+    coding: Optional[Coding] = Field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
 
-
-@dataclass
-class Destination:
+class Destination(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "destination"
         namespace = "http://hl7.org/fhir"
 
-    endpoint: Optional[Endpoint] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    endpoint: Optional[Endpoint] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    receiver: Optional[Receiver] = field(
+    receiver: Optional[Receiver] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -689,14 +726,15 @@ class Destination:
         }
     )
 
-
-@dataclass
-class ProductOrService:
+class ProductOrService(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "productOrService"
         namespace = "http://hl7.org/fhir"
 
-    coding: Optional[Coding] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    coding: Optional[Coding] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -704,48 +742,52 @@ class ProductOrService:
         }
     )
 
-@dataclass
-class ReasonText:
+class ReasonText(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "text"
         namespace = "http://hl7.org/fhir"
 
-    value: Optional[str] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
         }
     )
 
-
-@dataclass
-class Reason:
+class Reason(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "reason"
         namespace = "http://hl7.org/fhir"
 
-    coding: Optional[Coding] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    coding: Optional[Coding] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    text: Optional[ReasonText] = field(
+    text: Optional[ReasonText] = Field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
 
-
-@dataclass
-class SubType:
+class SubType(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "subType"
         namespace = "http://hl7.org/fhir"
 
-    coding: Optional[Coding] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    coding: Optional[Coding] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -753,54 +795,56 @@ class SubType:
         }
     )
 
-
-@dataclass
-class TypeType:
+class TypeType(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "type"
         namespace = "http://hl7.org/fhir"
 
-    coding: Optional[Coding] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    coding: Optional[Coding] = Field(
         default=None,
         metadata={
             "type": "Element",
         }
     )
-    value: Optional[str] = field(
+    value: Optional[str] = Field(
         default=None,
         metadata={
             "type": "Attribute",
         }
     )
 
-
-@dataclass
-class PractitionerRole:
+class PractitionerRole(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "http://hl7.org/fhir"
 
-    id: Optional[Id] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[Id] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    meta: Optional[MetaType] = field(
+    meta: Optional[MetaType] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    practitioner: Optional[Practitioner2] = field(
+    practitioner: Optional[Practitioner2] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    code: Optional[Code] = field(
+    code: Optional[Code] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -808,21 +852,22 @@ class PractitionerRole:
         }
     )
 
-
-@dataclass
-class Adjudication:
+class Adjudication(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "adjudication"
         namespace = "http://hl7.org/fhir"
 
-    category: Optional[Category] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    category: Optional[Category] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    reason: Optional[Reason] = field(
+    reason: Optional[Reason] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -830,20 +875,22 @@ class Adjudication:
         }
     )
 
-@dataclass
-class EventCoding:
+class EventCoding(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "eventCoding"
         namespace = "http://hl7.org/fhir"
 
-    system: Optional[System] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    system: Optional[System] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    code: Optional[Code] = field(
+    code: Optional[Code] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -851,20 +898,22 @@ class EventCoding:
         }
     )
 
-@dataclass
-class Response:
+class Response(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "response"
         namespace = "http://hl7.org/fhir"
 
-    identifier: Optional[Identifier] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    identifier: Optional[Identifier] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    code: Optional[Code] = field(
+    code: Optional[Code] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -872,26 +921,28 @@ class Response:
         }
     )
 
-@dataclass
-class MessageHeader:
+class MessageHeader(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "http://hl7.org/fhir"
 
-    id: Optional[Id] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[Id] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    meta: Optional[MetaType] = field(
+    meta: Optional[MetaType] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    event_coding: Optional[EventCoding] = field(
+    event_coding: Optional[EventCoding] = Field(
         default=None,
         metadata={
             "name": "eventCoding",
@@ -899,35 +950,35 @@ class MessageHeader:
             "required": True,
         }
     )
-    destination: Optional[Destination] = field(
+    destination: Optional[Destination] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    sender: Optional[Sender] = field(
+    sender: Optional[Sender] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    source: Optional[Source] = field(
+    source: Optional[Source] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    focus: Optional[Focus] = field(
+    focus: Optional[Focus] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    response: Optional[Response] = field(
+    response: Optional[Response] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -935,13 +986,15 @@ class MessageHeader:
         }
     )
 
-@dataclass
-class AddItem:
+class AddItem(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "addItem"
         namespace = "http://hl7.org/fhir"
 
-    item_sequence: Optional[ItemSequence] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    item_sequence: Optional[ItemSequence] = Field(
         default=None,
         metadata={
             "name": "itemSequence",
@@ -949,7 +1002,7 @@ class AddItem:
             "required": True,
         }
     )
-    product_or_service: Optional[ProductOrService] = field(
+    product_or_service: Optional[ProductOrService] = Field(
         default=None,
         metadata={
             "name": "productOrService",
@@ -957,7 +1010,7 @@ class AddItem:
             "required": True,
         }
     )
-    adjudication: Optional[Adjudication] = field(
+    adjudication: Optional[Adjudication] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -965,41 +1018,42 @@ class AddItem:
         }
     )
 
-
-@dataclass
-class ClaimResponse:
+class ClaimResponse(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "http://hl7.org/fhir"
 
-    id: Optional[Id] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[Id] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    meta: Optional[MetaType] = field(
+    meta: Optional[MetaType] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    status: Optional[Status] = field(
+    status: Optional[Status] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    type: Optional[TypeType] = field(
+    type: Optional[TypeType] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    sub_type: Optional[SubType] = field(
+    sub_type: Optional[SubType] = Field(
         default=None,
         metadata={
             "name": "subType",
@@ -1007,49 +1061,49 @@ class ClaimResponse:
             "required": True,
         }
     )
-    use: Optional[Use] = field(
+    use: Optional[Use] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    patient: Optional[Patient2] = field(
+    patient: Optional[Patient2] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    created: Optional[Created] = field(
+    created: Optional[Created] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    insurer: Optional[Insurer] = field(
+    insurer: Optional[Insurer] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    requestor: Optional[Requestor] = field(
+    requestor: Optional[Requestor] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    outcome: Optional[Outcome] = field(
+    outcome: Optional[Outcome] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    pre_auth_ref: Optional[PreAuthRef] = field(
+    pre_auth_ref: Optional[PreAuthRef] = Field(
         default=None,
         metadata={
             "name": "preAuthRef",
@@ -1057,7 +1111,7 @@ class ClaimResponse:
             "required": True,
         }
     )
-    pre_auth_period: Optional[PreAuthPeriod] = field(
+    pre_auth_period: Optional[PreAuthPeriod] = Field(
         default=None,
         metadata={
             "name": "preAuthPeriod",
@@ -1065,7 +1119,7 @@ class ClaimResponse:
             "required": True,
         }
     )
-    add_item: Optional[AddItem] = field(
+    add_item: Optional[AddItem] = Field(
         default=None,
         metadata={
             "name": "addItem",
@@ -1074,49 +1128,50 @@ class ClaimResponse:
         }
     )
 
-
-@dataclass
-class Resource:
+class Resource(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "resource"
         namespace = "http://hl7.org/fhir"
 
-    claim_response: Optional[ClaimResponse] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    claim_response: Optional[ClaimResponse] = Field(
         default=None,
         metadata={
             "name": "ClaimResponse",
             "type": "Element",
         }
     )
-    patient: Optional[Patient1] = field(
+    patient: Optional[Patient1] = Field(
         default=None,
         metadata={
             "name": "Patient",
             "type": "Element",
         }
     )
-    practitioner_role: Optional[PractitionerRole] = field(
+    practitioner_role: Optional[PractitionerRole] = Field(
         default=None,
         metadata={
             "name": "PractitionerRole",
             "type": "Element",
         }
     )
-    practitioner: Optional[Practitioner1] = field(
+    practitioner: Optional[Practitioner1] = Field(
         default=None,
         metadata={
             "name": "Practitioner",
             "type": "Element",
         }
     )
-    organization: Optional[Organization] = field(
+    organization: Optional[Organization] = Field(
         default=None,
         metadata={
             "name": "Organization",
             "type": "Element",
         }
     )
-    message_header: Optional[MessageHeader] = field(
+    message_header: Optional[MessageHeader] = Field(
         default=None,
         metadata={
             "name": "MessageHeader",
@@ -1124,14 +1179,15 @@ class Resource:
         }
     )
 
-
-@dataclass
-class Entry:
+class Entry(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         name = "entry"
         namespace = "http://hl7.org/fhir"
 
-    full_url: Optional[FullUrl] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    full_url: Optional[FullUrl] = Field(
         default=None,
         metadata={
             "name": "fullUrl",
@@ -1139,7 +1195,7 @@ class Entry:
             "required": True,
         }
     )
-    resource: Optional[Resource] = field(
+    resource: Optional[Resource] = Field(
         default=None,
         metadata={
             "type": "Element",
@@ -1147,41 +1203,42 @@ class Entry:
         }
     )
 
-
-@dataclass
-class Bundle:
+class Bundle(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     class Meta:
         namespace = "http://hl7.org/fhir"
 
-    id: Optional[Id] = field(
+    model_config = ConfigDict(defer_build=True)
+
+    id: Optional[Id] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    meta: Optional[MetaType] = field(
+    meta: Optional[MetaType] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    type: Optional[TypeType] = field(
+    type: Optional[TypeType] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    timestamp: Optional[Timestamp] = field(
+    timestamp: Optional[Timestamp] = Field(
         default=None,
         metadata={
             "type": "Element",
             "required": True,
         }
     )
-    entry: List[Entry] = field(
+    entry: List[Entry] = Field(
         default_factory=list,
         metadata={
             "type": "Element",
@@ -1189,12 +1246,8 @@ class Bundle:
         }
     )
 
-
-class Config:
-    extra = Extra.forbid
-
-@dataclass(config=Config)
-class Response:
+class Response(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     response: Bundle
     transaction_request: str
     transaction_response: str

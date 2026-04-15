@@ -3,8 +3,8 @@ import logging
 import datetime
 import tempfile
 import uuid
-from typing import List, Optional, Tuple, Callable
-from pydantic import BaseModel, root_validator
+from typing import List, Optional, Tuple, Callable, Union
+from pydantic import BaseModel, model_validator, ConfigDict
 from io import StringIO
 from ..sts.assertion import Assertion
 from .attribute_query import AttributeQuery, Issuer, Extensions, Subject, SubjectConfirmation, SubjectConfirmationData, NameId, Facet, Dimension
@@ -18,15 +18,16 @@ logger = logging.getLogger(__name__)
 
 
 class MDAInputModel(BaseModel):
+    model_config = ConfigDict(defer_build=True)
     notBefore: datetime.datetime
     notOnOrAfter: datetime.datetime
     ssin: Optional[str] = None
     registrationNumber: Optional[str] = None
     mutuality: Optional[str] = None
-    facets=[
+    facets: List[Facet] = [
                 Facet(
                     id="urn:be:cin:nippin:insurability",
-                    dimensions=[
+                    dimension=[
                         Dimension(
                             id="requestType",
                             value="information",
@@ -39,7 +40,8 @@ class MDAInputModel(BaseModel):
                 )
     ]
 
-    @root_validator(pre=True)
+    @model_validator(mode='before')
+    @classmethod
     def check_card_number_omitted(cls, values):
         ssin = values.get("ssin")
         registrationNumber = values.get("registrationNumber")
@@ -55,7 +57,7 @@ class MDAInputModel(BaseModel):
 
     def __eq__(self, other):
             if other.__class__ is self.__class__:
-                return self.json() == other.json()
+                return self.model_dump_json() == other.model_dump_json()
             return NotImplemented
 
 class AbstractMDAService:
@@ -86,17 +88,17 @@ class AbstractMDAService:
         quality = None
                                      
         for attribute in token_pydantic.attribute_statement.attribute:
-            if attribute.attribute_name == 'urn:be:fgov:ehealth:1.0:certificateholder:person:ssin':
-                ssin = attribute.attribute_value
-            elif attribute.attribute_name.startswith('urn:be:fgov:person:ssin:ehealth:1.0:nihii'):
-                nihii = attribute.attribute_value
-            elif attribute.attribute_name  == 'urn:be:fgov:person:ssin:ehealth:1.0:givenname':
-                givenname = attribute.attribute_value
-            elif attribute.attribute_name  == 'urn:be:fgov:person:ssin:ehealth:1.0:surname':
-                surname = attribute.attribute_value
-            elif attribute.attribute_name.startswith('urn:be:fgov:person:ssin:ehealth:1.0:fpsph'):
+            if attribute.name == 'urn:be:fgov:ehealth:1.0:certificateholder:person:ssin':
+                ssin = attribute.attribute_value[0].value if attribute.attribute_value else None
+            elif attribute.name.startswith('urn:be:fgov:person:ssin:ehealth:1.0:nihii'):
+                nihii = attribute.attribute_value[0].value if attribute.attribute_value else None
+            elif attribute.name  == 'urn:be:fgov:person:ssin:ehealth:1.0:givenname':
+                givenname = attribute.attribute_value[0].value if attribute.attribute_value else None
+            elif attribute.name  == 'urn:be:fgov:person:ssin:ehealth:1.0:surname':
+                surname = attribute.attribute_value[0].value if attribute.attribute_value else None
+            elif attribute.name.startswith('urn:be:fgov:person:ssin:ehealth:1.0:fpsph'):
                 if attribute.attribute_value:
-                    quality = attribute.attribute_name.split(':')[-2]
+                    quality = attribute.name.split(':')[-2]
 
         logger.info(f"Name: {givenname} {surname}, SSIN {ssin}, NIHII {nihii}, quality {quality}")
         self.config_validator.setProperty("mycarenet.default.careprovider.nihii.value", nihii)
@@ -195,7 +197,7 @@ class MDAService(AbstractMDAService):
             self,
             mycarenet_license_username: str,
             mycarenet_license_password: str,
-            etk_endpoint: str = "$uddi{uddi:ehealth-fgov-be:business:etkdepot:v1}",
+            etk_endpoint: str = "{uddi:ehealth-fgov-be:business:etkdepot:v1}",
             environment: str = "acc",
     ):
         super().__init__(environment=environment)
