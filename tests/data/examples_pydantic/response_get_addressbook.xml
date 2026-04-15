@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns4:GetProfessionalContactInfoResponse Id="_e6d2f455-a8cc-4cc3-89ad-348673111d6b"
+    IssueInstant="2026-04-15T07:50:53.586Z" xmlns="urn:be:fgov:ehealth:commons:core:v2"
+    xmlns:ns2="urn:be:fgov:ehealth:aa:complextype:v1"
+    xmlns:ns4="urn:be:fgov:ehealth:addressbook:protocol:v1"
+    xmlns:ns3="urn:be:fgov:ehealth:addressbook:core:v1">
+    <Status>
+        <StatusCode Value="urn:be:fgov:ehealth:2.0:status:Success" />
+    </Status>
+    <ns4:IndividualContactInformation>
+        <ns2:LastName>Nolet de Brauwere van Steeland</ns2:LastName>
+        <ns2:FirstName>Marie</ns2:FirstName>
+        <ns2:MiddleNames>Isabelle</ns2:MiddleNames>
+        <ns2:Language>fr</ns2:Language>
+        <ns2:Gender>female</ns2:Gender>
+        <ns2:BirthDate>02/04/1986</ns2:BirthDate>
+        <ns3:ProfessionalInformation>
+            <ns2:Profession>
+                <ns2:ProfessionCode authenticSource="EHP" type="code">PHYSICIAN</ns2:ProfessionCode>
+                <ns2:ProfessionFriendlyName xml:lang="nl">Arts</ns2:ProfessionFriendlyName>
+                <ns2:ProfessionFriendlyName xml:lang="fr">Médecin</ns2:ProfessionFriendlyName>
+                <ns2:ProfessionFriendlyName xml:lang="de">Arzt</ns2:ProfessionFriendlyName>
+                <ns2:NIHII>19733263004</ns2:NIHII>
+            </ns2:Profession>
+            <ns2:Address Type="contact">
+                <ns2:Street>
+                    <ns2:Description xml:lang="fr">TEN TRAPPENSTRAAT</ns2:Description>
+                </ns2:Street>
+                <ns2:HouseNumber>47</ns2:HouseNumber>
+                <ns2:Municipality>
+                    <ns2:ZipCode>1560</ns2:ZipCode>
+                    <ns2:Description xml:lang="nl">Hoeilaart</ns2:Description>
+                </ns2:Municipality>
+                <ns2:Country>
+                    <ns2:ISOCode>BE</ns2:ISOCode>
+                    <ns2:Description xml:lang="fr">Belgique</ns2:Description>
+                    <ns2:Description xml:lang="nl">België</ns2:Description>
+                    <ns2:Description xml:lang="de">Belgien</ns2:Description>
+                </ns2:Country>
+            </ns2:Address>
+            <ns2:HealthCareAdditionalInformation Type="Mail">nolet.marie@gmail.com</ns2:HealthCareAdditionalInformation>
+        </ns3:ProfessionalInformation>
+    </ns4:IndividualContactInformation>
+</ns4:GetProfessionalContactInfoResponse>

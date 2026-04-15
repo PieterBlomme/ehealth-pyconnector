@@ -1,0 +1,259 @@
+<ns1:Bundle xmlns:ns1="http://hl7.org/fhir">
+  <ns1:id value="f5b0b73e-5838-4c5a-9493-ba1d054fe15f"/>
+  <ns1:meta>
+    <ns1:profile value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementconsultreply"/>
+  </ns1:meta>
+  <ns1:type value="message"/>
+  <ns1:timestamp value="2026-01-08T16:03:21+01:00"/>
+  <ns1:entry>
+    <ns1:fullUrl value="urn:uuid:81883cf8-abc8-4d2b-a604-b335ed31ef67"/>
+    <ns1:resource>
+      <ns1:MessageHeader>
+        <ns1:id value="b1ad0d04-2697-4911-a323-28130e0a1d49"/>
+        <ns1:meta>
+          <ns1:profile value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-messageheader"/>
+        </ns1:meta>
+        <ns1:eventCoding>
+          <ns1:system value="http://hl7.org/fhir/restful-interaction"/>
+          <ns1:code value="search-type"/>
+        </ns1:eventCoding>
+        <ns1:destination>
+          <ns1:endpoint value="urn:uuid:28d2ca9a-7591-4e43-a17c-06f4b0b8ceba"/>
+          <ns1:receiver>
+            <ns1:reference value="PractitionerRole/PractitionerRole1"/>
+          </ns1:receiver>
+        </ns1:destination>
+        <ns1:sender>
+          <ns1:reference value="Organization/OrganizationIO1"/>
+        </ns1:sender>
+        <ns1:source>
+          <ns1:endpoint value="urn:uuid:f46c308e-e179-41b6-b83a-d29d738eeab7"/>
+        </ns1:source>
+        <ns1:response>
+          <ns1:identifier value="0c275b21-a34c-4c63-affc-a57039eb8a00"/>
+          <ns1:code value="ok"/>
+        </ns1:response>
+        <ns1:focus>
+          <ns1:reference value="Bundle/SearchBundleResponse1"/>
+        </ns1:focus>
+      </ns1:MessageHeader>
+    </ns1:resource>
+  </ns1:entry>
+  <ns1:entry>
+    <ns1:fullUrl value="urn:uuid:f46c308e-e179-41b6-b83a-d29d738eeab7"/>
+    <ns1:resource>
+      <ns1:Organization>
+        <ns1:id value="OrganizationIO1"/>
+        <ns1:meta>
+          <ns1:profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-organization"/>
+        </ns1:meta>
+        <ns1:identifier>
+          <ns1:system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/insurancenumber"/>
+          <ns1:value value="100"/>
+        </ns1:identifier>
+        <ns1:name value="LCM - ANMC"/>
+      </ns1:Organization>
+    </ns1:resource>
+  </ns1:entry>
+  <ns1:entry>
+    <ns1:fullUrl value="urn:uuid:c4f75466-5235-4845-a597-007faec31fb8"/>
+    <ns1:resource>
+      <ns1:Practitioner>
+        <ns1:id value="Practitioner1"/>
+        <ns1:meta>
+          <ns1:profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitioner"/>
+        </ns1:meta>
+        <ns1:identifier>
+          <ns1:system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi"/>
+          <ns1:value value="54488264527"/>
+        </ns1:identifier>
+        <ns1:name>
+          <ns1:family value="Ooms"/>
+          <ns1:given value="Lenie"/>
+        </ns1:name>
+      </ns1:Practitioner>
+    </ns1:resource>
+  </ns1:entry>
+  <ns1:entry>
+    <ns1:fullUrl value="urn:uuid:28d2ca9a-7591-4e43-a17c-06f4b0b8ceba"/>
+    <ns1:resource>
+      <ns1:PractitionerRole>
+        <ns1:id value="PractitionerRole1"/>
+        <ns1:meta>
+          <ns1:profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitionerrole"/>
+        </ns1:meta>
+        <ns1:practitioner>
+          <ns1:reference value="Practitioner/Practitioner1"/>
+        </ns1:practitioner>
+        <ns1:code>
+          <ns1:coding>
+            <ns1:system value="https://www.ehealth.fgov.be/standards/fhir/core/CodeSystem/cd-hcparty"/>
+            <ns1:code value="persphysiotherapist"/>
+          </ns1:coding>
+        </ns1:code>
+      </ns1:PractitionerRole>
+    </ns1:resource>
+  </ns1:entry>
+  <ns1:entry>
+    <ns1:fullUrl value="urn:uuid:6291c5b7-5bc9-4a24-bd6d-21e152dd6199"/>
+    <ns1:resource>
+      <ns1:Bundle>
+        <ns1:id value="SearchBundleResponse1"/>
+        <ns1:type value="searchset"/>
+        <ns1:total value="1"/>
+        <ns1:link>
+          <ns1:relation value="self"/>
+          <ns1:url value="http://www.mycarenet.be/ClaimResponse?patient=Patient1&amp;use=preauthorization&amp;subType.code=physiotherapy"/>
+        </ns1:link>
+        <ns1:entry>
+          <ns1:fullUrl value="urn:uuid:364fbd86-f418-42a5-bd57-4ba2f09724e6"/>
+          <ns1:resource>
+            <ns1:Organization>
+              <ns1:id value="OrganizationIO1"/>
+              <ns1:meta>
+                <ns1:profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-organization"/>
+              </ns1:meta>
+              <ns1:identifier>
+                <ns1:system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/insurancenumber"/>
+                <ns1:value value="100"/>
+              </ns1:identifier>
+              <ns1:name value="LCM - ANMC"/>
+            </ns1:Organization>
+          </ns1:resource>
+          <ns1:search>
+            <ns1:mode value="include"/>
+          </ns1:search>
+        </ns1:entry>
+        <ns1:entry>
+          <ns1:fullUrl value="urn:uuid:e9dd702f-102b-4d93-a30f-477293c0b41f"/>
+          <ns1:resource>
+            <ns1:Patient>
+              <ns1:id value="Patient1"/>
+              <ns1:meta>
+                <ns1:profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-patient"/>
+              </ns1:meta>
+              <ns1:identifier>
+                <ns1:system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/ssin"/>
+                <ns1:value value="00011317652"/>
+              </ns1:identifier>
+              <ns1:name>
+                <ns1:family value="Ouderits"/>
+                <ns1:given value="Gitte"/>
+              </ns1:name>
+              <ns1:gender value="female"/>
+            </ns1:Patient>
+          </ns1:resource>
+          <ns1:search>
+            <ns1:mode value="include"/>
+          </ns1:search>
+        </ns1:entry>
+        <ns1:entry>
+          <ns1:fullUrl value="urn:uuid:84e6fb1d-6518-45d1-abd0-bf265dd735e5"/>
+          <ns1:resource>
+            <ns1:Practitioner>
+              <ns1:id value="Practitioner1"/>
+              <ns1:meta>
+                <ns1:profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitioner"/>
+              </ns1:meta>
+              <ns1:identifier>
+                <ns1:system value="https://www.ehealth.fgov.be/standards/fhir/core/NamingSystem/nihdi"/>
+                <ns1:value value="50000035999"/>
+              </ns1:identifier>
+              <ns1:name>
+                <ns1:family value="n/a"/>
+                <ns1:given value="n/a"/>
+              </ns1:name>
+            </ns1:Practitioner>
+          </ns1:resource>
+          <ns1:search>
+            <ns1:mode value="include"/>
+          </ns1:search>
+        </ns1:entry>
+        <ns1:entry>
+          <ns1:fullUrl value="urn:uuid:2e0ac868-bde9-42f7-8f6a-a70f8a6b5d40"/>
+          <ns1:resource>
+            <ns1:PractitionerRole>
+              <ns1:id value="PractitionerRole1"/>
+              <ns1:meta>
+                <ns1:profile value="https://www.ehealth.fgov.be/standards/fhir/core/StructureDefinition/be-practitionerrole"/>
+              </ns1:meta>
+              <ns1:practitioner>
+                <ns1:reference value="Practitioner/Practitioner1"/>
+              </ns1:practitioner>
+              <ns1:code>
+                <ns1:coding>
+                  <ns1:system value="https://www.ehealth.fgov.be/standards/fhir/core/CodeSystem/cd-hcparty"/>
+                  <ns1:code value="persphysiotherapist"/>
+                </ns1:coding>
+              </ns1:code>
+            </ns1:PractitionerRole>
+          </ns1:resource>
+          <ns1:search>
+            <ns1:mode value="include"/>
+          </ns1:search>
+        </ns1:entry>
+        <ns1:entry>
+          <ns1:fullUrl value="urn:uuid:af4e51fa-4d5c-4bcb-b0ac-09167eea1661"/>
+          <ns1:resource>
+            <ns1:ClaimResponse>
+              <ns1:id value="ClaimResponse1"/>
+              <ns1:meta>
+                <ns1:profile value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/StructureDefinition/be-eagreementclaimresponse"/>
+              </ns1:meta>
+              <ns1:status value="active"/>
+              <ns1:type>
+                <ns1:coding>
+                  <ns1:system value="http://terminology.hl7.org/CodeSystem/claim-type"/>
+                  <ns1:code value="professional"/>
+                </ns1:coding>
+              </ns1:type>
+              <ns1:subType>
+                <ns1:coding>
+                  <ns1:system value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/agreement-types"/>
+                  <ns1:code value="physiotherapy-common-1"/>
+                </ns1:coding>
+              </ns1:subType>
+              <ns1:use value="preauthorization"/>
+              <ns1:patient>
+                <ns1:reference value="Patient/Patient1"/>
+              </ns1:patient>
+              <ns1:created value="2025-03-17T18:23:46+01:00"/>
+              <ns1:insurer>
+                <ns1:reference value="Organization/OrganizationIO1"/>
+              </ns1:insurer>
+              <ns1:requestor>
+                <ns1:reference value="PractitionerRole/PractitionerRole1"/>
+              </ns1:requestor>
+              <ns1:outcome value="complete"/>
+              <ns1:preAuthRef value="10020000000455231252"/>
+              <ns1:preAuthPeriod>
+                <ns1:start value="2025-02-20"/>
+                <ns1:end value="2025-12-31"/>
+              </ns1:preAuthPeriod>
+              <ns1:addItem>
+                <ns1:itemSequence value="1"/>
+                <ns1:productOrService>
+                  <ns1:coding>
+                    <ns1:system value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/nihdi-physiotherapy-pathologysituationcode"/>
+                    <ns1:code value="co-0-0-0-0"/>
+                  </ns1:coding>
+                </ns1:productOrService>
+                <ns1:adjudication>
+                  <ns1:category>
+                    <ns1:coding>
+                      <ns1:system value="https://www.ehealth.fgov.be/standards/fhir/mycarenet/CodeSystem/decision-values"/>
+                      <ns1:code value="agreement"/>
+                    </ns1:coding>
+                  </ns1:category>
+                </ns1:adjudication>
+              </ns1:addItem>
+            </ns1:ClaimResponse>
+          </ns1:resource>
+          <ns1:search>
+            <ns1:mode value="match"/>
+          </ns1:search>
+        </ns1:entry>
+      </ns1:Bundle>
+    </ns1:resource>
+  </ns1:entry>
+</ns1:Bundle>

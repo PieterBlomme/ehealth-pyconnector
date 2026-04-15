@@ -14,10 +14,11 @@ jobs:
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
           poetry install
-          poetry run download-packages
-          poetry run compile-bridge
-          poetry run launch-bridge &
-          sleep 15
+          poetry run pytest tests/test_parsing.py
+          # poetry run download-packages
+          # poetry run compile-bridge
+          # poetry run launch-bridge &
+          # sleep 15
           # async not yet implemented
           # manual: don't run in CI/CD
           # test_eagreement_fake.py ignored because it messes with the certificate chain.  we should run these tests in another job I guess
